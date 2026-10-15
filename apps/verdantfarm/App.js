@@ -1,10 +1,8 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, View, Text, ScrollView, TouchableOpacity, Modal, Alert, StyleSheet, Dimensions } from 'react-native';
+import { SafeAreaView, View, Text, ScrollView, TouchableOpacity, Modal, Alert, StyleSheet, Dimensions, Image } from 'react-native';
 import { GameManager, CROPS, ANIMALS, UPGRADES, WEATHERS } from './src/game';
-import TopBar from './src/components/TopBar';
-import PlotGrid from './src/components/PlotGrid';
-import AnimalPen from './src/components/AnimalPen';
+import FarmScene3D from './src/components/FarmScene3D';
 import QuestBoard from './src/components/QuestBoard';
 import ShopModal from './src/components/ShopModal';
 import AlmanacModal from './src/components/AlmanacModal';
@@ -12,21 +10,13 @@ import Toast from './src/components/Toast';
 
 const { width } = Dimensions.get('window');
 
-const TABS = [
-  { id: 'farm', label: '🌱 Farm' },
-  { id: 'animals', label: '🐮 Animals' },
-  { id: 'quests', label: '📜 Quests' },
-];
-
 export default function App() {
   const manager = React.useRef(null);
   if (!manager.current) manager.current = new GameManager();
   const gm = manager.current;
 
   const [state, setState] = React.useState(gm.getState());
-  const [tab, setTab] = React.useState('farm');
-  const [shopOpen, setShopOpen] = React.useState(false);
-  const [almanacOpen, setAlmanacOpen] = React.useState(false);
+  const [panel, setPanel] = React.useState(null); // null | 'barn' | 'quests' | 'shop' | 'almanac'
   const [toast, setToast] = React.useState(null);
 
   React.useEffect(() => {
@@ -45,112 +35,189 @@ export default function App() {
     return res;
   };
 
-  const plant = (plotIndex, cropId) => handle(() => gm.plant(plotIndex, cropId), `${CROPS[cropId].name} planted!`);
-  const harvest = (i) => handle(() => gm.harvest(i), (r) => `+${r.amount} ${r.cropName}`);
-  const collectAnimal = (i) => handle(() => gm.collectAnimal(i), (r) => `${r.emoji} ${r.product} collected!`);
-  const sell = (cropId) => handle(() => gm.sell(cropId), (r) => `Sold for $${r.earned}`);
-  const sellProduct = (id) => handle(() => gm.sellProduct(id), (r) => `Sold for $${r.earned}`);
-  const upgradePlot = (i) => handle(() => gm.upgradePlot(i), 'Soil upgraded!');
+  const onPlotTap = (index) => {
+    const plot = gm.state.plots[index];
+    if (!plot) return;
+    if (plot.ready) {
+      handle(() => gm.harvest(index), (r) => `+${r.amount} ${r.cropName}`);
+      return;
+    }
+    if (!plot.crop) {
+      const available = Object.entries(CROPS).filter(([, c]) => gm.state.level >= c.unlockLevel);
+      Alert.alert('🌱 Plant a crop', 'Choose a seed for this plot:', [
+        ...available.map(([id, c]) => ({
+          text: `${c.emoji} ${c.name} — $${c.seedCost}`,
+          onPress: () => handle(() => gm.plant(index, id), `${CROPS[id].name} planted!`),
+        })),
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+      return;
+    }
+    Alert.alert('Growing…', `${CROPS[plot.crop].name}: ${Math.floor((plot.growProgress || 0) * 100)}%`, [
+      plot.tier < 3
+        ? { text: `⬆️ Upgrade soil ($${gm.plotUpgradeCost(plot.tier)})`, onPress: () => handle(() => gm.upgradePlot(index), 'Soil upgraded!') }
+        : null,
+      { text: 'Close', style: 'cancel' },
+    ].filter(Boolean));
+  };
+
+  const harvestAll = () => {
+    let count = 0;
+    gm.state.plots.forEach((p, i) => { if (p.ready) { const r = gm.harvest(i); if (r.ok) count++; } });
+    setState({ ...gm.getState() });
+    notify(count ? `Harvested ${count} plot(s)!` : 'Nothing ready yet');
+  };
+
   const claimQuest = (id) => {
     const res = gm.claimQuest(id);
     setState({ ...gm.getState() });
     if (res.ok) Alert.alert('Quest complete!', res.lore);
-    return res;
   };
-  const buy = (kind, id) =>
-    handle(
-      () => gm.buy(kind, id),
-      kind === 'plot' ? 'New plot unlocked!' : `${UPGRADES[id].name} upgraded!`
-    );
-  const buyAnimal = (id) => handle(() => gm.buyAnimal(id), `${ANIMALS[id].name} joins the farm!`);
 
   const weather = WEATHERS[state.weather] || WEATHERS.sunny;
   const night = gm.isNight();
-  const bg = night ? '#1d2f42' : state.weather === 'rain' ? '#3a5a68' : state.weather === 'blessing' ? '#4a6b8a' : '#3b7a40';
+  const readyCount = state.plots.filter((p) => p.ready).length;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: bg }]}>
+    <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.screen}>
-        <TopBar
-          coins={state.coins}
-          level={state.level}
-          xp={state.xp}
-          xpNeeded={gm.xpNeeded}
-          weather={weather}
-          night={night}
-          onShop={() => setShopOpen(true)}
-          onAlmanac={() => setAlmanacOpen(true)}
+        <FarmScene3D
+          style={{ flex: 1 }}
+          plots={state.plots}
+          animals={state.animals}
+          time={state.time}
+          weather={state.weather}
+          onPlotTap={onPlotTap}
         />
 
-        <View style={styles.tabs}>
-          {TABS.map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.tab, tab === t.id && styles.tabActive]}
-              onPress={() => setTab(t.id)}
-            >
-              <Text style={[styles.tabText, tab === t.id && styles.tabTextActive]}>{t.label}</Text>
+        {/* Top HUD */}
+        <View style={[styles.hudTop, night && styles.hudNight]}>
+          <View style={styles.hudLeft}>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelText}>Lv {state.level}</Text>
+            </View>
+            <View style={styles.barWrap}>
+              <View style={styles.barTrack}>
+                <View style={[styles.barFill, { width: `${Math.min(100, (state.xp / gm.xpNeeded) * 100)}%` }]} />
+              </View>
+            </View>
+            <Text style={styles.weatherIcon}>{night ? '🌙' : weather.emoji}</Text>
+          </View>
+          <View style={styles.hudRight}>
+            <TouchableOpacity onPress={() => setPanel('almanac')} style={styles.iconBtn}>
+              <Text style={styles.iconText}>📖</Text>
             </TouchableOpacity>
-          ))}
+            <View style={styles.coinBadge}>
+              <Text style={styles.coinText}>🪙 {state.coins}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setPanel('shop')} style={styles.shopBtn}>
+              <Text style={styles.shopBtnText}>🛒</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-          {tab === 'farm' && (
-            <>
-              <PlotGrid
-                plots={state.plots}
-                level={state.level}
-                night={night}
-                onHarvest={harvest}
-                onPlant={plant}
-                onUpgrade={upgradePlot}
-              />
-              <Text style={styles.sectionTitle}>Barn — tap to sell</Text>
-              <View style={styles.barnRow}>
-                {Object.entries(state.barn).map(([cropId, qty]) =>
-                  qty > 0 ? (
-                    <TouchableOpacity key={cropId} style={styles.barnItem} onPress={() => sell(cropId)}>
-                      <Text style={styles.barnEmoji}>{CROPS[cropId].emoji}</Text>
-                      <Text style={styles.barnQty}>{qty}</Text>
-                      <Text style={styles.barnPrice}>${CROPS[cropId].sellPrice}/ea</Text>
-                    </TouchableOpacity>
-                  ) : null
-                )}
-                {Object.values(state.barn).every((v) => v === 0) ? (
-                  <Text style={styles.barnEmpty}>Your barn is empty. Harvest crops to fill it!</Text>
-                ) : null}
-              </View>
-            </>
-          )}
+        {/* Bottom action bar */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setPanel('barn')}>
+            <Text style={styles.actionEmoji}>🏚️</Text>
+            <Text style={styles.actionLabel}>Barn</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionBtn, readyCount > 0 && styles.actionBtnHot]}
+            onPress={harvestAll}
+          >
+            <Text style={styles.actionEmoji}>🧺</Text>
+            <Text style={styles.actionLabel}>Harvest{readyCount ? ` (${readyCount})` : ''}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setPanel('quests')}>
+            <Text style={styles.actionEmoji}>📜</Text>
+            <Text style={styles.actionLabel}>Quests</Text>
+          </TouchableOpacity>
+        </View>
 
-          {tab === 'animals' && (
-            <AnimalPen
-              animals={state.animals}
-              products={state.products}
-              onCollect={collectAnimal}
-              onSellProduct={sellProduct}
-              onBuy={() => setShopOpen(true)}
-            />
-          )}
-
-          {tab === 'quests' && <QuestBoard quests={gm.questList()} onClaim={claimQuest} />}
-
-          <View style={{ height: 40 }} />
-        </ScrollView>
+        {/* Panels */}
+        <Modal visible={panel === 'barn'} transparent animationType="slide" onRequestClose={() => setPanel(null)}>
+          <View style={styles.overlay}>
+            <View style={styles.sheet}>
+              <Text style={styles.sheetTitle}>🏚️ Barn & Products</Text>
+              <ScrollView>
+                <Text style={styles.sectionLabel}>Crops — tap to sell</Text>
+                <View style={styles.gridRow}>
+                  {Object.entries(state.barn).map(([cropId, qty]) =>
+                    qty > 0 ? (
+                      <TouchableOpacity key={cropId} style={styles.barnItem} onPress={() => handle(() => gm.sell(cropId), (r) => `+$${r.earned}`)}>
+                        <Text style={styles.barnEmoji}>{CROPS[cropId].emoji}</Text>
+                        <Text style={styles.barnQty}>{qty}</Text>
+                        <Text style={styles.barnPrice}>${CROPS[cropId].sellPrice}/ea</Text>
+                      </TouchableOpacity>
+                    ) : null
+                  )}
+                </View>
+                <Text style={styles.sectionLabel}>Animal Products</Text>
+                <View style={styles.gridRow}>
+                  {state.animals.map((a, i) => {
+                    if (!a.ready) return null;
+                    const def = ANIMALS[a.id];
+                    return (
+                      <TouchableOpacity key={i} style={styles.barnItem} onPress={() => handle(() => gm.collectAnimal(i), (r) => `${r.emoji} ${r.product}!`)}>
+                        <Text style={styles.barnEmoji}>{def.productEmoji}</Text>
+                        <Text style={styles.barnQty}>Collect</Text>
+                        <Text style={styles.barnPrice}>{def.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {state.animals.every((a) => !a.ready) ? (
+                    <Text style={styles.barnEmpty}>Animals are still producing…</Text>
+              ) : null}
+                </View>
+                <Text style={styles.sectionLabel}>Products — tap to sell</Text>
+                <View style={styles.gridRow}>
+                  {Object.entries(state.products).map(([animalId, qty]) =>
+                    qty > 0 ? (
+                      <TouchableOpacity key={animalId} style={styles.barnItem} onPress={() => handle(() => gm.sellProduct(animalId), (r) => `+$${r.earned}`)}>
+                        <Text style={styles.barnEmoji}>{ANIMALS[animalId].productEmoji}</Text>
+                        <Text style={styles.barnQty}>{qty}</Text>
+                        <Text style={styles.barnPrice}>${Math.floor(ANIMALS[animalId].buyCost / 4)}/ea</Text>
+                      </TouchableOpacity>
+                    ) : null
+                  )}
+                </View>
+                <View style={{ height: 20 }} />
+              </ScrollView>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setPanel(null)}>
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         <ShopModal
-          visible={shopOpen}
+          visible={panel === 'shop'}
           state={state}
           gm={gm}
-          onClose={() => setShopOpen(false)}
-          onBuy={buy}
-          onBuyAnimal={buyAnimal}
+          onClose={() => setPanel(null)}
+          onBuy={(kind, id) => handle(() => gm.buy(kind, id), kind === 'plot' ? 'New plot unlocked!' : 'Upgraded!')}
+          onBuyAnimal={(id) => handle(() => gm.buyAnimal(id), `${ANIMALS[id].name} joins the farm!`)}
         />
+
+        <Modal visible={panel === 'quests'} transparent animationType="slide" onRequestClose={() => setPanel(null)}>
+          <View style={styles.overlay}>
+            <View style={[styles.sheet, { maxHeight: '70%' }]}>
+              <ScrollView>
+                <QuestBoard quests={gm.questList()} onClaim={claimQuest} />
+              </ScrollView>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setPanel(null)}>
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
         <AlmanacModal
-          visible={almanacOpen}
+          visible={panel === 'almanac'}
           almanac={state.almanac}
-          onClose={() => setAlmanacOpen(false)}
+          onClose={() => setPanel(null)}
         />
         <Toast toast={toast} />
       </View>
@@ -159,37 +226,60 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#0a0f14' },
   screen: { flex: 1 },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 16 },
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 8,
+  hudTop: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8,
+    backgroundColor: 'rgba(8, 14, 10, 0.45)',
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
+  hudNight: { backgroundColor: 'rgba(4, 8, 20, 0.55)' },
+  hudLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  levelBadge: { backgroundColor: '#ffd166', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  levelText: { color: '#3a2c00', fontWeight: '900', fontSize: 13 },
+  barWrap: { width: 90 },
+  barTrack: { height: 8, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 4, overflow: 'hidden' },
+  barFill: { height: 8, backgroundColor: '#7cc46a', borderRadius: 4 },
+  weatherIcon: { fontSize: 20 },
+  hudRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconBtn: { padding: 4 },
+  iconText: { fontSize: 22 },
+  coinBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 5,
   },
-  tabActive: { backgroundColor: '#ffd166' },
-  tabText: { color: '#eaf5e6', fontWeight: '700', fontSize: 13 },
-  tabTextActive: { color: '#3a2c00' },
-  sectionTitle: { color: '#eaf5e6', fontSize: 16, fontWeight: '700', marginTop: 20, marginBottom: 8 },
-  barnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  coinText: { color: '#fff', fontWeight: '900', fontSize: 14 },
+  shopBtn: { backgroundColor: '#ffd166', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  shopBtnText: { fontSize: 18 },
+  bottomBar: {
+    position: 'absolute', bottom: 14, left: 14, right: 14,
+    flexDirection: 'row', gap: 10,
+  },
+  actionBtn: {
+    flex: 1, backgroundColor: 'rgba(10, 16, 12, 0.72)', borderRadius: 16,
+    alignItems: 'center', paddingVertical: 10,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+  },
+  actionBtnHot: { borderColor: '#ffd166', backgroundColor: 'rgba(60, 48, 8, 0.78)' },
+  actionEmoji: { fontSize: 24 },
+  actionLabel: { color: '#fff', fontSize: 11, fontWeight: '700', marginTop: 2 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  sheet: {
+    backgroundColor: '#17251a', borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    maxHeight: '80%', padding: 18, paddingBottom: 30,
+  },
+  sheetTitle: { color: '#fff', fontSize: 20, fontWeight: '900', marginBottom: 8 },
+  sectionLabel: { color: '#9fd08a', fontWeight: '800', marginTop: 12, marginBottom: 6, fontSize: 13 },
+  gridRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   barnItem: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12,
-    padding: 10,
-    alignItems: 'center',
-    minWidth: 84,
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12,
+    padding: 10, alignItems: 'center', minWidth: 86,
   },
-  barnEmoji: { fontSize: 28 },
-  barnQty: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  barnPrice: { color: '#d7ecd2', fontSize: 12 },
-  barnEmpty: { color: '#d7ecd2', fontStyle: 'italic' },
+  barnEmoji: { fontSize: 26 },
+  barnQty: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  barnPrice: { color: '#c9e6bd', fontSize: 11 },
+  barnEmpty: { color: '#c9e6bd', fontStyle: 'italic' },
+  closeBtn: { backgroundColor: '#ffd166', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  closeText: { color: '#3a2c00', fontWeight: '900' },
 });

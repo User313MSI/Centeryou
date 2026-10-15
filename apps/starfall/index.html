@@ -31,6 +31,7 @@
     </div>
     <button id="play-btn" class="play">▶ Play</button>
     <button id="restart-btn">⟲ Restart</button>
+    <button id="record-btn">⬇ Record Video</button>
     <span id="time">00:00 / 00:00</span>
   </div>
   <footer>Starfall Academy · © 2025 NovaLoom · Original score generated in-browser via WebAudio</footer>
@@ -220,6 +221,38 @@
     render(0);
     updateClock();
   }
+
+  const recordBtn = document.getElementById('record-btn');
+  let recorder = null;
+  const chunks = [];
+
+  recordBtn.addEventListener('click', () => {
+    if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+    Sound.ensure();
+    const stream = canvas.captureStream(30);
+    const mime = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+      .find((m) => MediaRecorder.isTypeSupported(m)) || '';
+    recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `starfall-${episode.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.webm`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      chunks.length = 0;
+      recorder = null;
+      recordBtn.textContent = '⬇ Record Video';
+    };
+    chunks.length = 0;
+    time = 0;
+    currentMood = null;
+    recorder.start(250);
+    recordBtn.textContent = '⏹ Stop & Download';
+    play();
+  });
 
   render(0);
   updateClock();
