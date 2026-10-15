@@ -23,10 +23,12 @@ export function newBoard(rng = Math.random) {
     for (let c = 0; c < COLS; c++) row.push(Math.floor(rng() * GEM_TYPES.length));
     board.push(row);
   }
-  while (findMatches(board).length > 0) {
+  let guard = 0;
+  while (findMatches(board).length > 0 && guard < 100) {
     for (const m of findMatches(board)) {
-      board[m.r][m.c] = Math.floor(rng() * GEM_TYPES.length);
+      board[m.r][m.c] = (board[m.r][m.c] + 1 + Math.floor(rng() * (GEM_TYPES.length - 1))) % GEM_TYPES.length;
     }
+    guard++;
   }
   return board;
 }
@@ -75,7 +77,9 @@ export function resolveBoard(board, rng = Math.random) {
   let totalCleared = 0;
   let cascades = 0;
   let matches = findMatches(b);
-  while (matches.length > 0) {
+  let guard = 0;
+  while (matches.length > 0 && guard < 100) {
+    guard++;
     totalCleared += matches.length;
     cascades++;
     const cleared = new Set(matches.map((m) => `${m.r},${m.c}`));
