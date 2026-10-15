@@ -1,0 +1,26 @@
+{
+  "brand": "NovaLoom",
+  "tagline": "Create. Play. Publish.",
+  "products": {
+    "harborcut": {
+      "name": "HarborCut",
+      "subtitle": "Video Editor"
+    },
+    "verdantfarm": {
+      "name": "Verdant Farm",
+      "subtitle": "Farm Game"
+    },
+    "aquapuzzle": {
+      "name": "Aqua Puzzle",
+      "subtitle": "Aquarium Match-3"
+    }
+  },
+  "palette": {
+    "accent": "#4f9cff",
+    "accentAlt": "#7c5cff",
+    "bg": "#101418",
+    "panel": "#1a2028",
+    "text": "#e8edf2"
+  },
+  "copyright": "© 2025 NovaLoom. All rights reserved."
+}

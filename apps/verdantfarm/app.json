@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Verdant Farm",
+    "slug": "verdantfarm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#87c56a",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#a8d78a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.novaloom.verdantfarm"
+    },
+    "android": {
+      "package": "com.novaloom.verdantfarm",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#a8d78a"
+      }
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  }
+}
