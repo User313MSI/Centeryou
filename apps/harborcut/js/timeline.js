@@ -149,6 +149,39 @@ const Timeline = (() => {
   function getSelected() { return selectedId; }
   function setSnapping(v) { snapping = v; }
 
+  document.addEventListener('dragover', (e) => {
+    if (e.dataTransfer.types.includes('application/x-harborcut-media')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  });
+
+  document.addEventListener('drop', (e) => {
+    const mediaId = e.dataTransfer.getData('application/x-harborcut-media');
+    if (!mediaId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const lane = e.target.closest('.track-lane');
+    const media = HarborState.state.media.find((m) => m.id === mediaId);
+    if (!lane || !media) return;
+    const track = HarborState.state.tracks.find((t) => t.id === lane.dataset.trackId);
+    if (!track) return;
+    const neededKind = media.type === 'audio' ? 'audio' : 'video';
+    if (track.kind !== neededKind) {
+      const alt = HarborState.state.tracks.find((t) => t.kind === neededKind);
+      if (!alt) return;
+      track = alt;
+    }
+    const rect = lane.getBoundingClientRect();
+    const start = snap(Math.max(0, xToTime(e.clientX - rect.left)), null);
+    const clip = Engine.addClip(track.id, media, start);
+    if (clip) {
+      select(clip.id);
+      App.renderInspector();
+      HarborState.notify();
+    }
+  });
+
   document.addEventListener('mousedown', (e) => {
     const handle = e.target.closest('.clip-handle');
     if (handle) {

@@ -85,6 +85,10 @@ const App = (() => {
           <div class="pool-name">${escapeHtml(media.name)}</div>
           <div class="pool-meta">${media.type} · ${media.duration ? media.duration.toFixed(1) + 's' : '—'}</div>
         </div>`;
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('application/x-harborcut-media', media.id);
+        e.dataTransfer.effectAllowed = 'copy';
+      });
       item.addEventListener('dblclick', () => {
         const track = HarborState.state.tracks.find((t) => t.kind === (media.type === 'audio' ? 'audio' : 'video'));
         if (!track) return;
@@ -321,6 +325,7 @@ const App = (() => {
       Timeline.renderTracks();
       renderPool();
       updateTimecode();
+      Preview.drawFrame(playhead);
     });
 
     initShortcuts();

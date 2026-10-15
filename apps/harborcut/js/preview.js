@@ -10,6 +10,11 @@ const Preview = (() => {
       el.src = media.url;
       el.muted = media.type === 'image';
       el.preload = 'auto';
+      el.addEventListener('loadeddata', () => {
+        if (typeof App !== 'undefined' && App.playhead) {
+          try { drawFrame(App.playhead()); } catch (e) {}
+        }
+      });
     }
     mediaEls.set(media.id, el);
     return el;
@@ -82,6 +87,11 @@ const Preview = (() => {
   function getImg(media) {
     if (media._img) return media._img;
     const img = new Image();
+    img.onload = () => {
+      if (typeof App !== 'undefined' && App.playhead) {
+        try { drawFrame(App.playhead()); } catch (e) {}
+      }
+    };
     img.src = media.url;
     media._img = img;
     return img;
