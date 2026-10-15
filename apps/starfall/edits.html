@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Starfall Edits — Dynamic AMV-style Montages</title>
+<style>
+  body { margin: 0; background: #05070f; color: #e8ecf8; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+  h1 { margin: 18px 0 4px; }
+  h1 .accent { color: #ff5c8a; }
+  .sub { color: #8b98b5; font-size: 13px; margin-bottom: 14px; }
+  canvas { width: min(94vw, 720px); border-radius: 10px; background: #000; box-shadow: 0 8px 40px rgba(255, 90, 140, 0.2); }
+  #controls { display: flex; gap: 10px; align-items: center; margin: 14px 0 8px; flex-wrap: wrap; justify-content: center; }
+  button { background: #1c1030; color: #e8ecf8; border: 1px solid #4a3070; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+  button:hover { background: #2a1a48; }
+  button.play { background: #ff5c8a; color: #fff; font-weight: 800; border-color: #ff5c8a; }
+  button.active { border-color: #ff5c8a; color: #ff9cb5; }
+  #time { font-family: monospace; color: #8b98b5; }
+  footer { color: #55617e; font-size: 12px; margin: 6px 0 24px; }
+  .desc { color: #a8b2cc; font-size: 13px; max-width: 560px; text-align: center; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+  <h1>⚡ Starfall <span class="accent">Edits</span></h1>
+  <div class="sub">Three dynamic montages — beat-synced cuts, punch-ins, shakes, kinetic text</div>
+  <canvas id="screen" width="720" height="1280"></canvas>
+  <div id="controls">
+    <button id="e1" class="active">1 · Heroic</button>
+    <button id="e2">2 · Emotional</button>
+    <button id="e3">3 · Hype</button>
+    <button id="play" class="play">▶ Play</button>
+    <button id="export">⬇ Record WebM</button>
+    <span id="time">0.0s</span>
+  </div>
+  <div class="desc" id="desc"></div>
+  <footer>Edits rendered 100% in-browser from the Starfall Academy animation engine · © 2025 NovaLoom</footer>
+
+<script src="audio.js"></script>
+<script src="characters.js"></script>
+<script src="stage.js"></script>
+<script>
+(() => {
+  const W = 720, H = 1280;
+  const canvas = document.getElementById('screen');
+  const ctx = canvas.getContext('2d');
+  const layer = document.createElement('canvas');
+  layer.width = 1280; layer.height = 720;
+  const lctx = layer.getContext('2d');
+
+  const EDIT_DESCS = {
+    e1: 'HEROIC — soaring strings, cut on the downbeat, slow push-ins that punch on impact frames.',
+    e2: 'EMOTIONAL — half-time keys, dissolves, breathing zoom, soft shake on the drop.',
+    e3: 'HYPE — double-time, rapid whip-cuts, glitch flashes, kinetic text on every kick.',
+  };
+
+  const SCENES = [
+    (t) => { Stage.nightSky(lctx, t); Characters.drawLumi(lctx, 640, 520, t, { scale: 1.4 }); Characters.drawNix(lctx, 1000, 300, t); },
+    (t) => { Stage.cityBackdrop(lctx, t); },
+    (t) => { Stage.starbridge(lctx, t); Characters.drawKaito(lctx, 540, 560, t, { scale: 1.2 }); },
+    (t) => { Stage.academyRoom(lctx, t); Characters.drawOrin(lctx, 820, 480, t, { scale: 1.3 }); },
+    (t) => { Stage.nightSky(lctx, t); Characters.drawKaito(lctx, 520, 540, t, { scale: 1.3 }); Characters.drawLumi(lctx, 340, 520, t, { scale: 1.3 }); },
+    (t) => { Stage.starbridge(lctx, t); Characters.drawLumi(lctx, 420, 520, t, { scale: 1.1 }); },
+    (t) => { Stage.cityBackdrop(lctx, t); Characters.drawNix(lctx, 500, 400, t, { scale: 1.5 }); },
+    (t) => { Stage.nightSky(lctx, t); Characters.drawStarShape(lctx, 640, 300, 60 + Math.sin(t * 3) * 12); lctx.fillStyle = '#ffd98a'; lctx.fill(); },
+  ];
+
+  const TEXTS = [
+    'STARFALL', 'ACADEMY', 'SHE TEARS THE SKY', 'AND THE SKY LIKES IT',
+    'NO KEEPERS MADE THE NIGHT GROW', 'UNTIL HER', 'SEASON ONE',
+  ];
+
+  function buildEdit(id) {
+    if (id === 'e1') {
+      const beats = [];
+      const tempo = 0.42;
+      for (let i = 0; i < 26; i++) {
+        beats.push({ at: i * tempo, scene: i % 8, punch: i % 4 === 0, shake: i % 8 === 7, zoomFrom: i % 2 ? 1.0 : 1.15, text: i % 7 === 3 ? TEXTS[(i / 7) | 0] : null });
+      }
+      return { beats, duration: 26 * tempo, tempo, mood: 'epic', title: 'HEROIC' };
+    }
+    if (id === 'e2') {
+      const beats = [];
+      const tempo = 0.85;
+      for (let i = 0; i < 14; i++) {
+        beats.push({ at: i * tempo, scene: (i * 3) % 8, punch: false, shake: i === 8, zoomFrom: 1.0, breathe: true, text: i % 4 === 1 ? TEXTS[2 + ((i / 4) | 0)] : null });
+      }
+      return { beats, duration: 14 * tempo, tempo, mood: 'sad', title: 'EMOTIONAL' };
+    }
+    const beats = [];
+    const tempo = 0.21;
+    for (let i = 0; i < 50; i++) {
+      beats.push({
+        at: i * tempo, scene: (i * 5) % 8,
+        punch: i % 2 === 0, shake: i % 4 === 3, glitch: i % 6 === 5,
+        zoomFrom: 1 + (i % 3) * 0.2,
+        text: i % 5 === 0 ? TEXTS[i % TEXTS.length] : null,
+      });
+    }
+    return { beats, duration: 50 * tempo, tempo, mood: 'happy', title: 'HYPE' };
+  }
+
+  let edit = buildEdit('e1');
+  let playing = false;
+  let time = 0;
+  let raf = null;
+  let last = 0;
+  let recorder = null;
+  const chunks = [];
+
+  function currentBeat(t) {
+    let b = edit.beats[0];
+    for (const beat of edit.beats) if (beat.at <= t) b = beat;
+    return b;
+  }
+
+  function render(t) {
+    const beat = currentBeat(t);
+    const local = t - beat.at;
+    const p = Math.min(1, local / edit.tempo);
+
+    SCENES[beat.scene](t);
+
+    const zoom = beat.breathe
+      ? 1 + Math.sin(t * 1.4) * 0.03
+      : beat.punch
+        ? beat.zoomFrom + p * 0.18
+        : beat.zoomFrom - p * 0.08;
+
+    let shakeX = 0, shakeY = 0;
+    if (beat.shake) {
+      const decay = Math.max(0, 1 - p * 3);
+      shakeX = (Math.random() - 0.5) * 24 * decay;
+      shakeY = (Math.random() - 0.5) * 24 * decay;
+    }
+
+    ctx.save();
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    const scale = Math.max(W / 1280, H / 720) * zoom;
+    const dw = 1280 * scale, dh = 720 * scale;
+    ctx.drawImage(layer, (W - dw) / 2 + shakeX, (H - dh) / 2 + shakeY, dw, dh);
+
+    if (beat.punch && p < 0.06) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (beat.glitch && p < 0.3) {
+      for (let i = 0; i < 6; i++) {
+        const gy = Math.random() * H;
+        const gh = 8 + Math.random() * 30;
+        ctx.drawImage(canvas, 0, gy, W, gh, (Math.random() - 0.5) * 40, gy, W, gh);
+      }
+      ctx.fillStyle = 'rgba(255,60,120,0.08)';
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // letterbox
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, 90);
+    ctx.fillRect(0, H - 90, W, 90);
+
+    if (beat.text) {
+      const tp = Math.min(1, p * 3);
+      const size = 64;
+      ctx.font = `900 ${size}px "Segoe UI", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillText(beat.text, W / 2 + 3, H / 2 + 3);
+      ctx.fillStyle = '#fff';
+      const slide = (1 - tp) * 60;
+      ctx.fillText(beat.text, W / 2 + slide, H / 2);
+      ctx.strokeStyle = '#ff5c8a';
+      ctx.lineWidth = 2;
+      ctx.strokeText(beat.text, W / 2 + slide, H / 2);
+      ctx.textAlign = 'left';
+    }
+
+    ctx.restore();
+  }
+
+  function loop(now) {
+    if (!playing) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    time += dt;
+    if (time >= edit.duration) { stop(); time = 0; }
+    render(time);
+    document.getElementById('time').textContent = time.toFixed(1) + 's';
+    raf = requestAnimationFrame(loop);
+  }
+
+  function play() {
+    if (playing) return;
+    Sound.ensure();
+    Sound.startMusic(edit.mood);
+    playing = true;
+    last = performance.now();
+    document.getElementById('play').textContent = '⏸';
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() {
+    playing = false;
+    Sound.stopMusic();
+    document.getElementById('play').textContent = '▶';
+    if (raf) cancelAnimationFrame(raf);
+    if (recorder && recorder.state === 'recording') recorder.stop();
+  }
+
+  function load(id) {
+    stop();
+    time = 0;
+    edit = buildEdit(id);
+    document.querySelectorAll('#controls button:not(.play):not(#export)').forEach((b) => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('desc').textContent = EDIT_DESCS[id];
+    render(0);
+  }
+
+  document.getElementById('play').addEventListener('click', () => (playing ? stop() : play()));
+  ['e1', 'e2', 'e3'].forEach((id) => document.getElementById(id).addEventListener('click', () => load(id)));
+
+  document.getElementById('export').addEventListener('click', () => {
+    if (recorder) { recorder.stop(); return; }
+    const stream = canvas.captureStream(30);
+    const mime = ['video/webm;codecs=vp9', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m));
+    recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `starfall-edit-${edit.title.toLowerCase()}.webm`;
+      a.click();
+      recorder = null;
+      chunks.length = 0;
+      document.getElementById('export').textContent = '⬇ Record WebM';
+    };
+    chunks.length = 0;
+    recorder.start(250);
+    document.getElementById('export').textContent = '⏹ Stop recording';
+    time = 0;
+    play();
+  });
+
+  document.getElementById('desc').textContent = EDIT_DESCS.e1;
+  render(0);
+})();
+</script>
+</body>
+</html>
