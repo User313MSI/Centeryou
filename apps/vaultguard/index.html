@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaultGuard — Antivirus & Threat Protection</title>
+  <meta name="description" content="VaultGuard — real-time antivirus with quick/full/custom scans, quarantine and scan history.">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <a href="#content" class="skip-link">Skip to content</a>
+  <header id="topbar">
+    <div class="brand" aria-label="VaultGuard">🛡 VaultGuard</div>
+    <nav id="nav" aria-label="Main navigation">
+      <button class="nav-btn active" data-view="dashboard" aria-current="page">Dashboard</button>
+      <button class="nav-btn" data-view="scan">Scan</button>
+      <button class="nav-btn" data-view="realtime">Real-Time</button>
+      <button class="nav-btn" data-view="quarantine">Quarantine</button>
+      <button class="nav-btn" data-view="history">History</button>
+      <button class="nav-btn" data-view="settings">Settings</button>
+    </nav>
+    <div class="spacer"></div>
+    <span id="shield-badge" class="badge" role="status">Protection ON</span>
+  </header>
+
+  <main id="content" tabindex="-1">
+    <section id="view-dashboard" class="view active" aria-label="Dashboard">
+      <div class="health-card">
+        <div class="health-ring">
+          <svg viewBox="0 0 120 120" width="150" height="150" role="img" aria-label="System health score">
+            <circle cx="60" cy="60" r="52" class="ring-bg"></circle>
+            <circle id="ring-fg" cx="60" cy="60" r="52" class="ring-fg"></circle>
+          </svg>
+          <div class="ring-center"><span id="health-score" aria-live="polite">100</span><small id="health-label">Excellent</small></div>
+        </div>
+        <div class="health-info">
+          <h2>System Health</h2>
+          <p id="health-detail">Run a scan to assess your system.</p>
+          <ul class="stat-grid">
+            <li><span id="stat-scanned">0</span><small>Files scanned</small></li>
+            <li><span id="stat-threats">0</span><small>Threats found</small></li>
+            <li><span id="stat-quarantined">0</span><small>Quarantined</small></li>
+            <li><span id="stat-uptime">—</span><small>Real-time uptime</small></li>
+          </ul>
+          <p class="sr-only" id="live-region" aria-live="polite"></p>
+          <div class="quick-actions">
+            <button id="btn-quick-scan" class="vg-btn primary">⚡ Quick Scan</button>
+            <button id="btn-full-scan" class="vg-btn">🔎 Full Scan</button>
+            <button id="btn-custom-scan" class="vg-btn">📁 Custom Scan</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Recent activity</div>
+        <div id="activity-list" class="activity-list"><div class="empty">No activity yet</div></div>
+      </div>
+    </section>
+
+    <section id="view-scan" class="view" aria-label="Scan">
+      <div class="panel">
+        <div class="panel-title">Scan</div>
+        <div class="scan-controls">
+          <button id="btn-scan-quick" class="vg-btn primary">⚡ Quick Scan</button>
+          <button id="btn-scan-full" class="vg-btn">🔎 Full Scan</button>
+          <button id="btn-scan-custom" class="vg-btn">📁 Choose folders…</button>
+          <button id="btn-scan-stop" class="vg-btn danger" hidden>⏹ Stop</button>
+        </div>
+        <div id="scan-targets" class="scan-targets" aria-label="Custom scan targets"></div>
+        <div class="progress-wrap" id="scan-progress-wrap" hidden>
+          <div class="progress-bar" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="scan-progressbar"><div id="scan-progress-fill"></div></div>
+          <div class="progress-meta"><span id="scan-progress-text">0 / 0</span><span id="scan-current"></span></div>
+        </div>
+        <div id="scan-results" class="results" aria-live="polite">
+          <div class="empty">No scan run yet</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-realtime" class="view" aria-label="Real-time protection">
+      <div class="panel">
+        <div class="panel-title">Real-Time Protection</div>
+        <div class="rt-controls">
+          <label class="switch"><input type="checkbox" id="rt-toggle" checked><span aria-hidden="true"></span> Enabled</label>
+          <button id="btn-rt-add" class="vg-btn">+ Watch folder</button>
+          <span id="rt-status" class="muted" role="status">Monitoring</span>
+        </div>
+        <div id="rt-dirs" class="chip-list"></div>
+        <div class="panel-title" style="margin-top:10px">Events</div>
+        <div id="rt-events" class="events"><div class="empty">No events yet</div></div>
+      </div>
+    </section>
+
+    <section id="view-quarantine" class="view" aria-label="Quarantine">
+      <div class="panel">
+        <div class="panel-title">Quarantine</div>
+        <div class="scan-controls">
+          <button id="btn-q-refresh" class="vg-btn">↻ Refresh</button>
+          <button id="btn-q-clear" class="vg-btn danger">Clear list</button>
+        </div>
+        <div id="quarantine-list" class="results"><div class="empty">Quarantine is empty</div></div>
+      </div>
+    </section>
+
+    <section id="view-history" class="view" aria-label="Scan history">
+      <div class="panel">
+        <div class="panel-title">Scan History</div>
+        <div class="scan-controls">
+          <button id="btn-h-clear" class="vg-btn danger">Clear history</button>
+          <button id="btn-h-export" class="vg-btn">⬇ Export report</button>
+        </div>
+        <div id="history-list" class="results"><div class="empty">No scans recorded</div></div>
+      </div>
+    </section>
+
+    <section id="view-settings" class="view" aria-label="Settings">
+      <div class="panel">
+        <div class="panel-title">Settings</div>
+        <div class="settings-grid">
+          <label class="set-row"><span>Real-time protection</span><input type="checkbox" id="set-rt" checked></label>
+          <label class="set-row"><span>Auto-quarantine infected files</span><input type="checkbox" id="set-autoq" checked></label>
+          <label class="set-row"><span>Scan archives (slower)</span><input type="checkbox" id="set-archives"></label>
+          <label class="set-row"><span>Notifications</span><input type="checkbox" id="set-notif" checked></label>
+          <div class="set-row"><span>Signature database</span><span id="sig-version" class="mono"></span></div>
+          <div class="set-row"><span>Quarantine location</span><span id="q-location" class="mono"></span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" hidden role="alert" aria-live="assertive"></div>
+
+  <script src="js/security.js"></script>
+  <script src="js/signatures.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/quarantine.js"></script>
+  <script src="js/realtime.js"></script>
+  <script src="js/shield.js"></script>
+  <script src="js/dom.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

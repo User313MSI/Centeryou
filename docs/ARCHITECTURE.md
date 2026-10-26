@@ -9,7 +9,8 @@ Dev-Apps/
     ├── harborcut/           # Desktop video editor (Electron)
     ├── verdantfarm/          # Mobile farm game (React Native + Expo)
     ├── aquapuzzle/           # Mobile match-3 + aquarium (React Native + Expo)
-    └── starfall/             # Animated series + AMV edits (web, Canvas + WebAudio)
+    ├── starfall/             # Animated series + AMV edits (web, Canvas + WebAudio)
+    └── vaultguard/           # Desktop antivirus (Electron, vanilla JS engine)
 ```
 
 ## Shared principles
@@ -25,6 +26,7 @@ Dev-Apps/
 | Aqua Puzzle | 10 (Jest) | ✅ all pass — includes a fix for an infinite-cascade engine bug found by the tests |
 | HarborCut | 12 (node) | ✅ all pass — state, undo/redo, engine ops |
 | Starfall | 7 (node) | ✅ all pass — episode timings, overlaps, coverage |
+| VaultGuard | 162 (node) | ✅ all pass — engine, security audits, performance audits, power audits |
 
 ## Known environment limits (honest notes)
 - Emulators cannot run in the build sandbox (no KVM). The games are tested at the logic level; run them on device/emulator with the instructions in each doc.

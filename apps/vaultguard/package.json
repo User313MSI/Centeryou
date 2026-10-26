@@ -1,0 +1,41 @@
+{
+  "name": "vaultguard",
+  "productName": "VaultGuard",
+  "version": "1.0.0",
+  "description": "VaultGuard — a real-time antivirus and threat protection suite by NovaLoom",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/run-tests.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.novaloom.vaultguard",
+    "productName": "VaultGuard",
+    "directories": { "output": "release" },
+    "files": ["main.js", "preload.js", "index.html", "css/**", "js/**", "assets/**"],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VaultGuard"
+    },
+    "mac": { "target": ["dmg"], "category": "public.app-category.utilities", "icon": "assets/icon.png" },
+    "linux": { "target": ["AppImage", "deb"], "category": "Utility", "icon": "assets/icon.png" }
+  },
+  "author": "NovaLoom",
+  "license": "UNLICENSED",
+  "private": true
+}

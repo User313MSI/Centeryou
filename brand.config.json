@@ -13,6 +13,10 @@
     "aquapuzzle": {
       "name": "Aqua Puzzle",
       "subtitle": "Aquarium Match-3"
+    },
+    "vaultguard": {
+      "name": "VaultGuard",
+      "subtitle": "Antivirus & Threat Protection"
     }
   },
   "palette": {
