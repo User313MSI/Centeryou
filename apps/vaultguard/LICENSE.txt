@@ -1,0 +1,71 @@
+VAULTGUARD — END USER LICENSE AGREEMENT (EULA)
+Copyright (c) NovaLoom. All rights reserved.
+
+IMPORTANT — READ CAREFULLY. This End User License Agreement ("Agreement") is a legal
+agreement between you (an individual or a single entity) and NovaLoom ("Vendor") for the
+VaultGuard software product, including any associated media, printed materials and online
+or electronic documentation ("Software").
+
+BY INSTALLING, COPYING OR OTHERWISE USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS
+OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. GRANT OF LICENSE
+Subject to the terms of this Agreement and to activation with a valid license key, Vendor
+grants you a non-exclusive, non-transferable, non-sublicensable license to install and use
+the Software on the number of machines ("seats") covered by your license plan:
+  - VaultGuard Pro:      1 seat
+  - VaultGuard Team:    10 seats
+  - VaultGuard Business: 50 seats
+
+2. FREE TRIAL
+Every new installation includes a free trial period of fourteen (14) days with full
+features. When the trial expires, the Software must be activated with a valid license key
+to continue full operation. Vendor may modify or discontinue the trial at any time.
+
+3. LICENSE KEY AND ACTIVATION
+The Software is licensed, not sold. Your license key is bound to the machine on which it is
+activated. You may not share, resell, transfer or disclose your license key. Vendor may
+revoke a license key that is used in violation of this Agreement.
+
+4. UPDATES
+During an active license period, you are entitled to updates delivered through the signed
+update channel. Updates are provided "as is" and may be modified or withdrawn at any time.
+
+5. RESTRICTIONS
+You may not: (a) reverse engineer, decompile or disassemble the Software, except to the
+extent permitted by applicable law; (b) rent, lease, lend or sublicense the Software;
+(c) remove or alter any proprietary notices; (d) use the Software to develop a competing
+product.
+
+6. PRIVACY
+VaultGuard scans files on your machine locally to detect threats. Scan results are stored
+locally. The Software only contacts the Vendor's update server to check for updates, and
+only over HTTPS.
+
+7. DISCLAIMER OF WARRANTIES
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NON-INFRINGEMENT. VENDOR DOES NOT WARRANT THAT THE SOFTWARE WILL BE
+ERROR-FREE OR UNINTERRUPTED, OR THAT ALL DEFECTS CAN BE CORRECTED.
+
+8. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL VENDOR BE LIABLE FOR ANY
+INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS,
+DATA OR GOODWILL, ARISING FROM THE USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF
+VENDOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. IN NO EVENT SHALL VENDOR'S
+TOTAL LIABILITY EXCEED THE AMOUNT PAID BY YOU FOR THE LICENSE.
+
+9. TERMINATION
+This Agreement terminates automatically if you fail to comply with its terms. Upon
+termination you must stop using and uninstall the Software and destroy all copies.
+
+10. GOVERNING LAW
+This Agreement is governed by the laws of France, without regard to conflict-of-law
+principles. Any dispute shall be brought before the competent courts of Paris, France.
+
+11. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between you and Vendor regarding the
+Software and supersedes all prior agreements.
+
+NovaLoom — VaultGuard Antivirus & Threat Protection
+https://novaloom.com
