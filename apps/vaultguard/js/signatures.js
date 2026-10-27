@@ -3,7 +3,7 @@ const Signatures = (() => {
 
   const HEX_PATTERNS = [
     { id: 'EICAR-TEST', name: 'Test.EICAR', severity: 'test', weight: 100, hex: '58354F2150254041505B345C505A58353428505E2937434329377D2445494341522D5354414E444152442D414E544956495255532D544553542D46494C452124482B482A' },
-    { id: 'EICAR-STD-68', name: 'Test.EICAR (standard 68-byte string)', severity: 'test', weight: 100, text: 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' },
+    { id: 'EICAR-STD-68', name: 'Test.EICAR (standard 68-byte string)', severity: 'test', weight: 100, textHex: '58354F2150254041505B345C505A58353428505E2937434329377D2445494341522D5354414E444152442D414E544956495255532D544553542D46494C452124482B482A' },
   ];
 
   const URL_PATTERNS = [
@@ -113,6 +113,9 @@ const Signatures = (() => {
     const hits = [];
     if (!bytes || !bytes.length) return hits;
     const text = bytesToLatin1(bytes);
+    for (const p of HEX_PATTERNS) {
+      if (p.textHex && text.indexOf(decodeHex(p.textHex)) !== -1) hits.push(p);
+    }
     for (const p of TEXT_PATTERNS) {
       p.re.lastIndex = 0;
       if (p.re.test(text)) hits.push(p);

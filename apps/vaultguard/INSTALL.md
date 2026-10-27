@@ -72,3 +72,42 @@ Un raccourci Bureau + menu Démarrer sont créés automatiquement.
 | Le setup ne se lance pas / « Windows a protégé votre ordinateur » | Clic sur « Informations complémentaires » → « Exécuter quand même » (normal tant que l'exe n'est pas signé avec un certificat) |
 | `npm install` échoue | `npm cache clean --force` puis relance `npm install` |
 | Icône manquante dans le setup | Vérifie que `assets\icon.ico` existe (présent dans le dépôt) |
+
+## 8. Windows Defender bloque un fichier du projet (EICAR / faux positif)
+
+C'est **normal** : le dépôt contient des signatures de test (EICAR, motifs malveillants)
+pour valider le moteur antivirus. Windows Defender les détecte comme un vrai virus et
+met le fichier en quarantaine.
+
+### Solution recommandée : exclure le dossier de développement
+
+Ouvre **PowerShell en administrateur** et colle :
+
+```powershell
+Add-MpPreference -ExclusionPath "$env:USERPROFILE\Dev-Apps"
+```
+
+> Sans cette exclusion, Defender supprimera aussi l'exécutable compilé de VaultGuard
+> (`release\win-unpacked\VaultGuard.exe`) pendant le build.
+
+### Si un fichier a déjà été mis en quarantaine
+
+```powershell
+# Voir les menaces en quarantaine
+Get-MpThreat | Select-Object ThreatName, Resources
+
+# Restaurer un fichier (remplace <chemin du fichier> par le chemin indiqué)
+Restore-MpThreat -ThreatID <id>
+```
+
+Ou via l'interface : **Sécurité Windows → Protection contre les virus et menaces →
+Historique de protection → Menaces en quarantaine → Restaurer**.
+
+### Vérifier que tout est OK après exclusion
+
+```powershell
+cd $env:USERPROFILE\Dev-Apps\apps\vaultguard
+npm test
+```
+
+Tu dois voir `0 failed` sur les 6 suites.

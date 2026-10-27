@@ -64,8 +64,12 @@ function strBytes(s) {
 }
 
 function eicarBytes() {
-  const s = 'X5O!P%@AP[4' + String.fromCharCode(92) + 'PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
-  return strBytes(s);
+  // Built from hex so the source file itself never contains the EICAR test string
+  // (otherwise Windows Defender quarantines this test file on developer machines).
+  const hex = '58354F2150254041505B345C505A58353428505E2937434329377D2445494341522D5354414E444152442D414E544956495255532D544553542D46494C452124482B482A';
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
 }
 
 async function main() {
@@ -764,7 +768,7 @@ async function auditSecurityExtra() {
       loadScript('signatures.js', sandbox);
       loadScript('scanner.js', sandbox);
       const Sc = sandbox.Scanner;
-      const plain = Sc.analyzeBytes('eicar.txt', strBytes('X5O!P%@AP[4' + String.fromCharCode(92) + 'PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'), 68);
+      const plain = Sc.analyzeBytes('eicar.txt', eicarBytes(), 68);
       assert(plain.verdict === 'test' && plain.testHit);
     }],
     ['sec-audit: double-extension and lure names flagged', () => {
