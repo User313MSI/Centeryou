@@ -254,6 +254,7 @@ const Scanner = (() => {
     let done = 0;
     let cursor = 0;
     let lastNotify = 0;
+    const isExcluded = opts.isExcluded || ((p, n) => (typeof Exclusions !== 'undefined' && Exclusions.isExcluded(p, n)));
 
     async function worker() {
       while (cursor < total) {
@@ -265,6 +266,10 @@ const Scanner = (() => {
           name: Security.clampString(meta && meta.name, 200) || 'file',
           size: Security.clampInt(meta && meta.size, 0, Number.MAX_SAFE_INTEGER, 0),
         };
+        if (safeMeta.path && isExcluded(safeMeta.path, safeMeta.name)) {
+          done++;
+          continue;
+        }
         try {
           const r = await scanFile(safeMeta, readHead);
           results.push(r);

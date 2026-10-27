@@ -14,9 +14,13 @@ const App = (() => {
   const scanTargets = [];
   const startedAt = Date.now();
 
+  const ransomGuard = RansomGuard.createGuard();
+
   const monitor = Realtime.createMonitor({
     listFiles: (dir, maxFiles, maxDepth) => window.vaultguard.listFiles({ dir, maxFiles, maxDepth }),
     riskExt: (ext) => (Signatures.EXTENSION_RISK[ext] || 0),
+    onNewFile: (f) => { if (ransomGuard.state.enabled) ransomGuard.recordNewFile(f); },
+    onModified: (f) => { if (ransomGuard.state.enabled) ransomGuard.recordRename({ path: f.path, name: f.name, newName: f.name }); },
   });
 
   const renderDashboardDebounced = (() => {
@@ -97,13 +101,187 @@ const App = (() => {
     if (name === 'quarantine') renderQuarantine();
     if (name === 'history') renderHistory();
     if (name === 'realtime') renderRealtime();
+    if (name === 'ransomware') renderRansomware();
+    if (name === 'schedule') renderSchedule();
     const main = $('content');
     if (main && typeof main.focus === 'function') main.focus({ preventScroll: true });
     announce(viewLabel(name));
   }
 
   function viewLabel(name) {
-    return ({ dashboard: 'Dashboard', scan: 'Scan', realtime: 'Real-time protection', quarantine: 'Quarantine', history: 'Scan history', settings: 'Settings' })[name] || name;
+    return ({
+      dashboard: 'Dashboard', scan: 'Scan', processes: 'Process protection',
+      network: 'Network protection', realtime: 'Real-time protection', ransomware: 'Ransomware protection',
+      boot: 'Startup & persistence', schedule: 'Scheduled scans', quarantine: 'Quarantine',
+      history: 'Scan history', settings: 'Settings',
+    })[name] || name;
+  }
+
+  function nativeNotify(title, body) {
+    if (settings.notifications && window.vaultguard && window.vaultguard.notify) {
+      try { window.vaultguard.notify(title, body); } catch (e) {}
+    }
+  }
+
+  function refreshProcesses() {
+    if (!window.vaultguard || !window.vaultguard.listProcesses) { toast('Requires the desktop app', true); return; }
+    $('proc-list').innerHTML = '';
+    Dom.replaceChildren($('proc-list'), skeletonRows(6));
+    window.vaultguard.listProcesses().then((res) => {
+      if (!res || !res.ok) { Dom.replaceChildren($('proc-list'), [Dom.emptyState('Could not list processes')]); return; }
+      const { processes, summary } = ProcessGuard.scanProcesses(res.processes);
+      $('proc-summary').textContent = `${summary.total} processes · ${summary.flagged.length} flagged (${summary.suspicious} suspicious, ${summary.malicious} malicious)`;
+      const flagged = processes.filter((p) => p.risk !== 'clean').sort((a, b) => b.score - a.score);
+      const shown = flagged.length ? flagged : processes.slice(0, 100);
+      if (!shown.length) { Dom.replaceChildren($('proc-list'), [Dom.emptyState('No processes')]); return; }
+      const children = [];
+      if (flagged.length) children.push(Dom.el('div', { class: 'empty', style: { textAlign: 'left' }, text: `${flagged.length} flagged process(es) — showing flagged first` }));
+      for (const p of shown.slice(0, 300)) {
+        children.push(Dom.el('div', { class: 'result-row' }, [
+          Dom.pill(p.risk, p.risk === 'malicious' ? 'infected' : p.risk === 'suspicious' ? 'suspicious' : p.risk === 'monitor' ? 'test' : 'clean'),
+          Dom.el('span', { class: 'r-path', title: p.path }, [
+            document.createTextNode(`${p.name} (pid ${p.pid})`),
+            Dom.el('div', { class: 'muted', text: p.path || p.cmdline.slice(0, 120) }),
+            Dom.scoreBar(p.score),
+          ]),
+          Dom.el('span', { class: 'r-reasons', text: p.findings.join('; ') || 'clean' }),
+          Dom.el('span', { class: 'r-actions' }, p.risk === 'malicious' || p.risk === 'suspicious' ? [
+            Dom.el('button', { class: 'vg-btn danger', text: 'Kill', onclick: () => killProc(p) }),
+          ] : []),
+        ]));
+      }
+      Dom.replaceChildren($('proc-list'), children);
+    });
+  }
+
+  async function killProc(p) {
+    if (!confirm(`Kill process ${p.name} (pid ${p.pid})?`)) return;
+    const res = await window.vaultguard.killProcess({ pid: p.pid });
+    if (res && res.ok) { toast(`Killed ${p.name}`); refreshProcesses(); }
+    else toast('Kill failed: ' + (res && res.error ? res.error : 'unknown'), true);
+  }
+
+  function refreshNetwork() {
+    if (!window.vaultguard || !window.vaultguard.listConnections) { toast('Requires the desktop app', true); return; }
+    Dom.replaceChildren($('net-list'), skeletonRows(6));
+    window.vaultguard.listConnections().then((res) => {
+      if (!res || !res.ok) { Dom.replaceChildren($('net-list'), [Dom.emptyState('Could not list connections')]); return; }
+      const { connections, summary } = NetGuard.scanConnections(res.connections);
+      $('net-summary').textContent = `${summary.total} connections · ${summary.established} established · ${summary.flagged.length} flagged`;
+      const flagged = connections.filter((c) => c.risk !== 'clean').sort((a, b) => b.score - a.score);
+      const shown = flagged.length ? flagged : connections.slice(0, 100);
+      if (!shown.length) { Dom.replaceChildren($('net-list'), [Dom.emptyState('No connections')]); return; }
+      const children = [];
+      if (flagged.length) children.push(Dom.el('div', { class: 'empty', style: { textAlign: 'left' }, text: `${flagged.length} flagged connection(s) — showing flagged first` }));
+      for (const c of shown.slice(0, 300)) {
+        children.push(Dom.el('div', { class: 'result-row' }, [
+          Dom.pill(c.risk, c.risk === 'malicious' ? 'infected' : c.risk === 'suspicious' ? 'suspicious' : c.risk === 'monitor' ? 'test' : 'clean'),
+          Dom.el('span', { class: 'r-path', title: `${c.local}:${c.localPort} → ${c.remote}:${c.remotePort}` }, [
+            document.createTextNode(`${c.process || 'pid ' + c.pid} → ${c.remoteHost || c.remote}:${c.remotePort}`),
+            Dom.el('div', { class: 'muted', text: `${c.protocol} ${c.state} · local ${c.localPort}` }),
+            Dom.scoreBar(c.score),
+          ]),
+          Dom.el('span', { class: 'r-reasons', text: c.findings.join('; ') || 'clean' }),
+          Dom.el('span', { class: 'r-actions' }),
+        ]));
+      }
+      Dom.replaceChildren($('net-list'), children);
+    });
+  }
+
+  function renderRansomware() {
+    $('rg-toggle').checked = ransomGuard.state.enabled;
+    const st = ransomGuard.status();
+    const a = st.assessment;
+    $('rg-status').textContent = st.tripped ? 'ALERT: ransomware-like activity detected' : (ransomGuard.state.enabled ? 'Monitoring' : 'Paused');
+    $('rg-status').style.color = st.tripped ? 'var(--danger)' : '';
+    $('rg-assessment').textContent = `Risk: ${a.risk} (score ${a.score}) · ${a.cryptoRenames} crypto-extension renames · ${a.notes} ransom note(s) found`;
+    const dirs = $('rg-dirs');
+    Dom.replaceChildren(dirs, st.protectedDirs.length ? st.protectedDirs.map((d) => Dom.chip(d, () => {})) : [Dom.el('span', { class: 'muted', text: 'No protected folders (real-time monitor feeds this view)' })]);
+    const ev = ransomGuard.state.events;
+    const events = $('rg-events');
+    if (!ev.length) { Dom.replaceChildren(events, [Dom.emptyState('No events yet')]); return; }
+    Dom.replaceChildren(events, ev.slice(0, 50).map((e) =>
+      Dom.el('div', { class: 'event-row' }, [
+        Dom.el('span', { class: 'e-time', text: fmtTime(e.ts) }),
+        Dom.el('span', { class: `e-kind ${e.kind === 'rename' && e.toCrypto ? 'new-executable' : 'new'}`, text: e.kind === 'rename' ? (e.toCrypto ? 'crypto-rename' : 'rename') : 'new file' }),
+        Dom.el('span', { class: 'e-path', title: e.path, text: e.name }),
+      ])
+    ));
+    if (st.tripped) {
+      nativeNotify('VaultGuard — Ransomware alert', 'Ransomware-like file activity detected. Review the Ransomware view.');
+      toast('Ransomware-like activity detected!', true);
+    }
+  }
+
+  function refreshBoot() {
+    if (!window.vaultguard || !window.vaultguard.listAutoruns) { toast('Requires the desktop app', true); return; }
+    Dom.replaceChildren($('boot-list'), skeletonRows(6));
+    window.vaultguard.listAutoruns().then((res) => {
+      if (!res || !res.ok) { Dom.replaceChildren($('boot-list'), [Dom.emptyState('Could not read startup items')]); return; }
+      const { entries, summary } = BootGuard.scanEntries(res.entries);
+      $('boot-summary').textContent = `${summary.total} startup items · ${summary.flagged.length} flagged`;
+      const flagged = entries.filter((e) => e.risk !== 'clean').sort((a, b) => b.score - a.score);
+      const shown = flagged.length ? flagged : entries.slice(0, 100);
+      if (!shown.length) { Dom.replaceChildren($('boot-list'), [Dom.emptyState('No startup items')]); return; }
+      const children = [];
+      if (flagged.length) children.push(Dom.el('div', { class: 'empty', style: { textAlign: 'left' }, text: `${flagged.length} flagged startup item(s) — showing flagged first` }));
+      for (const e of shown.slice(0, 300)) {
+        children.push(Dom.el('div', { class: 'result-row' }, [
+          Dom.pill(e.risk, e.risk === 'malicious' ? 'infected' : e.risk === 'suspicious' ? 'suspicious' : e.risk === 'review' ? 'test' : 'clean'),
+          Dom.el('span', { class: 'r-path', title: e.value }, [
+            document.createTextNode(e.name),
+            Dom.el('div', { class: 'muted', text: `${e.location} · ${e.value.slice(0, 100)}` }),
+            Dom.scoreBar(e.score),
+          ]),
+          Dom.el('span', { class: 'r-reasons', text: e.findings.join('; ') || 'clean' }),
+          Dom.el('span', { class: 'r-actions' }),
+        ]));
+      }
+      Dom.replaceChildren($('boot-list'), children);
+    });
+  }
+
+  function renderSchedule() {
+    const jobs = Scheduler.list();
+    const el = $('job-list');
+    if (!jobs.length) { Dom.replaceChildren(el, [Dom.emptyState('No scheduled scans')]); return; }
+    Dom.replaceChildren(el, jobs.map((j) =>
+      Dom.el('div', { class: 'result-row' }, [
+        Dom.pill(j.enabled ? 'active' : 'paused', j.enabled ? 'clean' : 'suspicious'),
+        Dom.el('span', { class: 'r-path', title: j.targets.join(', ') }, [
+          document.createTextNode(j.name),
+          Dom.el('div', { class: 'muted', text: `${j.type} · every ${j.interval / 3600000 >= 24 ? (j.interval / 86400000) + ' d' : (j.interval / 3600000) + ' h'} · next: ${Scheduler.nextRunLabel(j)}` }),
+        ]),
+        Dom.el('span', { class: 'r-reasons', text: j.lastRun ? 'last run ' + new Date(j.lastRun).toLocaleString() : 'never run' }),
+        Dom.el('span', { class: 'r-actions' }, [
+          Dom.el('button', { class: 'vg-btn', text: j.enabled ? 'Pause' : 'Resume', onclick: () => { Scheduler.toggleJob(j.id, !j.enabled); renderSchedule(); } }),
+          Dom.el('button', { class: 'vg-btn danger', text: 'Delete', onclick: () => { if (confirm('Delete this schedule?')) { Scheduler.removeJob(j.id); renderSchedule(); } } }),
+        ]),
+      ])
+    ));
+  }
+
+  function renderExclusions() {
+    const el = $('excl-list');
+    const items = Exclusions.list();
+    if (!items.length) { Dom.replaceChildren(el, [Dom.el('span', { class: 'muted', text: 'No exclusions' })]); return; }
+    Dom.replaceChildren(el, items.map((x) => Dom.chip(x, () => { Exclusions.remove(x); renderExclusions(); })));
+  }
+
+  let schedTimer = null;
+  function startSchedulerLoop() {
+    if (schedTimer) clearInterval(schedTimer);
+    schedTimer = setInterval(() => {
+      const due = Scheduler.dueJobs();
+      for (const j of due) {
+        Scheduler.markRun(j.id);
+        toast(`Scheduled scan started: ${j.name}`);
+        runScan(j.type === 'quick' ? 'quick' : 'custom', j.type === 'quick' ? undefined : j.targets);
+        break;
+      }
+    }, 30000);
+    if (schedTimer.unref) schedTimer.unref();
   }
 
   function announce(text) {
@@ -514,7 +692,7 @@ const App = (() => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (!(e.ctrlKey || e.metaKey)) return;
       const k = e.key.toLowerCase();
-      const map = { '1': 'dashboard', '2': 'scan', '3': 'realtime', '4': 'quarantine', '5': 'history', '6': 'settings' };
+      const map = { '1': 'dashboard', '2': 'scan', '3': 'processes', '4': 'network', '5': 'realtime', '6': 'ransomware', '7': 'boot', '8': 'schedule', '9': 'quarantine', '0': 'history' };
       if (map[k]) { e.preventDefault(); switchView(map[k]); }
       else if (k === 'q') { e.preventDefault(); if (!currentScan) runScan('quick'); }
       else if (k === 's' && e.shiftKey) { e.preventDefault(); runScan('full'); }
@@ -551,6 +729,45 @@ const App = (() => {
       Shield.clearHistory(); renderHistory(); refreshDashboard(); toast('History cleared');
     });
     $('btn-h-export').addEventListener('click', exportReport);
+
+    $('btn-proc-refresh').addEventListener('click', refreshProcesses);
+    $('btn-net-refresh').addEventListener('click', refreshNetwork);
+    $('btn-boot-refresh').addEventListener('click', refreshBoot);
+    $('rg-toggle').addEventListener('change', (e) => { ransomGuard.state.enabled = e.target.checked; renderRansomware(); });
+    $('btn-rg-reset').addEventListener('click', () => { ransomGuard.reset(); renderRansomware(); toast('Alerts reset'); });
+    $('btn-rg-add-dir').addEventListener('click', async () => {
+      const res = await window.vaultguard.pickScanDirs();
+      if (res && res.ok && res.dirs.length) { res.dirs.forEach((d) => { ransomGuard.addProtectedDir(d); monitor.addWatch(d); }); renderRansomware(); }
+    });
+    $('btn-job-add').addEventListener('click', () => {
+      const name = $('job-name').value.trim() || 'Scheduled scan';
+      const type = $('job-type').value;
+      const interval = $('job-interval').value;
+      const targets = type === 'custom' ? [...scanTargets] : [];
+      if (type === 'custom' && !targets.length) { toast('Add custom targets in the Scan view first', true); return; }
+      Scheduler.addJob({ name, type, interval, targets });
+      $('job-name').value = '';
+      renderSchedule();
+      toast('Schedule created');
+    });
+    $('btn-excl-add').addEventListener('click', () => {
+      const v = $('excl-input').value.trim();
+      if (!v) return;
+      Exclusions.add(v);
+      $('excl-input').value = '';
+      renderExclusions();
+      toast('Exclusion added');
+    });
+    $('excl-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-excl-add').click(); });
+
+    ransomGuard.onChange(() => { if (document.querySelector('#view-ransomware.active')) renderRansomware(); });
+
+    if (window.vaultguard && window.vaultguard.onQuickScan) {
+      window.vaultguard.onQuickScan(() => { switchView('scan'); runScan('quick'); });
+    }
+
+    startSchedulerLoop();
+    renderExclusions();
 
     const hint = Dom.el('span', { class: 'kbd-hint', 'aria-hidden': 'true' }, [
       document.createTextNode('Shortcuts: '),

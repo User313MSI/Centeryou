@@ -14,5 +14,12 @@ contextBridge.exposeInMainWorld('vaultguard', {
   saveReport: invoke('report:save'),
   getHome: invoke('app:home'),
   getStats: invoke('app:stats'),
+  listProcesses: invoke('sys:list-processes'),
+  killProcess: invoke('sys:kill-process'),
+  listConnections: invoke('sys:list-connections'),
+  listAutoruns: invoke('boot:list-autoruns'),
+  repairFile: invoke('repair:clean-file'),
+  notify: (title, body) => ipcRenderer.send('app:notify', { title, body }),
+  onQuickScan: (cb) => ipcRenderer.on('vg:quick-scan', cb),
   isDesktop: true,
 });

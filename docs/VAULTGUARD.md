@@ -21,6 +21,35 @@ npm run dist:linux   # → release/*.AppImage + .deb
 ## Features
 - **Dashboard**: live health score (ring), files scanned / threats / quarantined /
   real-time uptime, recent activity feed, one-click scan actions
+- **Process Protection** (`ProcessGuard`): live process list via OS APIs, flags known
+  attack tools (mimikatz, psexec, xmrig…), LOLBIN abuse (powershell/rundll32/mshta…
+  with download/exec args, hidden windows, temp paths), executables from temp,
+  office/browser spawning unusual children, unsigned binaries — **kill button**
+- **Network Protection** (`NetGuard`): live TCP connections, flags C2 ports (4444,
+  5555, 31337…), raw-IP C2 from script processes, suspicious TLDs, DGA-like domains,
+  temp-folder executables connecting out, beaconing patterns; whitelist of known-good
+  hosts (Microsoft/Google/GitHub…) to cut noise
+- **Ransomware Protection** (`RansomGuard`): monitors real-time file events for
+  crypto-extension renames (.locked/.wcry/.zepto…) in bursts, ransom-note file names
+  (HOW_TO_DECRYPT, readme…), trips an alert + native notification, protected-folder list
+- **Startup & Persistence** (`BootGuard`): scans registry Run/RunOnce (HKCU/HKLM,
+  incl. WOW6432Node + Policies\Explorer\Run), Startup folders, (Linux: rc.local,
+  ~/.config/autostart, crontab); flags download-exec values, AppData/Temp persistence,
+  scripts in Startup, masquerading names (svchost, winlogon…), known-app whitelist
+- **Scheduled scans** (`Scheduler`): hourly/daily/weekly jobs, quick or custom-folder,
+  pause/resume/delete, auto-runs in background every 30 s check
+- **Exclusions** (`Exclusions`): path / file-name / glob (`*.log`, `C:\Tools\*`),
+  substring matching, persisted, applied by the scanner (skipped files not scanned)
+- **Repair** (`Repair` + `repair:clean-file` IPC): removes PHP webshell blocks,
+  PowerShell `-enc`/iwr|iex chains, JS `eval(atob(...))` — with a `.vgbak` backup
+- **Signature updater** (`Updater`): versioned DB (`YYYY.MM.DD-N`), manifest
+  comparison (needsUpdate), staged updates, auto-update toggle, last-check tracking
+- **System tray**: icon in the notification area — click to show/hide, context menu
+  (Open / Quick Scan / Quit); closing the window hides to tray instead of quitting
+- **Native notifications**: Windows toast on ransomware alerts and scan results
+- **Context-aware scoring**: source files (.py/.ts/.diff/.patch/…) and trusted dirs
+  (src/, tests/, docs/) get reduced signature weights → no more false positives on
+  your own code; .php/.ps1/.bat keep full weight
 - **Scan**: Quick (Downloads/Desktop/Documents, depth 4), Full (user-chosen
   folders, depth 12), Custom (folder chips); live progress bar with current file,
   stop button, skeleton loading, result flash, truncated-result notice
@@ -52,7 +81,8 @@ npm run dist:linux   # → release/*.AppImage + .deb
 ## Engine tests
 ```bash
 npm test
-# 162 tests: 46 engine + 12 Security + 27 security-audit + 15 performance-audit + 28 power-audit + UI/UX structural checks
+# 217 tests: 46 engine + 12 Security + 27 security-audit + 15 performance-audit
+#            + 28 power-audit + 8 false-positive-fix + 47 pro-modules + 34 misc
 ```
 
 ## Security
@@ -90,4 +120,8 @@ npm test
   Engine + syntax fully validated by 162 Node tests; packaging config ready.
 - Real filesystem scanning requires the desktop app (the preload bridge); in a plain
   browser the UI runs but scanning is disabled with a toast.
-- Signature DB is local and static (no cloud updates) — a deliberate scope choice for v1.
+- Signature DB is local and static; the `Updater` module implements version comparison
+  and staged updates, but no network fetch channel yet (deliberate v1 scope — CSP blocks egress).
+- Process/network/autorun listing shells out to OS tools (`powershell`, `ps`, `ss`);
+  on locked-down machines these views may return empty — the engines degrade gracefully.
+- `sys:kill-process` refuses pid ≤ 4; killing a process is a user-confirmed action only.

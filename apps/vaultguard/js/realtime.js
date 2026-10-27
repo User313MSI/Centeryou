@@ -74,6 +74,7 @@ const Realtime = (() => {
             state.snapshot.set(f.path, f.mtimeMs);
             state.scanned++;
             const ext = (fname.includes('.') ? fname.slice(fname.lastIndexOf('.')) : '').toLowerCase();
+            if (deps.onNewFile) deps.onNewFile({ path: f.path, name: fname });
             if (deps.riskExt && deps.riskExt(ext) > 0) {
               recordEvent({ ts: Date.now(), kind: 'new-executable', path: f.path, name: fname, severity: 'high' });
             } else {
@@ -84,6 +85,7 @@ const Realtime = (() => {
             state.scanned++;
             const ext = (fname.includes('.') ? fname.slice(fname.lastIndexOf('.')) : '').toLowerCase();
             const risky = deps.riskExt && deps.riskExt(ext) > 0;
+            if (deps.onModified) deps.onModified({ path: f.path, name: fname });
             recordEvent({ ts: Date.now(), kind: risky ? 'modified-executable' : 'modified', path: f.path, name: fname, severity: risky ? 'high' : 'medium' });
           }
         }

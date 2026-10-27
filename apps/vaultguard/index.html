@@ -16,7 +16,12 @@
     <nav id="nav" aria-label="Main navigation">
       <button class="nav-btn active" data-view="dashboard" aria-current="page">Dashboard</button>
       <button class="nav-btn" data-view="scan">Scan</button>
+      <button class="nav-btn" data-view="processes">Processes</button>
+      <button class="nav-btn" data-view="network">Network</button>
       <button class="nav-btn" data-view="realtime">Real-Time</button>
+      <button class="nav-btn" data-view="ransomware">Ransomware</button>
+      <button class="nav-btn" data-view="boot">Startup</button>
+      <button class="nav-btn" data-view="schedule">Schedule</button>
       <button class="nav-btn" data-view="quarantine">Quarantine</button>
       <button class="nav-btn" data-view="history">History</button>
       <button class="nav-btn" data-view="settings">Settings</button>
@@ -114,6 +119,71 @@
       </div>
     </section>
 
+    <section id="view-processes" class="view" aria-label="Process protection">
+      <div class="panel">
+        <div class="panel-title">Process Protection</div>
+        <div class="scan-controls">
+          <button id="btn-proc-refresh" class="vg-btn primary">↻ Refresh processes</button>
+          <span id="proc-summary" class="muted"></span>
+        </div>
+        <div id="proc-list" class="results"><div class="empty">No scan yet — click Refresh</div></div>
+      </div>
+    </section>
+
+    <section id="view-network" class="view" aria-label="Network protection">
+      <div class="panel">
+        <div class="panel-title">Network Protection</div>
+        <div class="scan-controls">
+          <button id="btn-net-refresh" class="vg-btn primary">↻ Refresh connections</button>
+          <span id="net-summary" class="muted"></span>
+        </div>
+        <div id="net-list" class="results"><div class="empty">No scan yet — click Refresh</div></div>
+      </div>
+    </section>
+
+    <section id="view-ransomware" class="view" aria-label="Ransomware protection">
+      <div class="panel">
+        <div class="panel-title">Ransomware Protection</div>
+        <div class="rt-controls">
+          <label class="switch"><input type="checkbox" id="rg-toggle" checked><span aria-hidden="true"></span> Enabled</label>
+          <button id="btn-rg-add-dir" class="vg-btn">+ Protect folder</button>
+          <button id="btn-rg-reset" class="vg-btn danger">Reset alerts</button>
+          <span id="rg-status" class="muted" role="status"></span>
+        </div>
+        <div id="rg-dirs" class="chip-list"></div>
+        <div class="panel-title" style="margin-top:10px">Assessment</div>
+        <div id="rg-assessment" class="muted">No activity monitored yet.</div>
+        <div class="panel-title" style="margin-top:10px">Events</div>
+        <div id="rg-events" class="events"><div class="empty">No events yet</div></div>
+      </div>
+    </section>
+
+    <section id="view-boot" class="view" aria-label="Startup items">
+      <div class="panel">
+        <div class="panel-title">Startup & Persistence</div>
+        <div class="scan-controls">
+          <button id="btn-boot-refresh" class="vg-btn primary">↻ Scan autoruns</button>
+          <span id="boot-summary" class="muted"></span>
+        </div>
+        <div id="boot-list" class="results"><div class="empty">No scan yet — click Scan autoruns</div></div>
+      </div>
+    </section>
+
+    <section id="view-schedule" class="view" aria-label="Scheduled scans">
+      <div class="panel">
+        <div class="panel-title">Scheduled Scans</div>
+        <div class="scan-controls">
+          <button id="btn-job-add" class="vg-btn primary">+ New schedule</button>
+        </div>
+        <div class="settings-grid" style="margin-bottom:10px">
+          <div class="set-row"><span>Name</span><input type="text" id="job-name" placeholder="Daily scan" style="max-width:220px"></div>
+          <div class="set-row"><span>Type</span><select id="job-type"><option value="quick">Quick</option><option value="custom">Custom folders</option></select></div>
+          <div class="set-row"><span>Interval</span><select id="job-interval"><option value="hourly">Hourly</option><option value="daily" selected>Daily</option><option value="weekly">Weekly</option></select></div>
+        </div>
+        <div id="job-list" class="results"><div class="empty">No scheduled scans</div></div>
+      </div>
+    </section>
+
     <section id="view-settings" class="view" aria-label="Settings">
       <div class="panel">
         <div class="panel-title">Settings</div>
@@ -126,6 +196,14 @@
           <div class="set-row"><span>Quarantine location</span><span id="q-location" class="mono"></span></div>
         </div>
       </div>
+      <div class="panel">
+        <div class="panel-title">Exclusions</div>
+        <div class="scan-controls">
+          <input type="text" id="excl-input" placeholder="Path, file name or glob (e.g. *.log, C:\Tools\*)" style="flex:1;min-width:260px">
+          <button id="btn-excl-add" class="vg-btn">+ Add exclusion</button>
+        </div>
+        <div id="excl-list" class="chip-list"><span class="muted">No exclusions</span></div>
+      </div>
     </section>
   </main>
 
@@ -137,6 +215,14 @@
   <script src="js/quarantine.js"></script>
   <script src="js/realtime.js"></script>
   <script src="js/shield.js"></script>
+  <script src="js/exclusions.js"></script>
+  <script src="js/processguard.js"></script>
+  <script src="js/netguard.js"></script>
+  <script src="js/scheduler.js"></script>
+  <script src="js/ransomware.js"></script>
+  <script src="js/repair.js"></script>
+  <script src="js/updater.js"></script>
+  <script src="js/bootguard.js"></script>
   <script src="js/dom.js"></script>
   <script src="js/app.js"></script>
 </body>

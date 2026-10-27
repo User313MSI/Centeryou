@@ -37,6 +37,8 @@ button:focus:not(:focus-visible) { outline: none; }
   .health-card { grid-template-columns: 1fr; justify-items: center; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   #nav { overflow-x: auto; }
+  #topbar { flex-wrap: wrap; height: auto; padding: 6px 10px; }
+  body { grid-template-rows: auto 1fr; }
   .result-row { grid-template-columns: 70px 1fr; }
   .result-row .r-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
@@ -239,6 +241,23 @@ button { font-family: inherit; cursor: pointer; }
 .pill.suspicious { background: rgba(210,153,34,0.15); color: var(--warn); }
 .pill.infected { background: rgba(248,81,73,0.15); color: var(--danger); }
 .pill.test { background: rgba(88,166,255,0.15); color: var(--info); }
+.pill.malicious { background: rgba(248,81,73,0.25); color: var(--danger); font-weight: 800; }
+.pill.monitor { background: rgba(88,166,255,0.12); color: var(--info); }
+.pill.review { background: rgba(210,153,34,0.12); color: var(--warn); }
+.pill.active { background: rgba(63,185,80,0.15); color: var(--accent); }
+.pill.paused { background: rgba(139,152,168,0.15); color: var(--muted); }
+
+select {
+  background: #0e1318; color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 4px 8px; font-size: 12px; font-family: inherit;
+}
+input[type="text"] {
+  background: #0e1318; color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 6px 10px; font-size: 12px; font-family: inherit;
+}
+input[type="text"]:focus, select:focus { border-color: var(--accent-2); outline: none; }
 
 .score-bar {
   height: 5px; border-radius: 4px; background: var(--panel-2);

