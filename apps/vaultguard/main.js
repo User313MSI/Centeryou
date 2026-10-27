@@ -10,6 +10,7 @@ app.setAppUserModelId('com.novaloom.vaultguard');
 
 let tray = null;
 let mainWindow = null;
+let licenseLabel = '';
 
 function notify(title, body) {
   try {
@@ -29,6 +30,8 @@ function createTray(win) {
       { label: 'Open VaultGuard', click: () => { win.show(); win.focus(); } },
       { type: 'separator' },
       { label: 'Quick Scan', click: () => { win.show(); win.webContents.send('vg:quick-scan'); } },
+      { type: 'separator' },
+      { label: 'License…', click: () => { win.show(); win.focus(); win.webContents.send('vg:show-license'); } },
       { type: 'separator' },
       { label: 'Quit', click: () => app.quit() },
     ]);
@@ -319,6 +322,37 @@ const HANDLERS = {
 
   'app:home': () => ({ ok: true, home: os.homedir() }),
 
+  'app:auto-start': () => {
+    try {
+      const s = app.getLoginItemSettings();
+      return { ok: true, enabled: !!s.openAtLogin };
+    } catch (e) {
+      return { ok: false, error: 'unavailable', enabled: false };
+    }
+  },
+
+  'app:set-auto-start': (event, args) => {
+    const enabled = !!(args && args.enabled);
+    try {
+      app.setLoginItemSettings({ openAtLogin: enabled });
+      return { ok: true, enabled: app.getLoginItemSettings().openAtLogin };
+    } catch (e) {
+      return { ok: false, error: 'unavailable', enabled: !enabled };
+    }
+  },
+
+  'license:report': (event, args) => {
+    if (!isPlainObject(args)) return { ok: false, error: 'Invalid arguments' };
+    licenseLabel = safeString(args.label, 120);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      try { mainWindow.setTitle(licenseLabel ? 'VaultGuard — ' + licenseLabel : 'VaultGuard'); } catch (e) {}
+    }
+    if (tray) {
+      try { tray.setToolTip('VaultGuard — ' + (licenseLabel || 'Antivirus & Threat Protection')); } catch (e) {}
+    }
+    return { ok: true };
+  },
+
   'app:stats': () => ({
     ok: true,
     platform: process.platform,
@@ -486,6 +520,38 @@ const HANDLERS = {
     notify(safeString(args.title, 100), safeString(args.body, 300));
   },
 
+  'update:check': async (event, args) => {
+    if (!isPlainObject(args)) return { ok: false, error: 'Invalid arguments' };
+    const url = safeString(args.url, 2048);
+    if (!isUpdateUrlAllowed(url)) return { ok: false, error: 'Update URL is not allowed' };
+    const timeoutMs = clampInt(args.timeoutMs, 1000, 30000, 10000);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const res = await fetch(url, { signal: controller.signal, redirect: 'follow', headers: { accept: 'application/json' } });
+      clearTimeout(timer);
+      if (!res.ok) return { ok: false, error: 'Update server returned HTTP ' + res.status };
+      const text = await res.text();
+      if (text.length > 256 * 1024) return { ok: false, error: 'Manifest too large' };
+      let manifest;
+      try { manifest = JSON.parse(text); } catch (e) { return { ok: false, error: 'Manifest is not valid JSON' }; }
+      if (!isPlainObject(manifest)) return { ok: false, error: 'Invalid manifest' };
+      return {
+        ok: true,
+        manifest: {
+          version: safeString(manifest.version, 40),
+          signatures: clampInt(manifest.signatures, 0, 1000000, 0),
+          sha256: safeString(manifest.sha256, 64),
+          channel: safeString(manifest.channel, 10),
+          minAppVersion: safeString(manifest.minAppVersion, 40),
+          sig: safeString(manifest.sig, 64),
+        },
+      };
+    } catch (e) {
+      return { ok: false, error: 'Update check failed: network unavailable' };
+    }
+  },
+
   'repair:clean-file': (event, args) => {
     if (!isPlainObject(args)) return { ok: false, error: 'Invalid arguments' };
     const resolved = safeResolve(args.filePath);
@@ -518,6 +584,24 @@ function Security_looksLikeTraversal(p) {
   return p.split(/[\\/]/).includes('..');
 }
 
+function isUpdateUrlAllowed(url) {
+  let u;
+  try { u = new URL(url); } catch (e) { return false; }
+  if (u.protocol !== 'https:') return false;
+  const host = u.hostname.toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return false;
+  if (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(host)) return false;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+  if (/^0\.|^100\.(6[4-9]|[7-9]\d|1\d\d)\./.test(host)) return false;
+  if (host === '::1' || host === '[::1]' || host.indexOf(':') !== -1) return false;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    const parts = host.split('.').map(Number);
+    if (parts.some((p) => p > 255)) return false;
+    return true; // public literal IP is allowed; private ranges filtered above
+  }
+  return /^[a-z0-9.-]+$/i.test(host);
+}
+
 app.whenReady().then(() => {
   for (const [channel, handler] of Object.entries(HANDLERS)) {
     if (channel === 'app:notify') {
@@ -537,6 +621,14 @@ app.whenReady().then(() => {
   }
   mainWindow = createWindow();
   createTray(mainWindow);
+  // Antivirus products start with Windows by default; only force it on first run.
+  try {
+    const flagFile = path.join(app.getPath('userData'), '.autostart-initialized');
+    if (app.isPackaged && !fs.existsSync(flagFile)) {
+      app.setLoginItemSettings({ openAtLogin: true });
+      fs.writeFileSync(flagFile, '1', 'utf8');
+    }
+  } catch (e) {}
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow();

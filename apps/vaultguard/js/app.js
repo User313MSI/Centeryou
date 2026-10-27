@@ -103,6 +103,7 @@ const App = (() => {
     if (name === 'realtime') renderRealtime();
     if (name === 'ransomware') renderRansomware();
     if (name === 'schedule') renderSchedule();
+    if (name === 'license') renderLicense();
     const main = $('content');
     if (main && typeof main.focus === 'function') main.focus({ preventScroll: true });
     announce(viewLabel(name));
@@ -113,7 +114,7 @@ const App = (() => {
       dashboard: 'Dashboard', scan: 'Scan', processes: 'Process protection',
       network: 'Network protection', realtime: 'Real-time protection', ransomware: 'Ransomware protection',
       boot: 'Startup & persistence', schedule: 'Scheduled scans', quarantine: 'Quarantine',
-      history: 'Scan history', settings: 'Settings',
+      history: 'Scan history', license: 'License & activation', settings: 'Settings',
     })[name] || name;
   }
 
@@ -400,6 +401,13 @@ const App = (() => {
   async function runScan(kind, targets) {
     if (currentScan) { toast('A scan is already running'); return; }
     if (!window.vaultguard) { toast('Scanning requires the desktop app', true); return; }
+    const feature = kind === 'quick' ? 'quickScan' : (kind === 'full' ? 'fullScan' : 'customScan');
+    const gate = License.canUse(feature);
+    if (!gate.allowed) {
+      toast(gate.reason, true);
+      if (gate.upgrade) switchView('license');
+      return;
+    }
     const dirs = targets || (await gatherTargets(kind));
     if (!dirs || !dirs.length) { toast('No targets selected'); return; }
     const t0 = performance.now();
@@ -669,6 +677,113 @@ const App = (() => {
     toast('Report downloaded');
   }
 
+  function licenseLabelFor(st) {
+    if (st.state === 'licensed') return st.planName + (st.customer ? ' · ' + st.customer : '');
+    if (st.state === 'trial') return 'Trial · ' + st.daysLeft + ' days left';
+    if (st.state === 'invalid-license') return 'License invalid';
+    return 'Trial expired';
+  }
+
+  function renderLicenseBadge() {
+    const el = $('license-badge');
+    if (!el) return;
+    const st = License.status();
+    el.hidden = false;
+    el.textContent = licenseLabelFor(st);
+    el.classList.remove('trial', 'expired', 'invalid');
+    if (st.state === 'trial') el.classList.add('trial');
+    if (st.state === 'expired') el.classList.add('expired');
+    if (st.state === 'invalid-license') el.classList.add('invalid');
+    if (window.vaultguard && window.vaultguard.reportLicense) {
+      window.vaultguard.reportLicense({ label: licenseLabelFor(st) }).catch(() => {});
+    }
+  }
+
+  function renderLicense() {
+    const st = License.status();
+    $('lic-status').textContent = ({
+      licensed: 'Active', trial: 'Trial active', expired: 'Trial expired', 'invalid-license': 'License invalid',
+    })[st.state] || st.state;
+    $('lic-plan').textContent = st.state === 'licensed' ? st.planName : (st.state === 'trial' ? 'Full-feature trial' : '—');
+    $('lic-customer').textContent = st.customer || '—';
+    $('lic-expires').textContent = st.state === 'licensed' ? License.fmtDate(st.expires) + ' (' + st.daysLeft + ' days left)' : '—';
+    $('lic-machine').textContent = License.machineId();
+    const trial = License.trialState();
+    $('lic-trial').textContent = trial.active ? trial.daysLeft + ' days remaining' : 'Ended';
+    $('lic-trial-ends').textContent = License.fmtDate(trial.endsAt);
+    const banner = $('lic-banner');
+    if (st.state === 'licensed') {
+      banner.hidden = true;
+    } else if (st.state === 'trial') {
+      banner.hidden = false;
+      banner.classList.add('trial');
+      banner.textContent = 'You are using the free 14-day trial. ' + st.daysLeft + ' days left — activate a license below to keep full protection after the trial ends.';
+    } else {
+      banner.hidden = false;
+      banner.classList.remove('trial');
+      banner.textContent = st.state === 'invalid-license'
+        ? (st.message || 'Your license is invalid. Please reactivate.')
+        : 'Your 14-day trial has ended. Activate a VaultGuard license to restore full protection.';
+    }
+    renderLicenseBadge();
+  }
+
+  function activateLicense() {
+    const raw = $('lic-key-input').value;
+    const customer = $('lic-customer-input').value.trim();
+    const out = $('lic-result');
+    out.className = '';
+    out.classList.add('muted');
+    const res = License.activate(raw, { customer });
+    if (res.valid) {
+      out.classList.add('ok');
+      out.textContent = 'Activated: ' + res.planName + ' — valid until ' + License.fmtDate(res.expires) + '.';
+      $('lic-key-input').value = '';
+      toast('VaultGuard activated — ' + res.planName);
+      nativeNotify('VaultGuard activated', res.planName + ' is now active on this machine.');
+    } else {
+      out.classList.add('err');
+      out.textContent = res.message || 'Activation failed.';
+      toast('Activation failed', true);
+    }
+    renderLicense();
+  }
+
+  async function checkForUpdates() {
+    const statusEl = $('update-status');
+    const btn = $('btn-update-check');
+    if (!window.vaultguard || !window.vaultguard.checkForUpdates) { statusEl.textContent = 'Requires the desktop app.'; return; }
+    const url = $('update-url').value.trim() || 'https://updates.novaloom.com/vaultguard/manifest.json';
+    btn.disabled = true;
+    statusEl.textContent = 'Checking ' + url + ' …';
+    try {
+      const res = await window.vaultguard.checkForUpdates({ url, timeoutMs: 10000 });
+      if (!res || !res.ok) { statusEl.textContent = 'Update check failed: ' + ((res && res.error) || 'unknown error'); return; }
+      const check = Updater.needsUpdate(res.manifest);
+      Updater.recordCheck(check.update ? 'ok' : 'up-to-date');
+      $('update-last-check').textContent = new Date().toLocaleString();
+      if (!check.trusted) {
+        statusEl.textContent = 'Rejected manifest: ' + check.reason + '. Updates are only accepted from a signed NovaLoom channel.';
+        toast('Update manifest rejected', true);
+        return;
+      }
+      $('update-latest').textContent = check.available + ' (' + check.signatures + ' signatures, ' + check.channel + ')';
+      if (check.update) {
+        statusEl.textContent = 'Update available: ' + check.available + ' (you have ' + check.current + '). Signature verified.';
+        toast('Update available: ' + check.available);
+        nativeNotify('VaultGuard update available', check.available + ' is ready (signature verified).');
+        if (Updater.status().autoUpdate) Updater.stageUpdate(check.available);
+      } else {
+        statusEl.textContent = 'VaultGuard is up to date (' + check.current + '). Signature verified.';
+        toast('VaultGuard is up to date');
+      }
+    } catch (e) {
+      statusEl.textContent = 'Update check failed: network error';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function bindSettings() {
     $('set-rt').checked = settings.realtime;
     $('set-autoq').checked = settings.autoQuarantine;
@@ -681,6 +796,41 @@ const App = (() => {
     const stats = signatureStats();
     $('sig-version').textContent = `${stats.version} — ${stats.total} signatures (${stats.text} text · ${stats.url} URL · ${stats.hex} hex · ${stats.mz} PE · ${stats.behaviors} behavior rules)`;
     if (window.vaultguard) window.vaultguard.quarantineDir().then((r) => { if (r && r.ok) $('q-location').textContent = r.dir; });
+
+    $('set-auto-update').checked = Updater.status().autoUpdate;
+    $('set-auto-update').addEventListener('change', (e) => {
+      Updater.setAutoUpdate(e.target.checked);
+      toast(e.target.checked ? 'Automatic updates enabled' : 'Automatic updates disabled');
+    });
+    $('btn-update-check').addEventListener('click', checkForUpdates);
+    $('update-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') checkForUpdates(); });
+    if (window.vaultguard && window.vaultguard.autoStartEnabled) {
+      window.vaultguard.autoStartEnabled().then((r) => {
+        if (r && r.ok && $('set-autostart')) $('set-autostart').checked = !!r.enabled;
+      });
+    }
+    if ($('set-autostart')) {
+      $('set-autostart').addEventListener('change', async (e) => {
+        if (!window.vaultguard || !window.vaultguard.setAutoStart) return;
+        const res = await window.vaultguard.setAutoStart({ enabled: e.target.checked });
+        toast(res && res.ok ? (res.enabled ? 'VaultGuard will start with your system' : 'Auto-start disabled') : 'Auto-start unavailable', !(res && res.ok));
+      });
+    }
+  }
+
+  function bindLicenseView() {
+    $('btn-lic-activate').addEventListener('click', activateLicense);
+    $('lic-key-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') activateLicense(); });
+    $('btn-lic-deactivate').addEventListener('click', () => {
+      if (!confirmAction('Deactivate VaultGuard on this machine? The trial will restart.')) return;
+      License.deactivate();
+      $('lic-result').textContent = '';
+      renderLicense();
+      toast('License deactivated');
+    });
+    if (window.vaultguard && window.vaultguard.onShowLicense) {
+      window.vaultguard.onShowLicense(() => switchView('license'));
+    }
   }
 
   function confirmAction(message) {
@@ -694,6 +844,7 @@ const App = (() => {
       const k = e.key.toLowerCase();
       const map = { '1': 'dashboard', '2': 'scan', '3': 'processes', '4': 'network', '5': 'realtime', '6': 'ransomware', '7': 'boot', '8': 'schedule', '9': 'quarantine', '0': 'history' };
       if (map[k]) { e.preventDefault(); switchView(map[k]); }
+      else if (k === 'l') { e.preventDefault(); switchView('license'); }
       else if (k === 'q') { e.preventDefault(); if (!currentScan) runScan('quick'); }
       else if (k === 's' && e.shiftKey) { e.preventDefault(); runScan('full'); }
     });
@@ -785,6 +936,8 @@ const App = (() => {
     });
 
     bindSettings();
+    bindLicenseView();
+    renderLicense();
     if (settings.realtime) monitor.start();
     refreshDashboard();
     if (window.vaultguard) {

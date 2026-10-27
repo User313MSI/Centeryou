@@ -1687,17 +1687,20 @@ async function auditProModules() {
       assert(U.parseVersion('2025.10.26-1').n === 1);
       assert(U.parseVersion('nope') === null);
     }],
-    ['pro: updater — needsUpdate detects newer', () => {
+    ['pro: updater — needsUpdate detects newer (signed)', () => {
       const { sandbox } = makeSandbox();
       loadScript('signatures.js', sandbox);
       loadScript('updater.js', sandbox);
       const U = sandbox.Updater;
-      const r = U.needsUpdate({ version: '2099.01.01-1', signatures: 500, sha256: 'ab'.repeat(32) });
-      assert(r.update === true && r.available === '2099.01.01-1');
-      const r2 = U.needsUpdate({ version: '2000.01.01-1' });
-      assert(r2.update === false);
+      const Security = sandbox.Security;
+      const sign = (m) => ({ ...m, sig: Security.hmacSha256Hex(U.UPDATE_SECRET, ['VG-UPDATE', m.version, String(m.signatures), m.sha256, m.channel || 'stable', m.minAppVersion || ''].join('|')) });
+      const r = U.needsUpdate(sign({ version: '2099.01.01-1', signatures: 500, sha256: 'ab'.repeat(32) }));
+      assert(r.update === true && r.available === '2099.01.01-1' && r.trusted === true);
+      const r2 = U.needsUpdate(sign({ version: '2000.01.01-1', signatures: 1, sha256: 'ab'.repeat(32) }));
+      assert(r2.update === false && r2.trusted === true);
       assert(U.needsUpdate(null).update === false);
       assert(U.needsUpdate({ version: 'garbage' }).update === false);
+      assert(U.needsUpdate({ version: '2099.01.01-1', signatures: 500, sha256: 'ab'.repeat(32) }).trusted === false);
     }],
     ['pro: updater — recordCheck updates version', () => {
       const { sandbox } = makeSandbox();
@@ -1775,6 +1778,162 @@ async function auditProModules() {
         null,
       ]);
       assert(summary.total === 2 && summary.flagged.length >= 1, JSON.stringify(summary));
+    }],
+    // ---------- Crypto (SHA-256 / HMAC) ----------
+    ['commercial: sha256 matches known vectors', () => {
+      const { sandbox } = makeSandbox();
+      const S = sandbox.Security;
+      assert(S.sha256Hex('') === 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+      assert(S.sha256Hex('abc') === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+      assert(S.sha256Hex('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq') === '248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1');
+      const long = 'a'.repeat(1000000);
+      assert(S.sha256Hex(long) === 'cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0');
+    }],
+    ['commercial: sha256 handles unicode and binary', () => {
+      const { sandbox } = makeSandbox();
+      const S = sandbox.Security;
+      const bin = new Uint8Array(256).map((_, i) => i);
+      assert(S.sha256Hex(bin) === '40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880');
+      assert(S.sha256Hex('héllo 😀') === S.sha256Hex(new TextEncoder().encode('héllo 😀')));
+    }],
+    ['commercial: hmac-sha256 matches RFC 4231 vector', () => {
+      const { sandbox } = makeSandbox();
+      const S = sandbox.Security;
+      const key = new Uint8Array(20).fill(0x0b);
+      const expected = 'b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7';
+      assert(S.hmacSha256Hex(key, 'Hi There') === expected);
+      const key2 = S.utf8Bytes('Jefe');
+      assert(S.hmacSha256Hex(key2, 'what do ya want for nothing?') === '5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843');
+      const bigKey = S.hmacSha256Hex('k'.repeat(100), 'msg');
+      assert(bigKey.length === 64);
+    }],
+    ['commercial: timingSafeEqualHex is constant-time-ish and strict', () => {
+      const { sandbox } = makeSandbox();
+      const S = sandbox.Security;
+      assert(S.timingSafeEqualHex('ab'.repeat(32), 'AB'.repeat(32)) === true);
+      assert(S.timingSafeEqualHex('ab'.repeat(32), 'ac'.repeat(32)) === false);
+      assert(S.timingSafeEqualHex('ab', 'abc') === false);
+      assert(S.timingSafeEqualHex('', '') === false);
+      assert(S.timingSafeEqualHex(null, 'ab') === false);
+    }],
+    // ---------- License ----------
+    ['commercial: license key round-trip activates', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const key = L.makeKey({ plan: 'PRO', expires: '20991231', machineId: 'M-test-1' });
+      assert(key && key.indexOf('VGPR') === 0, key);
+      const v = L.verifyKey(key, 'M-test-1');
+      assert(v.valid === true && v.plan === 'PRO');
+    }],
+    ['commercial: license rejects wrong machine', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const key = L.makeKey({ plan: 'TEAM', expires: '20991231', machineId: 'M-a' });
+      const v = L.verifyKey(key, 'M-b');
+      assert(v.valid === false && v.reason === 'bad-signature');
+    }],
+    ['commercial: license rejects tampering and garbage', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const key = L.makeKey({ plan: 'PRO', expires: '20991231', machineId: 'M-a' });
+      assert(L.verifyKey(key.slice(0, -2) + 'zz', 'M-a').valid === false);
+      assert(L.verifyKey('VG-PRO-20991231-deadbeefdeadbeef', 'M-a').valid === false);
+      assert(L.verifyKey('not-a-key', 'M-a').valid === false);
+      assert(L.verifyKey('', 'M-a').valid === false);
+      assert(L.verifyKey(null, 'M-a').valid === false);
+      assert(L.normalizeKey(key).plan === 'PRO');
+      assert(L.normalizeKey('garbage') === null);
+    }],
+    ['commercial: license detects expiry', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const key = L.makeKey({ plan: 'PRO', expires: '20200101', machineId: 'M-a' });
+      const v = L.verifyKey(key, 'M-a');
+      assert(v.valid === false && v.reason === 'expired');
+      const bad = L.makeKey({ plan: 'PRO', expires: '20991301', machineId: 'M-a' });
+      assert(L.verifyKey(bad, 'M-a').valid === false);
+    }],
+    ['commercial: activation persists and status reports licensed', () => {
+      const { sandbox, store } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const mid = L.machineId();
+      const key = L.makeKey({ plan: 'BUSINESS', expires: '20991231', machineId: mid });
+      const res = L.activate(key, { customer: 'ACME Corp' });
+      assert(res.activated === true && res.plan === 'BUSINESS');
+      const st = L.status();
+      assert(st.state === 'licensed' && st.planName === 'VaultGuard Business', JSON.stringify(st));
+      assert(st.customer === 'ACME Corp');
+      L.deactivate();
+      assert(store['vaultguard.license'] === undefined);
+      const st2 = L.status();
+      assert(st2.state === 'trial', st2.state);
+    }],
+    ['commercial: trial starts at 14 days and expires', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const now = Date.now();
+      const t = L.trialState({ now });
+      assert(t.active === true && t.daysLeft === 14);
+      const later = L.trialState({ now: now + 20 * 24 * 3600 * 1000 });
+      assert(later.expired === true && later.daysLeft === 0);
+      const st = L.status({ now: now + 20 * 24 * 3600 * 1000 });
+      assert(st.state === 'expired');
+      const gate = L.canUse('fullScan', st);
+      assert(gate.allowed === false && gate.upgrade === true);
+    }],
+    ['commercial: canUse gates features when expired', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('license.js', sandbox);
+      const L = sandbox.License;
+      const expired = { state: 'expired' };
+      assert(L.canUse('quickScan', expired).allowed === false);
+      assert(L.canUse('realtime', expired).allowed === false);
+      assert(L.canUse('nope', expired).allowed === false);
+      const trial = L.status();
+      assert(L.canUse('quickScan', trial).allowed === true);
+      assert(L.canUse('ransomware', trial).allowed === true);
+    }],
+    // ---------- Signed update channel ----------
+    ['commercial: updater accepts signed manifest only', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      const Security = sandbox.Security;
+      const base = { version: '2099.01.01-1', signatures: 500, sha256: 'ab'.repeat(32), channel: 'stable', minAppVersion: '' };
+      const payload = ['VG-UPDATE', base.version, '500', base.sha256, 'stable', ''].join('|');
+      const good = { ...base, sig: Security.hmacSha256Hex(U.UPDATE_SECRET, payload) };
+      assert(U.needsUpdate(good).update === true);
+      const bad = { ...good, signatures: 999 };
+      const r = U.needsUpdate(bad);
+      assert(r.update === false && r.trusted === false, JSON.stringify(r));
+      const unsigned = { ...base };
+      assert(U.needsUpdate(unsigned).trusted === false);
+      const wrongKey = { ...good, sig: Security.hmacSha256Hex('evil', payload) };
+      assert(U.needsUpdate(wrongKey).trusted === false);
+    }],
+    ['commercial: updater rejects manifest for older app', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('updater.js', sandbox);
+      const U = sandbox.Updater;
+      const Security = sandbox.Security;
+      const base = { version: '2099.01.01-1', signatures: 500, sha256: 'cd'.repeat(32), channel: 'stable', minAppVersion: '2999.01.01-1' };
+      base.sig = Security.hmacSha256Hex(U.UPDATE_SECRET, ['VG-UPDATE', base.version, '500', base.sha256, 'stable', base.minAppVersion].join('|'));
+      const r = U.needsUpdate(base);
+      assert(r.update === false && r.trusted === false && r.reason === 'app too old for this update', JSON.stringify(r));
+      const badHash = { ...base, minAppVersion: '', sha256: 'notahash' };
+      assert(U.verifyManifest(badHash).trusted === false);
+      const badChannel = { ...base, channel: 'evil', minAppVersion: '' };
+      badChannel.sig = Security.hmacSha256Hex(U.UPDATE_SECRET, ['VG-UPDATE', base.version, '500', base.sha256, 'stable', ''].join('|'));
+      const rc = U.verifyManifest(badChannel);
+      assert(rc.trusted === true && rc.channel === 'stable');
     }],
     // ---------- .diff fix ----------
     ['pro: .diff/.patch files are source context', () => {

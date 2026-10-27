@@ -21,5 +21,10 @@ contextBridge.exposeInMainWorld('vaultguard', {
   repairFile: invoke('repair:clean-file'),
   notify: (title, body) => ipcRenderer.send('app:notify', { title, body }),
   onQuickScan: (cb) => ipcRenderer.on('vg:quick-scan', cb),
+  onShowLicense: (cb) => ipcRenderer.on('vg:show-license', cb),
+  checkForUpdates: invoke('update:check'),
+  reportLicense: invoke('license:report'),
+  autoStartEnabled: invoke('app:auto-start'),
+  setAutoStart: invoke('app:set-auto-start'),
   isDesktop: true,
 });

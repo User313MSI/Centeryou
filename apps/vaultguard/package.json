@@ -1,7 +1,10 @@
 {
   "name": "vaultguard",
   "productName": "VaultGuard",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "config": {
+    "updateUrl": "https://updates.novaloom.com/vaultguard/manifest.json"
+  },
   "description": "VaultGuard — a real-time antivirus and threat protection suite by NovaLoom",
   "main": "main.js",
   "scripts": {
@@ -30,7 +33,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "VaultGuard"
+      "shortcutName": "VaultGuard",
+      "runAfterFinish": true,
+      "license": "LICENSE.txt"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://updates.novaloom.com/vaultguard"
     },
     "mac": { "target": ["dmg"], "category": "public.app-category.utilities", "icon": "assets/icon.png" },
     "linux": { "target": ["AppImage", "deb"], "category": "Utility", "icon": "assets/icon.png" }

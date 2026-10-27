@@ -24,9 +24,11 @@
       <button class="nav-btn" data-view="schedule">Schedule</button>
       <button class="nav-btn" data-view="quarantine">Quarantine</button>
       <button class="nav-btn" data-view="history">History</button>
+      <button class="nav-btn" data-view="license">License</button>
       <button class="nav-btn" data-view="settings">Settings</button>
     </nav>
     <div class="spacer"></div>
+    <span id="license-badge" class="badge" role="status" hidden></span>
     <span id="shield-badge" class="badge" role="status">Protection ON</span>
   </header>
 
@@ -192,9 +194,24 @@
           <label class="set-row"><span>Auto-quarantine infected files</span><input type="checkbox" id="set-autoq" checked></label>
           <label class="set-row"><span>Scan archives (slower)</span><input type="checkbox" id="set-archives"></label>
           <label class="set-row"><span>Notifications</span><input type="checkbox" id="set-notif" checked></label>
+          <label class="set-row"><span>Start with Windows</span><input type="checkbox" id="set-autostart" checked></label>
           <div class="set-row"><span>Signature database</span><span id="sig-version" class="mono"></span></div>
           <div class="set-row"><span>Quarantine location</span><span id="q-location" class="mono"></span></div>
         </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Updates</div>
+        <div class="settings-grid">
+          <label class="set-row"><span>Check for updates automatically</span><input type="checkbox" id="set-auto-update" checked></label>
+          <div class="set-row"><span>Update channel</span><select id="job-channel"><option value="stable" selected>Stable</option><option value="beta">Beta</option></select></div>
+          <div class="set-row"><span>Last check</span><span id="update-last-check" class="mono">never</span></div>
+          <div class="set-row"><span>Latest version</span><span id="update-latest" class="mono">—</span></div>
+        </div>
+        <div class="scan-controls">
+          <input type="text" id="update-url" placeholder="https://updates.novaloom.com/vaultguard/manifest.json" style="flex:1;min-width:260px">
+          <button id="btn-update-check" class="vg-btn">Check for updates</button>
+        </div>
+        <div id="update-status" class="muted" style="margin-top:8px"></div>
       </div>
       <div class="panel">
         <div class="panel-title">Exclusions</div>
@@ -203,6 +220,41 @@
           <button id="btn-excl-add" class="vg-btn">+ Add exclusion</button>
         </div>
         <div id="excl-list" class="chip-list"><span class="muted">No exclusions</span></div>
+      </div>
+    </section>
+    <section id="view-license" class="view" aria-label="License">
+      <div class="panel">
+        <div class="panel-title">License &amp; activation</div>
+        <div class="settings-grid">
+          <div class="set-row"><span>Status</span><span id="lic-status" class="mono">—</span></div>
+          <div class="set-row"><span>Plan</span><span id="lic-plan" class="mono">—</span></div>
+          <div class="set-row"><span>Licensed to</span><span id="lic-customer" class="mono">—</span></div>
+          <div class="set-row"><span>Valid until</span><span id="lic-expires" class="mono">—</span></div>
+          <div class="set-row"><span>Machine ID</span><span id="lic-machine" class="mono">—</span></div>
+        </div>
+        <div id="lic-banner" class="muted" hidden></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Activate VaultGuard</div>
+        <div class="scan-controls">
+          <input type="text" id="lic-key-input" placeholder="VG-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" style="flex:1;min-width:320px" autocomplete="off" spellcheck="false">
+          <button id="btn-lic-activate" class="vg-btn primary">Activate</button>
+        </div>
+        <div class="scan-controls" style="margin-top:8px">
+          <input type="text" id="lic-customer-input" placeholder="Name or company (optional)" style="flex:1;min-width:260px">
+        </div>
+        <div id="lic-result" class="muted" style="margin-top:8px"></div>
+        <div class="scan-controls" style="margin-top:10px">
+          <button id="btn-lic-deactivate" class="vg-btn danger">Deactivate on this machine</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Trial</div>
+        <div class="settings-grid">
+          <div class="set-row"><span>Trial status</span><span id="lic-trial" class="mono">—</span></div>
+          <div class="set-row"><span>Trial ends</span><span id="lic-trial-ends" class="mono">—</span></div>
+        </div>
+        <p class="muted">Every new installation includes a free 14-day trial with all features. When the trial ends, activate a license to keep full protection.</p>
       </div>
     </section>
   </main>
@@ -222,6 +274,7 @@
   <script src="js/ransomware.js"></script>
   <script src="js/repair.js"></script>
   <script src="js/updater.js"></script>
+  <script src="js/license.js"></script>
   <script src="js/bootguard.js"></script>
   <script src="js/dom.js"></script>
   <script src="js/app.js"></script>

@@ -11,7 +11,7 @@ A professional software suite built for publication. Four products, one reposito
 | **HarborCut** | `apps/harborcut/` | Web app (desktop-class) | Video editing software — multi-track timeline, trimming, splitting, fades, text overlays, audio mixing, export to video file |
 | **Verdant Farm** | `apps/verdantfarm/` | Mobile game (PWA) | Farm management game — plant, grow, harvest, sell, expand your farm |
 | **Aqua Puzzle** | `apps/aquapuzzle/` | Mobile game (PWA) | Match-3 puzzle with an aquarium you fill by buying new fish |
-| **VaultGuard** | `apps/vaultguard/` | Desktop app (Electron) | Standalone antivirus — real-time protection, quick/full/custom scans, 78+ signatures, behavior detection, quarantine, health score, JSON reports |
+| **VaultGuard** | `apps/vaultguard/` | Desktop app (Electron) | Standalone antivirus — real-time protection, quick/full/custom scans, 78+ signatures, behavior detection, quarantine, health score, JSON reports, 14-day trial + license activation, signed update channel |
 
 ## Run any app
 
