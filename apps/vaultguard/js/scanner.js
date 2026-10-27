@@ -121,10 +121,26 @@ const Scanner = (() => {
     }
 
     const textHits = Signatures.matchTextPatterns(bytes);
+    const ext = Signatures.extOf(safeName);
+    const isSourceFile = Signatures.SOURCE_FILE_RE.test(safeName);
+    const isTrustedDir = Signatures.TRUSTED_DIRS.test(safePath);
+    const isCodeLike = isSourceFile || isTrustedDir;
+    const isDangerousScriptExt = ['.php', '.asp', '.aspx', '.jsp', '.ps1', '.psm1', '.bat', '.cmd', '.vbs', '.hta'].includes(ext);
+    const textWeightScale = (isCodeLike && !isDangerousScriptExt) ? 0.25 : 1.0;
+    const textHitIds = [];
     for (const h of textHits) {
       result.signatures.push(Security.clampString(h.id, 60));
-      result.score += Security.clampInt(h.weight, 0, 100, 0);
-      result.reasons.push(`signature ${h.id}: ${h.name}`);
+      textHitIds.push(h.id);
+      const w = Math.round(Security.clampInt(h.weight, 0, 100, 0) * textWeightScale);
+      result.score += w;
+      result.reasons.push(`signature ${h.id}: ${h.name}${textWeightScale < 1 ? ' (reduced weight: source code context)' : ''}`);
+    }
+    if (isCodeLike && !isDangerousScriptExt) {
+      const riskyInSource = textHitIds.filter((id) => ['CMD-Ransom-Note', 'PS-DOWNLOAD-EXEC', 'WGET-CURL-PIPE-SH', 'PS-IWR-IEX', 'KILL-SHADOW-COPIES', 'DEFENDER-DISABLE', 'CRYPTO-RANSOM-API', 'BAT-MASS-DELETE', 'LSASS-ACCESS', 'MIMIKATZ-STRING'].includes(id));
+      if (riskyInSource.length) {
+        result.score = Math.max(0, result.score - 30);
+        result.reasons.push('context adjustment: plain-text source file (likely false positive)');
+      }
     }
 
     const nr = Signatures.nameRisk(safeName);
@@ -148,7 +164,6 @@ const Scanner = (() => {
 
     const ent = Signatures.shannonEntropy(bytes);
     result.entropy = Math.round(ent * 100) / 100;
-    const ext = Signatures.extOf(safeName);
     const isPacked = ent > 7.5 && safeSize > 64 * 1024 && !Signatures.SCRIPT_EXTS.includes(ext) && !Signatures.DOC_EXTS.includes(ext);
     if (isPacked) {
       result.score += 25;

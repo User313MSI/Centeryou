@@ -74,6 +74,9 @@ const Signatures = (() => {
   const ARCHIVE_EXTS = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz'];
   const SCRIPT_EXTS = ['.js', '.jse', '.vbs', '.vbe', '.wsf', '.wsh', '.ps1', '.bat', '.cmd', '.sh', '.py', '.php', '.hta'];
   const DOC_EXTS = ['.doc', '.docm', '.xls', '.xlsm', '.ppt', '.pptm', '.docx', '.xlsx', '.pdf'];
+  const SOURCE_EXTS = ['.py', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.java', '.c', '.h', '.cpp', '.hpp', '.cs', '.go', '.rs', '.rb', '.lua', '.sql', '.json', '.yml', '.yaml', '.xml', '.html', '.css', '.scss', '.md', '.txt', '.csv', '.log', '.ini', '.cfg', '.toml', '.env.example', '.sh', '.bash', '.ps1', '.psm1', '.bat', '.cmd', '.php'];
+  const TRUSTED_DIRS = /(^|[\\/])(src|lib|dist|build|tests?|__tests__|node_modules|docs?|examples?|scripts|tools?|migrations?|assets|public|static|config)([\\/]|$)/i;
+  const SOURCE_FILE_RE = /\.(py|ts|tsx|js|jsx|mjs|cjs|java|c|h|cpp|hpp|cs|go|rs|rb|lua|sql|json|ya?ml|xml|html?|css|scss|md|txt|csv|log|ini|cfg|toml|sh|bash|ps1|psm1|bat|cmd|php)$/i;
 
   const MAX_SCAN_TEXT = 512 * 1024;
 
@@ -180,6 +183,9 @@ const Signatures = (() => {
     ARCHIVE_EXTS: Object.freeze([...ARCHIVE_EXTS]),
     SCRIPT_EXTS: Object.freeze([...SCRIPT_EXTS]),
     DOC_EXTS: Object.freeze([...DOC_EXTS]),
+    SOURCE_EXTS: Object.freeze([...SOURCE_EXTS]),
+    TRUSTED_DIRS,
+    SOURCE_FILE_RE,
     MAX_SCAN_TEXT,
     decodeHex,
     matchHexPatterns,

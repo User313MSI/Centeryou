@@ -79,6 +79,12 @@ npm test
   dedup of overlapping scan targets, history cache (2 s TTL), realtime tick time budget,
   event/result lists capped and virtualized by truncation notice
 
+## False-positive control (context-aware scoring)
+- Files that are **plain-text source code** (`.py`, `.ts`, `.js`, `.java`, `.json`, `.md`…) or live in **trusted directories** (`src/`, `tests/`, `docs/`, `node_modules/`…) get a **×0.25 weight reduction** on text signatures and a −30 context adjustment
+- `.php`/`.asp`/`.aspx`/`.jsp` (web-executable) and `.ps1`/`.bat`/`.cmd`/`.vbs`/`.hta` keep **full weight** — a webshell in `.php` is still `infected`, a dropper `.ps1` in Temp is still `infected`
+- Every reduction is **visible in the result reasons** (« reduced weight: source code context », « likely false positive »)
+- Verified by 8 dedicated tests (`[fp-fix]` suite)
+
 ## Known environment limits (honest notes)
 - The Electron window cannot render headless in this sandbox (no display server).
   Engine + syntax fully validated by 162 Node tests; packaging config ready.
