@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 <head>
-<style>
-body { background: #0b0e14 !important; color: #eef2f8 !important; }
-</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
@@ -21,12 +18,21 @@ body { background: #0b0e14 !important; color: #eef2f8 !important; }
 html { background: #0b0e14 !important; }
 body {
   background: #0b0e14 !important;
-  background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.18), transparent 60%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.14), transparent 55%) !important;
+  background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.45), transparent 65%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.40), transparent 60%) !important;
   color: #eef2f8 !important;
 }
 .fp-top { background: rgba(20,26,36,.85) !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-.fp-brand { color: #5b8cff !important; }
-.fp-hero h1 { color: #eef2f8 !important; }
+.fp-brand {
+  background: linear-gradient(135deg, #5b8cff, #8b5cf6) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; color: transparent !important;
+}
+.fp-hero h1 {
+  color: #eef2f8 !important;
+  background: linear-gradient(120deg, #ffffff 20%, #5b8cff 60%, #8b5cf6 100%) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
 .fp-day { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1) !important; }
 .fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
 .fp-empty { color: #97a3b6 !important; }
@@ -38,7 +44,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.5 — design system premium (dark + light)
+   FlowPlan v3.6 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -524,7 +530,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.5 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.6 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
