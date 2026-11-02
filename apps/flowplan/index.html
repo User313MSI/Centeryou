@@ -134,37 +134,51 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-/* SÛR v3.5 : thème sombre en dur, aucune variable, aucun sélecteur complexe */
-html { background: #0b0e14 !important; }
-body {
+/* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
+:root[data-theme="dark"] html { background: #0b0e14 !important; }
+:root[data-theme="dark"] body::before {
+  content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(600px 400px at 20% 20%, rgba(91,140,255,.20), transparent 60%),
+    radial-gradient(500px 380px at 80% 15%, rgba(139,92,246,.18), transparent 60%),
+    radial-gradient(700px 500px at 50% 90%, rgba(91,140,255,.10), transparent 60%);
+  animation: bgDrift 24s ease-in-out infinite alternate;
+}
+@keyframes bgDrift {
+  0% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(3%, -2%) scale(1.06); }
+  100% { transform: translate(-2%, 3%) scale(1.02); }
+}
+.fp-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: 14px; letter-spacing: 1px; }
+:root[data-theme="dark"] body {
   background: #0b0e14 !important;
   background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.45), transparent 65%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.40), transparent 60%) !important;
   color: #eef2f8 !important;
 }
-.fp-top { background: rgba(20,26,36,.85) !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-.fp-brand {
+:root[data-theme="dark"] .fp-top { background: rgba(20,26,36,.85) !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-brand {
   background: linear-gradient(135deg, #5b8cff, #8b5cf6) !important;
   -webkit-background-clip: text !important; background-clip: text !important;
   -webkit-text-fill-color: transparent !important; color: transparent !important;
 }
-.fp-hero h1 {
+:root[data-theme="dark"] .fp-hero h1 {
   color: #eef2f8 !important;
   background: linear-gradient(120deg, #ffffff 20%, #5b8cff 60%, #8b5cf6 100%) !important;
   -webkit-background-clip: text !important; background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
-.fp-day { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-.fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-.fp-empty { color: #97a3b6 !important; }
-.fp-btn { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
-.fp-input-row textarea { background: #141a24 !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.16) !important; }
-.fp-week-label { color: #eef2f8 !important; }
-.fp-stats span { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
-.fp-filter { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
-.fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
-.fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-day { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-empty { color: #97a3b6 !important; }
+:root[data-theme="dark"] .fp-btn { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
+:root[data-theme="dark"] .fp-input-row textarea { background: #141a24 !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.16) !important; }
+:root[data-theme="dark"] .fp-week-label { color: #eef2f8 !important; }
+:root[data-theme="dark"] .fp-stats span { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-filter { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
+:root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
+:root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v4.1 — design system premium (dark + light)
+   FlowPlan v4.3 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -238,13 +252,13 @@ body {
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 40;
 }
-.fp-brand {
+:root[data-theme="dark"] .fp-brand {
   font-size: 21px; font-weight: 800; letter-spacing: -0.4px;
   background: var(--accent-grad);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .fp-top-actions { display: flex; gap: 8px; align-items: center; }
-.fp-search {
+:root[data-theme="dark"] .fp-search {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
   border-radius: 12px; padding: 9px 13px; font-size: 14px; width: 180px; font-family: inherit;
   transition: border-color .15s, box-shadow .15s;
@@ -299,13 +313,13 @@ body {
 
 /* ---------- hero ---------- */
 .fp-hero { max-width: 780px; margin: 0 auto; padding: 44px 20px 10px; text-align: center; }
-.fp-hero h1 {
+:root[data-theme="dark"] .fp-hero h1 {
   font-size: 40px; margin: 0 0 16px; letter-spacing: -1.2px; line-height: 1.12; font-weight: 800;
   background: linear-gradient(120deg, var(--text) 30%, var(--accent) 70%, var(--accent-2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .fp-input-row { display: flex; gap: 10px; align-items: stretch; }
-.fp-input-row textarea {
+:root[data-theme="dark"] .fp-input-row textarea {
   flex: 1; background: var(--panel-solid); color: var(--text);
   border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 14px 16px;
   font-size: 16px; font-family: inherit; resize: none; min-height: 52px;
@@ -329,7 +343,7 @@ body {
 
 /* ---------- barre semaine ---------- */
 .fp-weekbar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px 20px 6px; flex-wrap: wrap; }
-.fp-week-label { font-weight: 700; font-size: 17px; min-width: 230px; text-align: center; letter-spacing: -0.2px; }
+:root[data-theme="dark"] .fp-week-label { font-weight: 700; font-size: 17px; min-width: 230px; text-align: center; letter-spacing: -0.2px; }
 .fp-view-switch {
   display: inline-flex; gap: 3px; margin-left: 12px;
   background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px;
@@ -338,7 +352,7 @@ body {
 .fp-view-switch .fp-btn.active { background: var(--accent-grad); color: #fff; box-shadow: var(--shadow-sm); }
 
 .fp-stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 10px 20px 8px; }
-.fp-stats span {
+:root[data-theme="dark"] .fp-stats span {
   background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
   padding: 5px 14px; font-size: 13px; color: var(--muted);
 }
@@ -352,7 +366,7 @@ body {
   border-radius: var(--radius); color: var(--warn); font-size: 14px;
 }
 .fp-filters { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; padding: 0 20px 14px; }
-.fp-filter {
+:root[data-theme="dark"] .fp-filter {
   background: var(--panel); border: 1px solid var(--border); color: var(--muted);
   border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
   transition: all .14s;
@@ -378,7 +392,7 @@ body {
   border-color: var(--accent); border-style: dashed;
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
-.fp-day-head {
+:root[data-theme="dark"] .fp-day-head {
   display: flex; justify-content: space-between; align-items: center;
   font-weight: 700; font-size: 13.5px; color: var(--muted);
   padding-bottom: 9px; border-bottom: 1px solid var(--border);
@@ -412,7 +426,7 @@ body {
   align-self: flex-start; margin-top: 4px; font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .5px; padding: 2px 9px; border-radius: 999px; color: var(--text);
 }
-.fp-empty { color: var(--muted); opacity: .65; font-size: 13px; text-align: center; margin-top: 14px; }
+:root[data-theme="dark"] .fp-empty { color: var(--muted); opacity: .65; font-size: 13px; text-align: center; margin-top: 14px; }
 .fp-search-results { grid-column: 1 / -1; min-height: 0; }
 
 /* ---------- mois ---------- */
@@ -504,7 +518,7 @@ body {
 }
 @keyframes slidein { from { opacity: 0; transform: translateX(40px); } }
 
-.fp-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px; border-top: 1px solid var(--border); }
+:root[data-theme="dark"] .fp-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px; border-top: 1px solid var(--border); }
 
 .fp-btn:focus-visible, .fp-event:focus-visible, .fp-example:focus-visible, .fp-filter:focus-visible,
 .fp-input-row textarea:focus-visible, .fp-modal input:focus-visible, .fp-modal select:focus-visible,
@@ -542,9 +556,10 @@ body {
 
 </style>
 </head>
-<body style="background:#0b0e14 !important; color:#eef2f8 !important;">
+<body>
   <header class="fp-top">
     <div class="fp-brand">🌊 FlowPlan</div>
+    <div id="fp-clock" class="fp-clock">--:--:--</div>
     <div class="fp-top-actions">
       <input id="fp-search" class="fp-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un événement">
       <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
@@ -665,7 +680,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v4.1 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v4.3 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

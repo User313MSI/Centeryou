@@ -85,7 +85,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome', 'fp-voice-toggle',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome', 'fp-voice-toggle', 'fp-clock',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }
@@ -433,6 +433,22 @@ test('DOM : speak() existe et retourne false proprement si speechSynthesis absen
   const { sandbox } = loadApp();
   // speechSynthesis absent dans le harnais -> speak doit échouer proprement, pas crash
   assert(typeof sandbox.speechSynthesis === 'undefined');
+});
+
+// ---------- audit v4.3 ----------
+test('CSS : le bloc de secours sombre est scopé à data-theme=dark (le thème clair fonctionne)', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  // aucune règle !important non scopée qui écraserait le light
+  const bad = html.match(/^[^:][^{]*#0b0e14[^:]*!/gm) || [];
+  assert(bad.length === 0, 'règles sombres non scopées trouvées: ' + bad.length);
+  assert(html.includes(':root[data-theme="dark"] body'), 'sécurité scopée dark présente');
+  assert(html.includes(':root[data-theme="light"]'), 'variables light présentes');
+});
+
+test('DOM : horloge affichée au chargement', () => {
+  const { document } = loadApp();
+  const c = document.getElementById('fp-clock');
+  assert(/^\d{2}:\d{2}:\d{2}$/.test(c.textContent), 'horloge au format HH:MM:SS, reçu: ' + c.textContent);
 });
 
 // ---------- résumé (async) ----------

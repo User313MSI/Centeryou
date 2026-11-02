@@ -48,6 +48,7 @@
     reminders: $('fp-reminders'),
     demo: $('fp-demo'),
     voiceToggle: $('fp-voice-toggle'),
+    clock: $('fp-clock'),
     present: $('fp-present'),
     welcome: $('fp-welcome'),
     welcomeGo: $('fp-welcome-go'),
@@ -297,6 +298,7 @@
       const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
       if (card) {
         card.classList.add('just-added');
+        try { const r = card.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, cat.color || '#5b8cff'); } catch (e) {}
         if (window.Animation && card.animate) {
           try {
             card.animate(
@@ -908,6 +910,7 @@
       const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
       if (card) {
         card.classList.add('just-added');
+        try { const r = card.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, cat.color || '#5b8cff'); } catch (e) {}
         if (window.Animation && card.animate) {
           try {
             card.animate(
@@ -1047,11 +1050,59 @@
     }, msg.length * 90 + 800);
   });
 
+
+  // ---------- WOW : confettis d'ajout (léger, canvas plein écran temporaire) ----------
+  let fxCanvas = null;
+  function burst(x, y, color) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!fxCanvas) {
+      fxCanvas = document.createElement('canvas');
+      fxCanvas.className = 'fp-fx';
+      fxCanvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:999';
+      document.body.appendChild(fxCanvas);
+    }
+    const c = fxCanvas;
+    c.width = innerWidth; c.height = innerHeight;
+    const ctx = c.getContext('2d');
+    const parts = [];
+    for (let i = 0; i < 22; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = 2 + Math.random() * 4;
+      parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, color: color || '#5b8cff', size: 2 + Math.random() * 3 });
+    }
+    let frames = 0;
+    function tick() {
+      ctx.clearRect(0, 0, c.width, c.height);
+      let alive = false;
+      for (const p of parts) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.02;
+        if (p.life > 0) {
+          alive = true;
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      if (alive && frames++ < 60) requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, c.width, c.height);
+    }
+    requestAnimationFrame(tick);
+  }
+
   // ripple au clic sur tous les .fp-btn
   document.addEventListener('click', function (e) {
     const b = e.target && e.target.closest ? e.target.closest('.fp-btn') : null;
     if (b) { b.classList.remove('ripple'); void b.offsetWidth; b.classList.add('ripple'); }
   });
+
+  // horloge en direct
+  function tickClock() {
+    if (!els.clock) return;
+    const d = new Date();
+    els.clock.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
 
   // ---------- boot : verrouillage ----------
   async function boot() {
