@@ -71,6 +71,7 @@ function makeDocument() {
     createElement(tag) { return makeEl('<' + tag + '>'); },
     createTextNode(t) { return { textContent: t }; },
     querySelectorAll() { return []; },
+    querySelector() { return null; },
     addEventListener(type, fn) { (docListeners[type] = docListeners[type] || []).push(fn); },
     fire(type, event) {
       (docListeners[type] || []).forEach(fn => fn(Object.assign(
