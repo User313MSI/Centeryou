@@ -92,7 +92,7 @@
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan — tes données restent sur ton appareil (100 % local). Glisse un événement d'un jour à l'autre pour le déplacer.</footer>
+  <footer class="fp-footer">FlowPlan v2.1 (build ad084d9) — tes données restent sur ton appareil (100 % local). Glisse un événement d'un jour à l'autre pour le déplacer.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
@@ -101,10 +101,6 @@
   <script src="js/categories.js"></script>
   <script src="js/ics.js"></script>
   <script src="js/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
+  <script src="js/boot.js"></script>
 </body>
 </html>
