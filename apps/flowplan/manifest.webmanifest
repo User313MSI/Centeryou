@@ -1,0 +1,14 @@
+{
+  "name": "FlowPlan — Planning interactif",
+  "short_name": "FlowPlan",
+  "description": "Dis ta semaine à voix haute ou au clavier, FlowPlan génère ton planning interactif. 100 % local.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101418",
+  "theme_color": "#101418",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

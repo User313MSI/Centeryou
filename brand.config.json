@@ -13,6 +13,10 @@
     "aquapuzzle": {
       "name": "Aqua Puzzle",
       "subtitle": "Aquarium Match-3"
+    },
+    "flowplan": {
+      "name": "FlowPlan",
+      "subtitle": "Interactive Planner"
     }
   },
   "palette": {

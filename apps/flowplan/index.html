@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'">
+  <meta name="theme-color" content="#101418">
+  <title>FlowPlan — Ton planning en un mot</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="fp-top">
+    <div class="fp-brand">🌊 FlowPlan</div>
+    <div class="fp-top-actions">
+      <button id="fp-export" class="fp-btn" title="Exporter au format calendrier (.ics)">📅 Export .ics</button>
+      <button id="fp-print" class="fp-btn" title="Imprimer la semaine">🖨️ Imprimer</button>
+      <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
+    </div>
+  </header>
+
+  <section class="fp-hero">
+    <h1>Dis ta semaine. On fait le planning.</h1>
+    <p class="fp-sub">Écris ou dicte : « Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; samedi soirée chez Léa »</p>
+    <div class="fp-input-row">
+      <textarea id="fp-input" rows="2" placeholder="Écris ton planning ici… (Ctrl+Entrée pour générer)"></textarea>
+      <button id="fp-voice" class="fp-btn" title="Saisie vocale">🎙️ Voix</button>
+      <button id="fp-generate" class="fp-btn primary">✨ Générer</button>
+    </div>
+    <div class="fp-examples">
+      <span>Essayer :</span>
+      <button class="fp-example" data-example="Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; vendredi 18h apéro">Exemple 1</button>
+      <button class="fp-example" data-example="Tous les lundis 18h30 sport ; tous les jours 7h réveil ; jeudi 12 mai 2026 10h dentiste">Récurrence</button>
+      <button class="fp-example" data-example="Samedi mariage de Julie ; dimanche 10h brunch ; 25/12/2026 journée en famille">Dates précises</button>
+    </div>
+    <div id="fp-status" class="fp-status"></div>
+  </section>
+
+  <section class="fp-weekbar">
+    <button id="fp-prev-week" class="fp-btn">←</button>
+    <span id="fp-week-label" class="fp-week-label"></span>
+    <button id="fp-today-week" class="fp-btn">Cette semaine</button>
+    <button id="fp-next-week" class="fp-btn">→</button>
+  </section>
+
+  <div id="fp-stats" class="fp-stats"></div>
+  <div id="fp-conflicts" class="fp-conflicts" hidden></div>
+
+  <main id="fp-week" class="fp-week"></main>
+
+  <div id="fp-modal" class="fp-modal-backdrop" hidden>
+    <div class="fp-modal">
+      <h2>Événement</h2>
+      <label>Titre <input id="fp-modal-title" type="text" maxlength="120"></label>
+      <label>Date <input id="fp-modal-date" type="date"></label>
+      <div class="fp-modal-times">
+        <label>Début <input id="fp-modal-start" type="time"></label>
+        <label>Fin <input id="fp-modal-end" type="time"></label>
+        <label class="fp-allday"><input id="fp-modal-allday" type="checkbox"> Journée entière</label>
+      </div>
+      <div class="fp-modal-actions">
+        <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
+        <span class="fp-spacer"></span>
+        <button id="fp-modal-cancel" class="fp-btn">Annuler</button>
+        <button id="fp-modal-save" class="fp-btn primary">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="fp-footer">FlowPlan — tes données restent sur ton appareil (100 % local).</footer>
+
+  <script src="js/parser.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/categories.js"></script>
+  <script src="js/ics.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>

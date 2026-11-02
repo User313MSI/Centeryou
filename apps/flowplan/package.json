@@ -1,0 +1,32 @@
+{
+  "name": "flowplan",
+  "productName": "FlowPlan",
+  "version": "1.0.0",
+  "description": "FlowPlan — planning interactif généré depuis une phrase ou la voix, 100 % local, by NovaLoom",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node serve.js",
+    "test": "node tests/run-tests.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.novaloom.flowplan",
+    "productName": "FlowPlan",
+    "directories": { "output": "release" },
+    "files": ["main.js", "preload.js", "index.html", "css/**", "js/**", "assets/**", "manifest.webmanifest", "sw.js"],
+    "win": { "target": ["nsis", "portable"] },
+    "mac": { "target": ["dmg"], "category": "public.app-category.productivity" },
+    "linux": { "target": ["AppImage", "deb"], "category": "Utility" }
+  },
+  "author": "NovaLoom",
+  "license": "UNLICENSED",
+  "private": true
+}

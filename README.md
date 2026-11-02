@@ -11,6 +11,7 @@ A professional software suite built for publication. Three products, one reposit
 | **HarborCut** | `apps/harborcut/` | Web app (desktop-class) | Video editing software — multi-track timeline, trimming, splitting, fades, text overlays, audio mixing, export to video file |
 | **Verdant Farm** | `apps/verdantfarm/` | Mobile game (PWA) | Farm management game — plant, grow, harvest, sell, expand your farm |
 | **Aqua Puzzle** | `apps/aquapuzzle/` | Mobile game (PWA) | Match-3 puzzle with an aquarium you fill by buying new fish |
+| **FlowPlan** | `apps/flowplan/` | Web / PWA / desktop (Electron) | Interactive planner — describe your week in French (text or voice), get a visual weekly plan. 100% local, offline, exportable to .ics |
 
 ## Run any app
 
@@ -31,6 +32,7 @@ Installable: the games are Progressive Web Apps (add to home screen on Android/i
 - [HarborCut — video editor](docs/HARBORCUT.md)
 - [Verdant Farm — farm game](docs/VERDFARM.md)
 - [Aqua Puzzle — aquarium puzzle](docs/AQUAPUZZLE.md)
+- [FlowPlan — interactive planner](apps/flowplan/README.md)
 - [Publication checklist](docs/PUBLISH.md)
 
 ## Branding
