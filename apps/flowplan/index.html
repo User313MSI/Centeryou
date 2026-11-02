@@ -37,7 +37,7 @@
 /* 4) mode présentation : transition douce + contenu qui grandit */
 .fp-top, .fp-hero, .fp-filters, .fp-footer { transition: opacity .25s, transform .25s; }
 body.presenting .fp-top, body.presenting .fp-hero, body.presenting .fp-filters, body.presenting .fp-footer {
-  opacity: 0; transform: translateY(-12px); pointer-events: none; height: 0; overflow: hidden; padding: 0; margin: 0; display: block !important;
+  display: none !important;
 }
 body.presenting .fp-week { animation: presentZoom .35s cubic-bezier(.2,.9,.3,1); }
 @keyframes presentZoom { from { opacity: 0; transform: scale(.96); } }
@@ -86,7 +86,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.10 — design system premium (dark + light)
+   FlowPlan v3.11 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -585,7 +585,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.10 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.11 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
