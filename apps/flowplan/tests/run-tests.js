@@ -552,6 +552,66 @@ test('attaque : ICS avec CRLF dans titre/id -> structure intacte (1 VEVENT, UID 
   assert(/^UID:[A-Za-z0-9_-]+@flowplan\.local$/.test(lines.find(l => l.startsWith('UID:'))));
 });
 
+// ---------- Undo ----------
+test('undo : annule un ajout', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  eq(p.all().length, 1);
+  eq(p.undo(), 'ajout annulé');
+  eq(p.all().length, 0);
+  eq(p.undo(), null); // pile vide
+});
+
+test('undo : annule une suppression (événement restauré)', () => {
+  const p = Planner.createPlanner();
+  const ev = p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00', cat: 'travail' });
+  p.remove(ev.id);
+  eq(p.all().length, 0);
+  eq(p.undo(), 'suppression annulée');
+  eq(p.all().length, 1);
+  eq(p.all()[0].title, 'A');
+  eq(p.all()[0].cat, 'travail');
+});
+
+test('undo : annule une modification (état avant restauré)', () => {
+  const p = Planner.createPlanner();
+  const ev = p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  p.update(ev.id, { title: 'B', start: '14:00' });
+  eq(p.all()[0].title, 'B');
+  eq(p.undo(), 'modification annulée');
+  eq(p.all()[0].title, 'A');
+  eq(p.all()[0].start, '09:00');
+});
+
+test('undo : annule un clear (reset)', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-04' });
+  p.load([]); // reset
+  eq(p.all().length, 0);
+  eq(p.undo(), 'réinitialisation annulée');
+  eq(p.all().length, 1);
+});
+
+test('undo : pile plafonnée à 50 actions', () => {
+  const p = Planner.createPlanner();
+  for (let i = 0; i < 60; i++) p.add({ title: 'E' + i, date: '2026-11-04', start: '09:00', end: '09:01' });
+  let n = 0;
+  while (p.undo()) n++;
+  eq(n, 50);
+  eq(p.all().length, 10); // 60 ajoutés - 50 annulés
+});
+
+test('undo : doublon (add ignoré) ne pousse pas dans l historique', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' }); // doublon
+  eq(p.all().length, 1);
+  eq(p.canUndo(), true);
+  p.undo();
+  eq(p.all().length, 0);
+  eq(p.undo(), null); // pas de 2e undo pour le doublon
+});
+
 // ---------- Résumé ----------
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);

@@ -21,6 +21,7 @@
       <div class="fp-menu">
         <button id="fp-menu-btn" class="fp-btn" aria-label="Menu" aria-haspopup="true">⋯</button>
         <div id="fp-menu-panel" class="fp-menu-panel" hidden>
+          <button id="fp-undo" class="fp-menu-item">↩️ Annuler (Ctrl+Z)</button>
           <button id="fp-theme" class="fp-menu-item">☀️ Thème clair</button>
           <button id="fp-export" class="fp-menu-item">📅 Exporter (.ics)</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
@@ -98,7 +99,9 @@
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v2.2 — 100 % local, tes données restent sur cet appareil.</footer>
+  <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
+
+  <footer class="fp-footer">FlowPlan v2.4 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

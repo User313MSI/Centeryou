@@ -39,6 +39,8 @@
     examplesToggle: $('fp-examples-toggle'),
     examples: $('fp-examples'),
     reset: $('fp-reset'),
+    undo: $('fp-undo'),
+    toasts: $('fp-toasts'),
     modal: $('fp-modal'),
     mTitle: $('fp-modal-title'),
     mDate: $('fp-modal-date'),
@@ -70,6 +72,14 @@
     applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
   });
 
+  els.undo.addEventListener('click', function () { els.menuPanel.hidden = true; doUndo(); });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && els.modal.hidden) {
+      e.preventDefault();
+      doUndo();
+    }
+  });
+
   // menu ⋯ : s'ouvre/ferme, se ferme au clic ailleurs ou avec Échap
   els.menuBtn.addEventListener('click', function (e) {
     e.stopPropagation();
@@ -94,7 +104,7 @@
     Store.clear();
     activeCat = null;
     render();
-    setStatus('Données réinitialisées ✓');
+    toast('🗑️ Données réinitialisées', false, true);
   });
 
   // ---------- persistance ----------
@@ -115,6 +125,33 @@
     els.status.classList.toggle('error', !!isErr);
   }
 
+  // Toast visible 4s, empilé en haut à droite ; msg peut contenir {undo:true}
+  function toast(msg, isErr, withUndo) {
+    const t = document.createElement('div');
+    t.className = 'fp-toast' + (isErr ? ' error' : '');
+    t.textContent = msg;
+    if (withUndo) {
+      const b = document.createElement('button');
+      b.className = 'fp-toast-undo';
+      b.textContent = 'Annuler';
+      b.addEventListener('click', function () { doUndo(); t.remove(); });
+      t.appendChild(b);
+    }
+    els.toasts.appendChild(t);
+    setTimeout(function () { t.classList.add('out'); setTimeout(function () { t.remove(); }, 300); }, 4000);
+  }
+
+  function doUndo() {
+    const label = planner.undo();
+    if (label) {
+      persist();
+      render();
+      toast('↩️ ' + label);
+    } else {
+      toast('Rien à annuler', true);
+    }
+  }
+
   // ---------- génération ----------
   function generate() {
     const text = els.input.value.trim();
@@ -130,7 +167,7 @@
     }
     persist();
     els.input.value = '';
-    setStatus(added + ' événement(s) ajouté(s) ✓');
+    toast(added + ' événement(s) ajouté(s) ✓', false, added > 0);
     render();
   }
 
@@ -256,7 +293,7 @@
         if (id) {
           planner.update(id, { date: d.date });
           persist();
-          setStatus('Événement déplacé au ' + fmtDate(d.date) + ' ✓');
+          toast('📅 Déplacé au ' + fmtDate(d.date), false, true);
           render();
         }
       });
@@ -306,7 +343,7 @@
           e.preventDefault();
           cell.classList.remove('droptarget');
           const id = e.dataTransfer.getData('text/plain') || dragId;
-          if (id) { planner.update(id, { date: d.date }); persist(); setStatus('Événement déplacé au ' + fmtDate(d.date) + ' ✓'); render(); }
+          if (id) { planner.update(id, { date: d.date }); persist(); toast('📅 Déplacé au ' + fmtDate(d.date), false, true); render(); }
         });
         cell.addEventListener('dblclick', function () {
           currentWeekStart = Planner.weekStartISO(d.date);
@@ -432,11 +469,16 @@
     else planner.add(patch);
     persist();
     closeModal();
+    toast('💾 Enregistré', false, true);
     render();
   }
 
   function deleteModal() {
-    if (editingId) { planner.remove(editingId); persist(); }
+    if (editingId) {
+      planner.remove(editingId);
+      persist();
+      toast('🗑️ Événement supprimé', false, true);
+    }
     closeModal();
     render();
   }

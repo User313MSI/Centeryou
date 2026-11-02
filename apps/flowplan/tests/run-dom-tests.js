@@ -40,15 +40,19 @@ function makeEl(id) {
     },
     setAttribute(k, v) { this.dataset[k] = v; },
     getAttribute(k) { return this.dataset[k] ?? null; },
-    appendChild(c) { this.children.push(c); return c; },
-    insertBefore(c) { this.children.unshift(c); return c; },
+    appendChild(c) { c._parent = this; this.children.push(c); return c; },
+    insertBefore(c) { c._parent = this; this.children.unshift(c); return c; },
+    remove() { const p = this._parent; if (p) { const i = p.children.indexOf(this); if (i !== -1) p.children.splice(i, 1); } },
     addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
     removeEventListener() {},
     querySelectorAll() { return []; },
     contains(c) { return c === el || el.children.includes(c); },
     focus() {},
     click() { (listeners.click || []).forEach(fn => fn({ target: el })); },
-    fire(type, event) { (listeners[type] || []).forEach(fn => fn(event || { target: el, key: '', preventDefault() {}, dataTransfer: null })); },
+    fire(type, event) {
+      (listeners[type] || []).forEach(fn => fn(Object.assign(
+        { target: el, key: '', preventDefault() {}, stopPropagation() {}, dataTransfer: null }, event)));
+    },
     _listeners: listeners,
   };
   return el;
@@ -65,7 +69,10 @@ function makeDocument() {
     createTextNode(t) { return { textContent: t }; },
     querySelectorAll() { return []; },
     addEventListener(type, fn) { (docListeners[type] = docListeners[type] || []).push(fn); },
-    fire(type, event) { (docListeners[type] || []).forEach(fn => fn(event || { key: '', target: null })); },
+    fire(type, event) {
+      (docListeners[type] || []).forEach(fn => fn(Object.assign(
+        { key: '', target: null, preventDefault() {}, stopPropagation() {}, ctrlKey: false, metaKey: false }, event)));
+    },
     _byId: byId,
   };
   // pré-crée les éléments attendus par app.js
@@ -74,7 +81,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }
@@ -296,6 +303,22 @@ test('DOM : les exemples sont repliés par défaut et se déplient', () => {
   ex.hidden = true; // fidèle au HTML (hidden)
   document.getElementById('fp-examples-toggle').click();
   assert(ex.hidden === false, 'exemples visibles après clic');
+});
+
+// ---------- undo + toasts (UI) ----------
+test('DOM : Ctrl+Z annule le dernier ajout et affiche un toast', () => {
+  const { document, sandbox } = loadApp();
+  // ajoute un événement via le planner exposé par app.js ? non : via le DOM -> ouvre modale, sauve
+  document.getElementById('fp-add').click();
+  document.getElementById('fp-modal-title').value = 'Test undo';
+  document.getElementById('fp-modal-date').value = '2026-11-04';
+  document.getElementById('fp-modal-save').click();
+  const before = sandbox.FlowPlanStore.load().length;
+  assert(before === 1, '1 événement persisté');
+  document.fire('keydown', { key: 'z', ctrlKey: true });
+  eq(sandbox.FlowPlanStore.load().length, 0, 'undo a tout retiré');
+  const toasts = document.getElementById('fp-toasts');
+  assert(toasts.children.length >= 1, 'un toast affiché');
 });
 
 // ---------- résumé (async) ----------

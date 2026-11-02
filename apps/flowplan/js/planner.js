@@ -47,8 +47,21 @@
   }
 
   function createPlanner() {
-    const events = []; // {id, title, date, start, end, allDay, createdAt}
+    const events = []; // {id, title, date, start, end, allDay, cat, color, createdAt}
     let seq = 0;
+    const undoStack = []; // actions inversibles, max 50
+    const UNDO_LIMIT = 50;
+    let silent = false; // true pendant undo() pour ne pas re-pousser
+
+    function pushHistory(action) {
+      if (silent) return;
+      undoStack.push(action);
+      if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    }
+
+    function snapshot(ev) {
+      return Object.assign({}, ev);
+    }
 
     // dédoublonne : même titre + même date + mêmes horaires = on ignore (anti double-clic sur Générer)
     function findDuplicate(ev) {
@@ -65,7 +78,7 @@
         throw new Error('Un événement a besoin d\'un titre');
       }
       const dup = findDuplicate(ev);
-      if (dup) return dup; // déjà existant : on ne recrée pas
+      if (dup) return dup; // déjà existant : on ne recrée pas, pas d'historique non plus
       // normalisation défensive : end jamais <= start, date valide
       if (ev.start && ev.end) {
         const s = minutesOf(ev.start), e = minutesOf(ev.end);
@@ -86,19 +99,23 @@
         createdAt: new Date().toISOString(),
       };
       events.push(clean);
+      pushHistory({ type: 'add', id: clean.id });
       return clean;
     }
 
     function remove(id) {
       const i = events.findIndex(e => e.id === id);
       if (i === -1) return false;
+      const old = snapshot(events[i]);
       events.splice(i, 1);
+      pushHistory({ type: 'remove', ev: old });
       return true;
     }
 
     function update(id, patch) {
       const ev = events.find(e => e.id === id);
       if (!ev) return null;
+      const before = snapshot(ev);
       if (patch.title != null) ev.title = String(patch.title).trim().slice(0, 120) || ev.title;
       if (patch.date !== undefined) ev.date = patch.date || null;
       if (patch.start !== undefined) ev.start = patch.start || null;
@@ -106,8 +123,41 @@
       if (patch.allDay !== undefined) ev.allDay = !!patch.allDay;
       if (patch.cat !== undefined) ev.cat = patch.cat || null;
       if (patch.color !== undefined) ev.color = patch.color || null;
+      pushHistory({ type: 'update', id: ev.id, before: before, after: snapshot(ev) });
       return ev;
     }
+
+    // annule la dernière action ; retourne une description ou null
+    function undo() {
+      const action = undoStack.pop();
+      if (!action) return null;
+      silent = true;
+      try {
+        if (action.type === 'add') {
+          const i = events.findIndex(e => e.id === action.id);
+          if (i !== -1) events.splice(i, 1);
+          return 'ajout annulé';
+        }
+        if (action.type === 'remove') {
+          events.push(action.ev);
+          return 'suppression annulée';
+        }
+        if (action.type === 'update') {
+          const ev = events.find(e => e.id === action.id);
+          if (ev) Object.assign(ev, action.before);
+          return 'modification annulée';
+        }
+        if (action.type === 'clear') {
+          load(action.events);
+          return 'réinitialisation annulée';
+        }
+      } finally {
+        silent = false;
+      }
+      return null;
+    }
+
+    function canUndo() { return undoStack.length > 0; }
 
     function all() {
       return events.slice().sort((a, b) => {
@@ -222,12 +272,13 @@
 
     function toJSON() { return events.slice(); }
     function load(list) {
+      if (!silent && events.length) pushHistory({ type: 'clear', events: events.slice() });
       events.length = 0;
       seq = 0;
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
+    return { add, remove, update, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };
