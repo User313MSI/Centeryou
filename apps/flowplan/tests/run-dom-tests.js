@@ -104,6 +104,7 @@ function loadApp() {
     Blob: function () {},
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
     setTimeout: (fn) => fn(),
+    __toastCount: 0,
     window: null,
   };
   sandbox.window = sandbox;
@@ -308,6 +309,10 @@ test('DOM : les exemples sont repliés par défaut et se déplient', () => {
 // ---------- undo + toasts (UI) ----------
 test('DOM : Ctrl+Z annule le dernier ajout et affiche un toast', () => {
   const { document, sandbox } = loadApp();
+  const toastSpy = { count: 0 };
+  const toastsEl = document.getElementById('fp-toasts');
+  const origAppend = toastsEl.appendChild.bind(toastsEl);
+  toastsEl.appendChild = (c) => { toastSpy.count++; return origAppend(c); };
   // ajoute un événement via le planner exposé par app.js ? non : via le DOM -> ouvre modale, sauve
   document.getElementById('fp-add').click();
   document.getElementById('fp-modal-title').value = 'Test undo';
@@ -317,8 +322,9 @@ test('DOM : Ctrl+Z annule le dernier ajout et affiche un toast', () => {
   assert(before === 1, '1 événement persisté');
   document.fire('keydown', { key: 'z', ctrlKey: true });
   eq(sandbox.FlowPlanStore.load().length, 0, 'undo a tout retiré');
-  const toasts = document.getElementById('fp-toasts');
-  assert(toasts.children.length >= 1, 'un toast affiché');
+  // le harnais exécute setTimeout immédiatement, donc le toast a pu être retiré :
+  // on vérifie via un espion posé AVANT le fire sur appendChild du conteneur toasts
+  assert(toastSpy.count >= 2, 'au moins 2 toasts créés (save + undo), reçu: ' + toastSpy.count);
 });
 
 // ---------- résumé (async) ----------
