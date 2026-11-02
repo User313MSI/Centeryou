@@ -1,7 +1,13 @@
 # FlowPlan — Planning interactif
 
 Tu décris ta semaine en français (texte ou voix), FlowPlan génère ton planning visuel.
-**100 % local** : tes données restent sur ton appareil, aucune compte, aucun serveur externe.
+**100 % local** : tes données restent sur ton appareil, aucun compte, aucun serveur externe.
+
+## Aperçu
+
+![Page d'accueil FlowPlan](assets/screenshots/hero.png)
+
+![Vue semaine avec événements](assets/screenshots/week.png)
 
 ## Trois façons de l'utiliser
 
