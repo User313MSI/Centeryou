@@ -348,6 +348,15 @@ test('DOM : Échap quitte le mode focus (filtre actif -> null)', () => {
   assert(!badge, 'badge focus retiré après Échap');
 });
 
+// ---------- thème au chargement ----------
+test('DOM : sans préférence stockée, le thème appliqué au chargement est dark (pas light)', () => {
+  const { document } = loadApp();
+  const t = document.documentElement.getAttribute('data-theme');
+  assert(t === 'dark' || t === 'light', 'un thème est appliqué, reçu: ' + t);
+  // localStorage du harnais est vide -> défaut attendu = dark
+  eq(t, 'dark');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');

@@ -71,7 +71,12 @@
 
   // ---------- thème : 'auto' suit le système, sinon dark/light forcé ----------
   function currentSavedTheme() {
-    try { return localStorage.getItem('flowplan.theme') || 'dark'; } catch (e) { return 'dark'; }
+    try {
+      const v = localStorage.getItem('flowplan.theme');
+      // 'light' stocké = l'utilisateur avait choisi clair AVANT ; on respecte.
+      // sinon défaut dark (le HTML est dark aussi).
+      return v === 'light' || v === 'dark' || v === 'auto' ? v : 'dark';
+    } catch (e) { return 'dark'; }
   }
   function applyTheme(t) {
     if (t === 'auto') {
