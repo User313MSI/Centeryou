@@ -274,17 +274,31 @@
     if (!text) { setStatus('Écris ou dicte ton planning d\'abord.', true); return; }
     const events = Parser.parse(text, new Date());
     if (!events.length) { setStatus('Je n\'ai rien compris — essaie par exemple : « Lundi 10h réunion équipe ; mercredi 14h30 dentiste »', true); return; }
-    let added = 0;
-    for (const ev of events) {
-      const cat = Categories.categorize(ev.title);
-      const date = ev.date || currentWeekStart; // pas de date reconnue -> semaine affichée
-      planner.add({ title: ev.title, date: date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
-      added++;
-    }
-    persist();
+    // génération PROGRESSIVE : un événement toutes les 220ms, chacun animé (tac tac tac)
     els.input.value = '';
-    toast(added + ' événement(s) ajouté(s) ✓', false, added > 0);
-    render();
+    els.btnGen.disabled = true;
+    let i = 0;
+    const total = events.length;
+    function stepAdd() {
+      if (i >= events.length) {
+        els.btnGen.disabled = false;
+        persist();
+        toast(total + ' événement(s) ajouté(s) ✓', false, total > 0);
+        return;
+      }
+      const ev = events[i++];
+      const cat = Categories.categorize(ev.title);
+      const date = ev.date || currentWeekStart;
+      const added = planner.add({ title: ev.title, date: date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
+      persist();
+      render();
+      // anime la carte qui vient d'apparaître
+      const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
+      if (card) card.classList.add('just-added');
+      setStatus(i + '/' + total + ' — « ' + ev.title + ' »');
+      setTimeout(stepAdd, 220);
+    }
+    stepAdd();
   }
 
   // ---------- voix ----------
@@ -879,6 +893,46 @@
       setView('day');
       toast('🔍 Zoom sur le ' + fmtDate(currentDay) + ' — Échap pour revenir à la semaine', false);
     }
+  });
+
+
+  // ---------- voix d'accueil (TTS local, speechSynthesis) ----------
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return false;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'fr-FR';
+      u.rate = 1.05;
+      const voices = speechSynthesis.getVoices();
+      const fr = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
+      if (fr) u.voice = fr;
+      speechSynthesis.speak(u);
+      return true;
+    } catch (e) { return false; }
+  }
+  function voiceWelcome() {
+    const today = new Date();
+    const dayName = DAYS_FR[(today.getDay() + 6) % 7];
+    const n = planner.all().filter(e => e.date === Parser.todayISO(today)).length;
+    const msg = n > 0
+      ? 'Bonjour ! Nous sommes ' + dayName + '. Tu as ' + n + (n > 1 ? ' rendez-vous' : ' rendez-vous') + ' aujourd hui. Que veux-tu ajouter ou changer ?'
+      : 'Bonjour ! Nous sommes ' + dayName + '. Ta journée est libre. Dis-moi ce que tu veux planifier.';
+    if (speak(msg)) toast('🔊 ' + msg, false);
+    else toast(msg, false);
+  }
+  // bouton voix d'accueil dans le menu
+  document.getElementById('fp-voice-welcome').addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    voiceWelcome();
+    // après l'annonce, on écoute et on remplit le champ (si STT dispo)
+    setTimeout(function () {
+      if (Voice.isSupported()) {
+        els.input.focus();
+        setStatus('🎙️ Je t écoute… dis ce que tu veux changer.');
+        els.btnVoice.click(); // réutilise le micro existant
+      }
+    }, msg.length * 90 + 800);
   });
 
   // ---------- boot : verrouillage ----------

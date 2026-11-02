@@ -47,6 +47,9 @@ body.presenting .fp-day { min-height: 420px; }
 body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 
 /* 2) micro-animations supplémentaires */
+.fp-event.just-added { animation: justAdded .45s cubic-bezier(.2,.9,.3,1.3); }
+@keyframes justAdded { 0% { opacity: 0; transform: scale(.6) translateY(10px); } 60% { transform: scale(1.06); } 100% { opacity: 1; transform: scale(1); } }
+.fp-btn:disabled { opacity: .5; cursor: wait; }
 .fp-day { animation: rise .3s ease-out; }
 .fp-toast { animation: slidein .3s cubic-bezier(.2,.9,.3,1.15); }
 .fp-modal { animation: pop .2s cubic-bezier(.2,.9,.3,1.15); }
@@ -85,7 +88,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.13 — design system premium (dark + light)
+   FlowPlan v3.14 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -479,6 +482,7 @@ body {
           <button id="fp-reminders" class="fp-menu-item">🔕 Rappels : désactivés</button>
           <button id="fp-vault" class="fp-menu-item">🔐 Verrouiller (code PIN)</button>
           <button id="fp-demo" class="fp-menu-item">🎲 Remplir avec un exemple</button>
+          <button id="fp-voice-welcome" class="fp-menu-item">🔊 Voix d'accueil</button>
           <button id="fp-present" class="fp-menu-item">🎬 Mode présentation</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
           <hr>
@@ -584,7 +588,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.13 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.14 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
