@@ -92,9 +92,9 @@
     let added = 0;
     for (const ev of events) {
       const cat = Categories.categorize(ev.title);
-      const clean = planner.add({ title: ev.title, date: ev.date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
+      const date = ev.date || currentWeekStart; // pas de date reconnue -> semaine affichée
+      planner.add({ title: ev.title, date: date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
       added++;
-      if (!clean.date) planner.update(clean.id, { date: currentWeekStart });
     }
     persist();
     els.input.value = '';

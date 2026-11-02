@@ -57,8 +57,7 @@
   function nextDayOfWeek(target, now) {
     const n = now || new Date();
     const cur = n.getDay();
-    let diff = (target - cur + 7) % 7;
-    if (diff === 0) diff = 7;
+    const diff = (target - cur + 7) % 7; // 0 = aujourd'hui (le jour même reste valable)
     return toISODate(new Date(n.getFullYear(), n.getMonth(), n.getDate() + diff));
   }
 

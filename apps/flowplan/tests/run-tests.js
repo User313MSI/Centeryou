@@ -18,13 +18,13 @@ function eq(a, b, msg) {
   if (a !== b) throw new Error((msg || 'pas égal') + ' — attendu: ' + JSON.stringify(b) + ', reçu: ' + JSON.stringify(a));
 }
 
-// "maintenant" fixe : lundi 3 novembre 2026, 10h00 (heure de Paris, sans importance ici)
-const NOW = new Date(2026, 10, 3, 10, 0, 0);
+// "maintenant" fixe : LUNDI 2 novembre 2026, 10h00
+const NOW = new Date(2026, 10, 2, 10, 0, 0);
 
 // ---------- Parser ----------
-test('parser : "lundi 9h réunion équipe" -> lundi prochain à 9h00', () => {
+test('parser : "lundi 9h réunion équipe" -> lundi = aujourd hui (2/11)', () => {
   const ev = Parser.parseEvent('Lundi 9h réunion équipe', NOW);
-  eq(ev.date, '2026-11-09');
+  eq(ev.date, '2026-11-02');
   eq(ev.start, '09:00');
   eq(ev.end, '10:00'); // durée implicite 1h
   eq(ev.title, 'Réunion équipe');
@@ -54,13 +54,13 @@ test('parser : durée "vendredi 9h pendant 2h sport"', () => {
 
 test('parser : "aujourd\'hui 12h30 déjeuner" -> date du jour', () => {
   const ev = Parser.parseEvent("aujourd'hui 12h30 déjeuner", NOW);
-  eq(ev.date, '2026-11-03');
+  eq(ev.date, '2026-11-02');
   eq(ev.start, '12:30');
 });
 
 test('parser : "demain 8h réveil"', () => {
   const ev = Parser.parseEvent('demain 8h réveil', NOW);
-  eq(ev.date, '2026-11-04');
+  eq(ev.date, '2026-11-03');
   eq(ev.start, '08:00');
 });
 
@@ -78,7 +78,7 @@ test('parser : date numérique "05/12/2026 15h visio"', () => {
 
 test('parser : accents et apostrophes normalisés', () => {
   const ev = Parser.parseEvent("aujourd’hui 14h café avec l’équipe", NOW);
-  eq(ev.date, '2026-11-03');
+  eq(ev.date, '2026-11-02');
   const low = ev.title.toLowerCase();
   eq(low.includes('café'), true, 'titre: ' + ev.title);
   eq(low.includes('équipe'), true, 'titre: ' + ev.title);
@@ -94,7 +94,7 @@ test('parser : sans heure -> journée entière', () => {
 test('parser : multi-événements séparés par point-virgule', () => {
   const evs = Parser.parse('Lundi 9h réunion ; mardi 14h30 dentiste ; puis vendredi 18h apéro', NOW);
   eq(evs.length, 3);
-  eq(evs[0].date, '2026-11-09');
+  eq(evs[0].date, '2026-11-02');
   eq(evs[1].start, '14:30');
   eq(evs[2].start, '18:00');
 });
@@ -106,7 +106,7 @@ test('parser : entrée vide -> null / []', () => {
 
 test('parser : heure invalide ignorée', () => {
   const ev = Parser.parseEvent('lundi 25h truc', NOW);
-  eq(ev.date, '2026-11-09');
+  eq(ev.date, '2026-11-02');
   assert(!ev.start || ev.start === null || ev.start === undefined, '25h ne doit pas devenir une heure');
 });
 
@@ -258,18 +258,18 @@ test('audit : faute de frappe "mecredi 14h30" -> mercredi', () => {
 
 test('audit : "ce soir 20h film" -> aujourd\'hui', () => {
   const ev = Parser.parseEvent('ce soir 20h film', NOW);
-  eq(ev.date, '2026-11-03');
+  eq(ev.date, '2026-11-02');
   eq(ev.start, '20:00');
 });
 
 test('audit : "dans 3 jours 10h truc"', () => {
   const ev = Parser.parseEvent('dans 3 jours 10h truc', NOW);
-  eq(ev.date, '2026-11-06');
+  eq(ev.date, '2026-11-05');
 });
 
-test('audit : "lundi prochain 9h truc" -> lundi prochain, sans le mot dans le titre', () => {
+test('audit : "lundi prochain 9h truc" -> lundi du jour (2/11), sans le mot dans le titre', () => {
   const ev = Parser.parseEvent('lundi prochain 9h truc', NOW);
-  eq(ev.date, '2026-11-09');
+  eq(ev.date, '2026-11-02');
   eq(ev.title, 'Truc');
 });
 
@@ -313,9 +313,9 @@ test('audit : conflictedIds() renvoie les ids en conflit', () => {
 // ---------- Récurrence ----------
 test('parser : "tous les lundis 18h30 sport" -> 9 occurrences hebdo', () => {
   const evs = Parser.parse('tous les lundis 18h30 sport', NOW);
-  eq(evs.length, 9); // lundi 9/11 + 8 semaines
-  eq(evs[0].date, '2026-11-09');
-  eq(evs[1].date, '2026-11-16');
+  eq(evs.length, 9); // lundi 2/11 (aujourd'hui) + 8 semaines
+  eq(evs[0].date, '2026-11-02');
+  eq(evs[1].date, '2026-11-09');
   eq(evs[0].start, '18:30');
   assert(!evs[0].recurrence, 'les occurrences concrètes n\'ont plus de champ recurrence');
 });
@@ -364,8 +364,8 @@ test('intégration : phrase complète -> planning cohérent', () => {
   const w1 = p.week('2026-11-02'); // semaine du lun 2/11 : mercredi + samedi
   eq(w1.days[2].events[0].start, '14:30');
   eq(w1.days[5].events[0].allDay, true);
-  const w2 = p.week('2026-11-09'); // semaine du lun 9/11 : lundi "prochain"
-  eq(w2.days[0].events[0].title, 'Réunion équipe');
+  const w1b = p.week('2026-11-02'); // lundi 9h = aujourd'hui 2/11
+  eq(w1b.days[0].events[0].title, 'Réunion équipe');
   eq(p.conflicts().length, 0);
 });
 
@@ -454,6 +454,26 @@ test('sécu : parser rejette les dates impossibles (29 février année non bisse
   assert(!ev.date, '2026 n\'est pas bissextile');
   const ev2 = Parser.parseEvent('29 février 2028 10h truc', NOW);
   eq(ev2.date, '2028-02-29'); // 2028 est bissextile
+});
+
+// ---------- régression utilisateur : "lundi 18h stream" un lundi -> même jour ----------
+test('régression : dit un lundi, "lundi 18h stream twitch" tombe le jour même (2026-11-02)', () => {
+  const evs = Parser.parse('lundi 18h stream twitch', new Date(2026, 10, 2, 12, 0, 0));
+  eq(evs.length, 1);
+  eq(evs[0].date, '2026-11-02');
+  eq(evs[0].start, '18:00');
+  eq(evs[0].title, 'Stream twitch');
+});
+
+test('régression : multi-événements, tous visibles dans la semaine affichée', () => {
+  const NOW2 = new Date(2026, 10, 2, 12, 0, 0);
+  const p = Planner.createPlanner();
+  for (const ev of Parser.parse('Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; samedi soirée chez Léa ; lundi 18h stream twitch', NOW2)) p.add(ev);
+  const w = p.week('2026-11-02');
+  eq(w.days[0].events.length, 2); // lundi : réunion + stream
+  eq(w.days[0].events.map(e => e.title).sort().join('|'), 'Réunion équipe|Stream twitch');
+  eq(w.days[2].events[0].title, 'Dentiste');
+  eq(w.days[5].events[0].title, 'Soirée chez léa');
 });
 
 // ---------- Résumé ----------
