@@ -48,6 +48,7 @@ function makeEl(id) {
     addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
     removeEventListener() {},
     querySelectorAll() { return []; },
+    querySelector() { return null; },
     contains(c) { return c === el || el.children.includes(c); },
     focus() {},
     click() { (listeners.click || []).forEach(fn => fn({ target: el })); },
