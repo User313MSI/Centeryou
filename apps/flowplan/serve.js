@@ -49,9 +49,12 @@ http.createServer((req, res) => {
   }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); res.end('Not found'); return; }
+    // no-store sur le HTML/JS/CSS : jamais de cache navigateur, chaque reload = code frais.
+    // (évite qu'un ancien index.html reste servi après un git pull)
+    const isCode = /\.(html|js|css|webmanifest)$/.test(file);
     res.writeHead(200, {
       'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': isCode ? 'no-store, must-revalidate' : 'no-cache',
       ...SECURITY_HEADERS,
     });
     if (req.method === 'HEAD') { res.end(); return; }
