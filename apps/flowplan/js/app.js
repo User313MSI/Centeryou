@@ -295,14 +295,24 @@
       render();
       // anime la carte qui vient d'apparaître
       const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
-      if (card) card.classList.add('just-added');
+      if (card) {
+        card.classList.add('just-added');
+        if (window.Animation && card.animate) {
+          try {
+            card.animate(
+              [{ opacity: 0, transform: 'scale(.3) translateY(18px)' }, { opacity: 1, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }],
+              { duration: 520, easing: 'cubic-bezier(.34,1.56,.64,1)' }
+            );
+          } catch (e) {}
+        }
+      }
       setStatus(i + '/' + total + ' — « ' + ev.title + ' »');
       // VOIX en direct : annonce chaque événement ajouté (tac tac tac parlé)
       if (voiceEnabled()) {
         const dayName = ev.date ? DAYS_FR[(new Date(ev.date + 'T12:00:00').getDay() + 6) % 7] : '';
-        speak((dayName ? dayName + ' ' : '') + (ev.start || '') + ' ' + ev.title, { queue: false, rate: 1.1 });
+        speak((dayName ? dayName + ' ' : '') + (ev.start || '') + ' ' + ev.title, { rate: 1.25 });
       }
-      setTimeout(stepAdd, 900); // 900ms pour laisser la voix finir avant le suivant
+      setTimeout(stepAdd, 650); // la file d attente gère le rythme, on accélère le visuel
     }
     stepAdd();
   }
@@ -604,6 +614,33 @@
     renderFilters();
     renderView();
     renderStats();
+    animateIngress();
+  }
+
+  // Animation d'entrée via Web Animations API : stagger ressort sur les jours et événements
+  function animateIngress() {
+    if (!document.body || !window.Animation || view === undefined) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const days = document.querySelectorAll('.fp-day');
+    days.forEach((el, i) => {
+      try {
+        el.animate(
+          [{ opacity: 0, transform: 'translateY(22px) scale(.96)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }],
+          { duration: 380, delay: i * 45, easing: 'cubic-bezier(.22,1.2,.36,1)', fill: 'backwards' }
+        );
+      } catch (e) {}
+    });
+    const events = document.querySelectorAll('.fp-event:not(.just-added)');
+    events.forEach((el, i) => {
+      if (el.dataset.animated === '1') return;
+      el.dataset.animated = '1';
+      try {
+        el.animate(
+          [{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 300, delay: 120 + i * 30, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'backwards' }
+        );
+      } catch (e) {}
+    });
   }
 
   // ---------- recherche ----------
@@ -869,10 +906,20 @@
       persist();
       render();
       const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
-      if (card) card.classList.add('just-added');
-      if (voiceEnabled()) speak(added.title, { queue: false, rate: 1.1 });
+      if (card) {
+        card.classList.add('just-added');
+        if (window.Animation && card.animate) {
+          try {
+            card.animate(
+              [{ opacity: 0, transform: 'scale(.3) translateY(18px)' }, { opacity: 1, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }],
+              { duration: 520, easing: 'cubic-bezier(.34,1.56,.64,1)' }
+            );
+          } catch (e) {}
+        }
+      }
+      if (voiceEnabled()) speak(added.title, { rate: 1.25 });
       setStatus('🎲 ' + i + '/' + demo.length);
-      setTimeout(stepDemo, 700);
+      setTimeout(stepDemo, 550);
     }
     stepDemo();
   });
@@ -954,13 +1001,17 @@
       u.pitch = (opts && opts.pitch) || 1.0;
       if (!bestVoice) pickBestVoice();
       if (bestVoice) u.voice = bestVoice;
-      if (opts && opts.queue === false) speechSynthesis.cancel();
-      speechSynthesis.speak(u);
+      // JAMAIS de cancel() ici : une séquence en cours serait coupée.
+      // cancel() uniquement via stopVoice() (toggle off / reset).
+      speechSynthesis.speak(u); // file d'attente native du navigateur
       return true;
     } catch (e) { return false; }
   }
   function voiceEnabled() {
     try { return localStorage.getItem('flowplan.voice') !== '0'; } catch (e) { return true; }
+  }
+  function stopVoice() {
+    if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch (e) {} }
   }
   function voiceWelcome() {
     const today = new Date();
@@ -979,7 +1030,7 @@
   els.voiceToggle.addEventListener('click', function () {
     try { localStorage.setItem('flowplan.voice', voiceEnabled() ? '0' : '1'); } catch (e) {}
     refreshVoiceToggle();
-    if (!voiceEnabled() && 'speechSynthesis' in window) speechSynthesis.cancel();
+    if (!voiceEnabled()) stopVoice();
     toast(voiceEnabled() ? '🔊 Voix activée' : '🔇 Voix désactivée');
   });
   // bouton voix d'accueil dans le menu

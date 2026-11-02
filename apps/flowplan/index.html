@@ -69,20 +69,14 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
   --dur-fast: 140ms; --dur: 260ms; --dur-slow: 420ms;
 }
 
-/* apparition des cartes avec stagger (délai selon position) */
-.fp-day { animation: dayIn var(--dur-slow) var(--ease-out) backwards; }
-.fp-day:nth-child(1) { animation-delay: 0ms; } .fp-day:nth-child(2) { animation-delay: 40ms; }
-.fp-day:nth-child(3) { animation-delay: 80ms; } .fp-day:nth-child(4) { animation-delay: 120ms; }
-.fp-day:nth-child(5) { animation-delay: 160ms; } .fp-day:nth-child(6) { animation-delay: 200ms; }
-.fp-day:nth-child(7) { animation-delay: 240ms; }
-@keyframes dayIn { from { opacity: 0; transform: translateY(18px) scale(.97); } }
+
+
+
+
+ }
 
 /* événement ajouté : spring marqué */
-.fp-event.just-added { animation: eventSpring .55s var(--spring-hard); }
-@keyframes eventSpring {
-  0% { opacity: 0; transform: scale(.4) translateY(14px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
+
 /* survol carte : lévitation + glow de la couleur catégorie */
 .fp-event { transition: transform var(--dur-fast) var(--spring), box-shadow var(--dur) ease, border-color var(--dur-fast) ease; will-change: transform; }
 .fp-event:hover { transform: translateY(-3px) scale(1.02); }
@@ -170,7 +164,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v4.0 — design system premium (dark + light)
+   FlowPlan v4.1 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -671,7 +665,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v4.0 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v4.1 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
