@@ -498,6 +498,23 @@ test('régression : multi-événements, tous visibles dans la semaine affichée'
   eq(w.days[5].events[0].title, 'Soirée chez léa');
 });
 
+// ---------- anti-doublons ----------
+test('planner : ajouter 2x le même événement (titre+date+horaires) ne crée pas de doublon', () => {
+  const p = Planner.createPlanner();
+  const a = p.add({ title: 'Stream twitch', date: '2026-11-02', start: '18:00', end: '19:00' });
+  const b = p.add({ title: 'Stream twitch', date: '2026-11-02', start: '18:00', end: '19:00' });
+  eq(p.all().length, 1);
+  eq(a.id, b.id); // même objet retourné
+  eq(p.conflicts().length, 0); // plus de faux conflit
+});
+
+test('planner : même titre mais horaires différents = 2 événements distincts', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'Stream', date: '2026-11-02', start: '18:00', end: '19:00' });
+  p.add({ title: 'Stream', date: '2026-11-02', start: '20:00', end: '21:00' });
+  eq(p.all().length, 2);
+});
+
 // ---------- Résumé ----------
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);

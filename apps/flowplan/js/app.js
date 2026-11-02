@@ -295,6 +295,11 @@
   }
 
   function renderStats() {
+    // conflits uniquement sur la semaine affichée (pas les semaines futures hors vue)
+    const w = planner.week(currentWeekStart);
+    const weekIds = new Set();
+    for (const d of w.days) for (const e of d.events) weekIds.add(e.id);
+    const weekConflicts = planner.conflicts().filter(c => weekIds.has(c.a.id) && weekIds.has(c.b.id));
     const s = planner.stats(currentWeekStart);
     els.stats.innerHTML = '';
     const mk = (bold, rest, cls) => {
@@ -308,12 +313,11 @@
     };
     mk(s.totalEvents, ' événement(s)');
     mk(s.plannedHours + ' h', ' planifiées');
-    mk(s.conflicts ? s.conflicts + ' conflit(s) ⚠️' : 'Aucun conflit ✓', '', s.conflicts ? 'warn' : 'ok');
-    const conflicts = planner.conflicts();
-    if (conflicts.length) {
+    mk(weekConflicts.length ? weekConflicts.length + ' conflit(s) ⚠️' : 'Aucun conflit ✓', '', weekConflicts.length ? 'warn' : 'ok');
+    if (weekConflicts.length) {
       els.conflictBox.hidden = false;
-      els.conflictBox.textContent = 'Conflits : ' + conflicts.map(c =>
-        c.date + ' — « ' + c.a.title + ' » chevauche « ' + c.b.title + ' »').join(' | ');
+      els.conflictBox.textContent = 'Conflits cette semaine : ' + weekConflicts.map(c =>
+        c.date.slice(8, 10) + '/' + c.date.slice(5, 7) + ' — « ' + c.a.title + ' » chevauche « ' + c.b.title + ' »').join(' | ');
     } else {
       els.conflictBox.hidden = true;
     }

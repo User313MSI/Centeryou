@@ -50,10 +50,22 @@
     const events = []; // {id, title, date, start, end, allDay, createdAt}
     let seq = 0;
 
+    // dédoublonne : même titre + même date + mêmes horaires = on ignore (anti double-clic sur Générer)
+    function findDuplicate(ev) {
+      return events.find(e =>
+        e.title === ev.title &&
+        (e.date || null) === (ev.date || null) &&
+        (e.start || null) === (ev.start || null) &&
+        (e.end || null) === (ev.end || null) &&
+        e.allDay === !!ev.allDay);
+    }
+
     function add(ev) {
       if (!ev || typeof ev.title !== 'string' || !ev.title.trim()) {
         throw new Error('Un événement a besoin d\'un titre');
       }
+      const dup = findDuplicate(ev);
+      if (dup) return dup; // déjà existant : on ne recrée pas
       // normalisation défensive : end jamais <= start, date valide
       if (ev.start && ev.end) {
         const s = minutesOf(ev.start), e = minutesOf(ev.end);
@@ -215,7 +227,7 @@
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, all, byDate, week, monthGrid, search, conflicts, conflictedIds, categories, stats, toJSON, load };
+    return { add, remove, update, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };
