@@ -30,6 +30,8 @@
     return toISODate(d);
   }
 
+  function monthOfISO(iso) { return String(iso).slice(0, 7); }
+
   function minutesOf(hhmm) {
     if (!hhmm) return null;
     const [h, m] = hhmm.split(':').map(Number);
@@ -120,6 +122,32 @@
       return { start: ws, days };
     }
 
+    // grille du mois contenant `monthStart` ("YYYY-MM") : 6 semaines x 7 jours depuis le lundi
+    function monthGrid(monthStart) {
+      const [y, m] = monthStart.split('-').map(Number);
+      const first = new Date(y, m - 1, 1);
+      const monday = new Date(first.getFullYear(), first.getMonth(), first.getDate() - ((first.getDay() + 6) % 7));
+      const weeks = [];
+      for (let w = 0; w < 6; w++) {
+        const days = [];
+        for (let d = 0; d < 7; d++) {
+          const iso = toISODate(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + w * 7 + d));
+          days.push({ date: iso, inMonth: iso.slice(0, 7) === monthStart, events: byDate(iso) });
+        }
+        weeks.push(days);
+      }
+      return { month: monthStart, weeks };
+    }
+
+    // recherche plein texte (titre + catégorie), insensible aux accents
+    function search(q) {
+      const n = String(q || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+      if (!n) return all();
+      return all().filter(e =>
+        e.title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(n) ||
+        (e.cat || '').includes(n));
+    }
+
     // conflits : paires d'événements même jour qui se chevauchent
     function conflicts() {
       const out = [];
@@ -187,8 +215,8 @@
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, all, byDate, week, conflicts, conflictedIds, categories, stats, toJSON, load };
+    return { add, remove, update, all, byDate, week, monthGrid, search, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
-  return { createPlanner, weekStartISO, addDaysISO, overlaps, minutesOf };
+  return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };
 });

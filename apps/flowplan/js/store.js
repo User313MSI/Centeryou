@@ -32,15 +32,42 @@
     }
   }
 
+  const MAX_EVENTS = 5000;
+
+  function sanitizeEvent(e) {
+    if (!e || typeof e !== 'object') return null;
+    if (typeof e.id !== 'string' || !e.id) return null;
+    if (typeof e.title !== 'string' || !e.title) return null;
+    const out = {
+      id: e.id.slice(0, 64),
+      title: String(e.title).slice(0, 120),
+      date: /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') ? e.date : null,
+      start: /^\d{2}:\d{2}$/.test(e.start || '') ? e.start : null,
+      end: /^\d{2}:\d{2}$/.test(e.end || '') ? e.end : null,
+      allDay: !!e.allDay,
+      cat: typeof e.cat === 'string' ? e.cat.slice(0, 30) : null,
+      color: /^#[0-9a-fA-F]{6}$/.test(e.color || '') ? e.color : null,
+      createdAt: typeof e.createdAt === 'string' ? e.createdAt.slice(0, 40) : new Date().toISOString(),
+    };
+    return out;
+  }
+
   function load() {
     try {
       const raw = get();
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.events)) return [];
-      // filtre défensif : chaque événement doit avoir id + titre
-      return parsed.events.filter(e =>
-        e && typeof e === 'object' && typeof e.id === 'string' && typeof e.title === 'string');
+      const seen = new Set();
+      const out = [];
+      for (const e of parsed.events) {
+        const clean = sanitizeEvent(e);
+        if (!clean || seen.has(clean.id)) continue;
+        seen.add(clean.id);
+        out.push(clean);
+        if (out.length >= MAX_EVENTS) break;
+      }
+      return out;
     } catch (e) {
       return [];
     }
@@ -51,5 +78,5 @@
     else delete mem[KEY];
   }
 
-  return { save, load, clear, KEY, QUOTA_ERROR: 'QUOTA' };
+  return { save, load, clear, sanitizeEvent, MAX_EVENTS, KEY };
 });

@@ -22,8 +22,9 @@ Tu décris ta semaine en français (texte ou voix), FlowPlan génère ton planni
 ```powershell
 cd apps\flowplan
 npm install        # installe Electron (uniquement pour la version bureau)
-npm test           # 29 tests, zéro dépendance
+npm test           # 51 tests, zéro dépendance
 npm run serve      # version web : http://localhost:8000
+npm run icons      # régénère les icônes PNG (180/192/512)
 npm start          # version bureau (Electron)
 npm run dist:win   # fabrique l'installeur Windows (release\*.exe)
 ```
@@ -40,16 +41,27 @@ Sans Electron (juste le web) : `node serve.js` suffit, aucune installation.
 
 ## Fonctionnalités
 
-- Génération du planning semaine à partir d'une phrase
+- Génération du planning à partir d'une phrase en français
 - Saisie **vocale** (🎙️, Web Speech API, fonctionne dans Chrome/Edge)
-- Catégories automatiques (travail, sport, santé, perso, courses, études) avec couleurs
-- Détection de **conflits** (chevauchements)
+- **Vue semaine + vue mois**, navigation ←/→/« Aujourd'hui »
+- **Glisser-déposer** un événement d'un jour à l'autre (semaine et mois)
+- **Recherche** plein texte (titre + catégorie, insensible aux accents)
+- Catégories automatiques (travail, sport, santé, perso, courses, études) + **filtres** par catégorie + choix manuel dans la modale
+- Détection de **conflits** (chevauchements surlignés en orange sur les cartes)
 - Statistiques de la semaine (nb événements, heures planifiées)
-- Navigation entre les semaines, édition/suppression par clic sur un événement
+- **Thème clair / sombre** (persisté)
 - **Export .ics** (importable dans Google Agenda, Outlook, Apple Calendrier)
-- Impression de la semaine (CSS print dédié)
-- PWA installable + service worker hors-ligne
-- Version bureau Electron (sandbox, contextIsolation, CSP stricte)
+- Impression (CSS print dédié)
+- PWA installable (icônes PNG 180/192/512 pour iOS/Android) + service worker hors-ligne
+- Version bureau Electron durcie (sandbox, contextIsolation, navigation externe bloquée)
+- **100 % local** : aucune donnée ne quitte l'appareil
+
+## Sécurité
+
+Audit complet dans [`docs/AUDIT-SECURITE-FLOWPLAN.md`](../../docs/AUDIT-SECURITE-FLOWPLAN.md) :
+XSS impossible (textContent + CSP), export .ics échappé, localStorage sanitizé et plafonné,
+serveur de dev lié à 127.0.0.1 avec en-têtes de sécurité, fenêtre Electron verrouillée.
+51 tests dont 7 dédiés à la sécurité.
 
 ## Architecture
 

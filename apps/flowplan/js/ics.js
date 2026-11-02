@@ -43,7 +43,9 @@
     for (const e of events || []) {
       if (!e || !e.date) continue;
       lines.push('BEGIN:VEVENT');
-      lines.push('UID:' + (e.id || 'ev') + '@flowplan.local');
+      // UID : uniquement [A-Za-z0-9_-], sinon un import calendrier peut échouer
+      const uid = String(e.id || 'ev').replace(/[^A-Za-z0-9_-]/g, '');
+      lines.push('UID:' + (uid || 'ev') + '@flowplan.local');
       lines.push('DTSTAMP:' + (e.createdAt ? icsStamp(e.createdAt) : now));
       if (e.allDay || !e.start) {
         lines.push('DTSTART;VALUE=DATE:' + datePart(e.date));

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,16 +8,18 @@
   <meta name="theme-color" content="#101418">
   <title>FlowPlan — Ton planning en un mot</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
   <header class="fp-top">
     <div class="fp-brand">🌊 FlowPlan</div>
     <div class="fp-top-actions">
+      <input id="fp-search" class="fp-search" type="search" placeholder="🔍 Rechercher…" aria-label="Rechercher un événement">
+      <button id="fp-theme" class="fp-btn" title="Changer de thème">☀️ Clair</button>
       <button id="fp-export" class="fp-btn" title="Exporter au format calendrier (.ics)">📅 Export .ics</button>
-      <button id="fp-print" class="fp-btn" title="Imprimer la semaine">🖨️ Imprimer</button>
+      <button id="fp-print" class="fp-btn" title="Imprimer">🖨️ Imprimer</button>
       <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
     </div>
   </header>
@@ -40,10 +42,14 @@
   </section>
 
   <section class="fp-weekbar">
-    <button id="fp-prev-week" class="fp-btn">←</button>
+    <button id="fp-prev-week" class="fp-btn" aria-label="Précédent">←</button>
     <span id="fp-week-label" class="fp-week-label"></span>
-    <button id="fp-today-week" class="fp-btn">Cette semaine</button>
-    <button id="fp-next-week" class="fp-btn">→</button>
+    <button id="fp-today-week" class="fp-btn">Aujourd'hui</button>
+    <button id="fp-next-week" class="fp-btn" aria-label="Suivant">→</button>
+    <span class="fp-view-switch">
+      <button id="fp-view-week" class="fp-btn active">Semaine</button>
+      <button id="fp-view-month" class="fp-btn">Mois</button>
+    </span>
   </section>
 
   <div id="fp-stats" class="fp-stats"></div>
@@ -51,6 +57,7 @@
   <div id="fp-filters" class="fp-filters"></div>
 
   <main id="fp-week" class="fp-week"></main>
+  <main id="fp-month" class="fp-month" style="display:none"></main>
 
   <div id="fp-modal" class="fp-modal-backdrop" hidden>
     <div class="fp-modal">
@@ -62,6 +69,17 @@
         <label>Fin <input id="fp-modal-end" type="time"></label>
         <label class="fp-allday"><input id="fp-modal-allday" type="checkbox"> Journée entière</label>
       </div>
+      <label>Catégorie
+        <select id="fp-modal-cat">
+          <option value="autre">autre</option>
+          <option value="travail">travail</option>
+          <option value="sport">sport</option>
+          <option value="sante">santé</option>
+          <option value="perso">perso</option>
+          <option value="courses">courses</option>
+          <option value="etudes">études</option>
+        </select>
+      </label>
       <div class="fp-modal-actions">
         <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
         <span class="fp-spacer"></span>
@@ -71,7 +89,7 @@
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan — tes données restent sur ton appareil (100 % local).</footer>
+  <footer class="fp-footer">FlowPlan — tes données restent sur ton appareil (100 % local). Glisse un événement d'un jour à l'autre pour le déplacer.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

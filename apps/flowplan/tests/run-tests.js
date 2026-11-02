@@ -369,6 +369,93 @@ test('intégration : phrase complète -> planning cohérent', () => {
   eq(p.conflicts().length, 0);
 });
 
+// ---------- v2 : monthGrid / search ----------
+test('planner : monthGrid renvoie 6 semaines x 7 jours, flag inMonth', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'X', date: '2026-11-15' });
+  const g = p.monthGrid('2026-11');
+  eq(g.weeks.length, 6);
+  eq(g.weeks[0].length, 7);
+  eq(g.weeks[0][0].date, '2026-10-26'); // lundi avant le 1er nov 2026
+  const inNov = g.weeks.flat().filter(d => d.inMonth);
+  eq(inNov.length, 30);
+  const day15 = g.weeks.flat().find(d => d.date === '2026-11-15');
+  eq(day15.events.length, 1);
+});
+
+test('planner : search insensible aux accents et à la casse', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'Réunion équipe', date: '2026-11-04', cat: 'travail' });
+  p.add({ title: 'Dentiste', date: '2026-11-05', cat: 'sante' });
+  eq(p.search('reunion').length, 1);
+  eq(p.search('REUNION').length, 1);
+  eq(p.search('denti').length, 1);
+  eq(p.search('sante').length, 1); // recherche aussi dans la catégorie
+  eq(p.search('').length, 2);
+  eq(p.search('zzzz').length, 0);
+});
+
+// ---------- Audit sécurité ----------
+test('sécu : store.sanitizeEvent rejette les entrées dangereuses', () => {
+  eq(Store.sanitizeEvent(null), null);
+  eq(Store.sanitizeEvent({}), null);
+  eq(Store.sanitizeEvent({ id: 'x' }), null); // pas de titre
+  const evil = Store.sanitizeEvent({
+    id: 'a"><img src=x onerror=alert(1)>',
+    title: '<script>alert(1)</script>',
+    date: '2026-11-04; DROP TABLE',
+    start: '09:00" onmouseover="alert(1)',
+    color: 'javascript:alert(1)',
+  });
+  // le titre est conservé tel quel MAIS ne sera jamais injecté en HTML (textContent côté UI) ;
+  // ici on vérifie que les champs structurés sont nettoyés :
+  eq(evil.date, null);
+  eq(evil.start, null);
+  eq(evil.color, null);
+  assert(evil.id.length <= 64, 'id tronqué');
+});
+
+test('sécu : load() ignore les doublons d\'id et cappe à MAX_EVENTS', () => {
+  Store.clear();
+  const many = [];
+  for (let i = 0; i < Store.MAX_EVENTS + 500; i++) many.push({ id: 'ev' + i, title: 't' + i });
+  many.push({ id: 'ev0', title: 'doublon' }); // même id -> ignoré
+  Store.save(many);
+  const loaded = Store.load();
+  eq(loaded.length, Store.MAX_EVENTS);
+  eq(loaded[0].title, 't0'); // le doublon n'a pas écrasé
+  Store.clear();
+});
+
+test('sécu : ICS échappe CRLF dans le titre (anti-injection d\'en-têtes ICS)', () => {
+  const ics = ICS.toICS([{ id: 'x\r\nX-EVIL: 1', title: 'titre\r\nEND:VCALENDAR\r\nBEGIN:VEVENT', date: '2026-11-04', allDay: true }]);
+  // un vrai CRLF ne doit jamais apparaître à l'intérieur d'une ligne SUMMARY
+  const summaryLines = ics.split('\r\n').filter(l => l.startsWith('SUMMARY:'));
+  eq(summaryLines.length, 1, 'une seule ligne SUMMARY (le CRLF du titre est échappé)');
+  assert(summaryLines[0].includes('titre\\nEND:VCALENDAR'), 'CRLF du titre échappé en \\n littéral');
+  // la structure globale reste intacte : on compte les VRAIES lignes (pas les sous-chaînes échappées)
+  const lines = ics.split('\r\n');
+  eq(lines.filter(l => l === 'BEGIN:VCALENDAR').length, 1);
+  eq(lines.filter(l => l === 'END:VCALENDAR').length, 1);
+  eq(lines.filter(l => l === 'BEGIN:VEVENT').length, 1);
+  eq(lines.filter(l => l === 'END:VEVENT').length, 1);
+  // l'UID ne contient que des caractères sûrs
+  const uidLine = ics.split('\r\n').find(l => l.startsWith('UID:'));
+  assert(/^UID:[A-Za-z0-9_-]+@flowplan\.local$/.test(uidLine), 'UID sanitisé: ' + uidLine);
+});
+
+test('sécu : parser tronque les entrées trop longues (anti-DoS mémoire)', () => {
+  const ev = Parser.parseEvent('x'.repeat(100000), NOW);
+  assert(ev.title.length <= 301, 'tronqué');
+});
+
+test('sécu : parser rejette les dates impossibles (29 février année non bissextile)', () => {
+  const ev = Parser.parseEvent('29 février 2026 10h truc', NOW);
+  assert(!ev.date, '2026 n\'est pas bissextile');
+  const ev2 = Parser.parseEvent('29 février 2028 10h truc', NOW);
+  eq(ev2.date, '2028-02-29'); // 2028 est bissextile
+});
+
 // ---------- Résumé ----------
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);

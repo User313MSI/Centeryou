@@ -1,5 +1,5 @@
 /* FlowPlan — service worker : app 100 % hors-ligne dès la 2e visite. */
-const CACHE = 'flowplan-v1';
+const CACHE = 'flowplan-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -8,9 +8,14 @@ const ASSETS = [
   './js/planner.js',
   './js/store.js',
   './js/voice.js',
+  './js/categories.js',
+  './js/ics.js',
   './js/app.js',
   './manifest.webmanifest',
   './assets/icon.svg',
+  './assets/icon-180.png',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
 ];
 
 self.addEventListener('install', function (event) {
