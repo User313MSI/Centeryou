@@ -401,6 +401,16 @@ test('DOM : F11 quitte aussi la présentation', () => {
   assert(!body.classList.contains('presenting'), 'F11 doit quitter');
 });
 
+// ---------- régression présentation (bug visuel Échap) ----------
+test('CSS : en mode présentation, les blocs haut/bas sont display:none PUR (pas height:0/display:block)', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const m = html.match(/body\.presenting \.fp-top[^}]*\}/s);
+  assert(m, 'règle trouvée');
+  assert(m[0].includes('display: none'), 'display:none présent');
+  assert(!m[0].includes('height: 0'), 'plus de height:0 qui créait des artefacts');
+  assert(!m[0].includes('display: block'), 'plus de display:block contradictoire');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');
