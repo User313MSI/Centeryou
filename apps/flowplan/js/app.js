@@ -367,6 +367,11 @@
 
   function closeModal() { els.modal.hidden = true; editingId = null; }
 
+  // fermer la modale en cliquant sur le fond gris (pas sur la carte elle-même)
+  els.modal.addEventListener('click', function (e) {
+    if (e.target === els.modal) closeModal();
+  });
+
   function saveModal() {
     const title = els.mTitle.value.trim();
     if (!title) { els.mTitle.focus(); return; }
@@ -440,6 +445,7 @@
   els.mSave.addEventListener('click', saveModal);
   els.mCancel.addEventListener('click', closeModal);
   els.mDelete.addEventListener('click', deleteModal);
+  $('fp-modal-close').addEventListener('click', closeModal);
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !els.modal.hidden) closeModal();
   });

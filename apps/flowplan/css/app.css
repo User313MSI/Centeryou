@@ -160,6 +160,12 @@ body {
 .fp-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
 .fp-modal { background: var(--panel); border: 1px solid var(--border-strong); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 40px var(--shadow); }
 .fp-modal h2 { margin: 0 0 4px; font-size: 20px; }
+.fp-modal-head { display: flex; align-items: center; justify-content: space-between; }
+.fp-modal-x {
+  background: var(--panel-2); border: 1px solid var(--border-strong); color: var(--text);
+  border-radius: 8px; width: 34px; height: 34px; font-size: 15px; cursor: pointer; line-height: 1;
+}
+.fp-modal-x:hover { border-color: var(--danger); color: var(--danger); }
 .fp-modal label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
 .fp-modal input[type="text"], .fp-modal input[type="date"], .fp-modal input[type="time"], .fp-modal select {
   background: var(--panel-2); border: 1px solid var(--border-strong); color: var(--text);
