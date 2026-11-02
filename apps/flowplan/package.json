@@ -7,7 +7,9 @@
   "scripts": {
     "start": "electron .",
     "serve": "node serve.js",
-    "test": "node tests/run-tests.js",
+    "test": "node tests/run-tests.js && node tests/run-dom-tests.js",
+    "test:unit": "node tests/run-tests.js",
+    "test:dom": "node tests/run-dom-tests.js",
     "icons": "node scripts/make-icons.js",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",

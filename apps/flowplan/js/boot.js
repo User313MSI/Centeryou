@@ -1,12 +1,21 @@
 /*
  * FlowPlan — boot : enregistre le service worker.
- * Kill switch : ouvrir http://localhost:8000/?fresh=1 UNE fois purge tous les
- * service workers et tous les caches, puis recharge l'URL propre.
- * (indispensable après un git pull quand un ancien SW sert encore l'ancien code)
+ * ?fresh=1 : purge tous les SW + caches une fois, puis recharge l'URL propre.
+ * ?nosw=1   : mode développement — AUCUN service worker, aucun cache.
+ *             Chaque rechargement sert le code frais du serveur, garanti.
+ *             À utiliser pendant les itérations : http://localhost:8000/?nosw=1
  */
 (function () {
   'use strict';
   var params = new URLSearchParams(location.search);
+  if (params.get('nosw')) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        rs.forEach(function (r) { r.unregister(); });
+      });
+    }
+    return; // on ne enregistre rien
+  }
   if (params.get('fresh')) {
     var done = function () { location.replace(location.pathname); };
     var p = Promise.resolve();

@@ -1,0 +1,269 @@
+/*
+ * FlowPlan — tests DOM exécutés en Node (harnais maison, zéro dépendance).
+ * Charge js/app.js dans un faux DOM et VÉRIFIE que la modale se ferme
+ * via les 3 moyens : bouton ✕, touche Échap, clic sur le fond.
+ */
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const passes = [];
+const failures = [];
+function test(name, fn) {
+  try { fn(); passes.push(name); }
+  catch (e) { failures.push({ name, error: e.message }); }
+}
+function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+function eq(a, b, msg) {
+  if (a !== b) throw new Error((msg || 'pas égal') + ' — attendu ' + JSON.stringify(b) + ', reçu ' + JSON.stringify(a));
+}
+
+// ---------- faux DOM minimal mais fidèle ----------
+function makeEl(id) {
+  const listeners = {};
+  const el = {
+    id,
+    children: [],
+    style: {},
+    dataset: {},
+    hidden: false,
+    value: '',
+    textContent: '',
+    className: '',
+    draggable: false,
+    classList: {
+      _set: new Set(),
+      add(c) { this._set.add(c); },
+      remove(c) { this._set.delete(c); },
+      toggle(c, force) { if (force === undefined) force = !this._set.has(c); force ? this._set.add(c) : this._set.delete(c); },
+      contains(c) { return this._set.has(c); },
+    },
+    setAttribute(k, v) { this.dataset[k] = v; },
+    getAttribute(k) { return this.dataset[k] ?? null; },
+    appendChild(c) { this.children.push(c); return c; },
+    insertBefore(c) { this.children.unshift(c); return c; },
+    addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
+    removeEventListener() {},
+    querySelectorAll() { return []; },
+    focus() {},
+    click() { (listeners.click || []).forEach(fn => fn({ target: el })); },
+    fire(type, event) { (listeners[type] || []).forEach(fn => fn(event || { target: el, key: '', preventDefault() {}, dataTransfer: null })); },
+    _listeners: listeners,
+  };
+  return el;
+}
+
+function makeDocument() {
+  const byId = {};
+  const docListeners = {};
+  const document = {
+    documentElement: { setAttribute() {}, getAttribute() { return 'dark'; } },
+    body: makeEl('body'),
+    getElementById(id) { return byId[id] || (byId[id] = makeEl(id)); },
+    createElement(tag) { return makeEl('<' + tag + '>'); },
+    createTextNode(t) { return { textContent: t }; },
+    querySelectorAll() { return []; },
+    addEventListener(type, fn) { (docListeners[type] = docListeners[type] || []).push(fn); },
+    fire(type, event) { (docListeners[type] || []).forEach(fn => fn(event || { key: '', target: null })); },
+    _byId: byId,
+  };
+  // pré-crée les éléments attendus par app.js
+  ['fp-input', 'fp-generate', 'fp-voice', 'fp-status', 'fp-week-label', 'fp-prev-week', 'fp-next-week',
+   'fp-today-week', 'fp-week', 'fp-month', 'fp-stats', 'fp-conflicts', 'fp-filters', 'fp-search',
+   'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
+   'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
+   'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
+  ].forEach(id => { byId[id] = makeEl(id); });
+  return document;
+}
+
+function loadApp() {
+  const document = makeDocument();
+  const storageData = {};
+  const localStorage = {
+    getItem: k => (k in storageData ? storageData[k] : null),
+    setItem: (k, v) => { storageData[k] = String(v); },
+    removeItem: k => { delete storageData[k]; },
+  };
+  const sandbox = {
+    console,
+    document,
+    localStorage,
+    navigator: {},
+    location: { protocol: 'http:', origin: 'http://localhost:8000', pathname: '/', search: '', replace() {} },
+    URLSearchParams,
+    Blob: function () {},
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+    setTimeout: (fn) => fn(),
+    window: null,
+  };
+  sandbox.window = sandbox;
+  sandbox.self = sandbox;
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  const jsDir = path.join(__dirname, '..', 'js');
+  for (const f of ['parser.js', 'planner.js', 'store.js', 'voice.js', 'categories.js', 'ics.js', 'app.js']) {
+    const code = fs.readFileSync(path.join(jsDir, f), 'utf8');
+    vm.runInContext(code, sandbox, { filename: f });
+  }
+  return { sandbox, document };
+}
+
+// ---------- tests ----------
+test('DOM : la modale a l\'attribut hidden dans index.html, puis s\'ouvre au clic sur + Ajouter', () => {
+  // vérifie la source réelle (c'est le navigateur qui applique hidden)
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert(/id="fp-modal"[^>]*\bhidden\b/.test(html) || /\bhidden\b[^>]*id="fp-modal"/.test(html),
+    'index.html doit contenir <div id="fp-modal" ... hidden>');
+  const { document } = loadApp();
+  const modal = document.getElementById('fp-modal');
+  modal.hidden = true; // fidèle à l'attribut HTML ci-dessus
+  document.getElementById('fp-add').click();
+  assert(modal.hidden === false, 'modale visible après clic sur + Ajouter');
+});
+
+test('DOM : le bouton ✕ (fp-modal-close) ferme la modale', () => {
+  const { document } = loadApp();
+  const modal = document.getElementById('fp-modal');
+  document.getElementById('fp-add').click();
+  assert(modal.hidden === false);
+  document.getElementById('fp-modal-close').click();
+  assert(modal.hidden === true, '✕ doit fermer la modale');
+});
+
+test('DOM : la touche Échap ferme la modale', () => {
+  const { document } = loadApp();
+  const modal = document.getElementById('fp-modal');
+  document.getElementById('fp-add').click();
+  assert(modal.hidden === false);
+  document.fire('keydown', { key: 'Escape' });
+  assert(modal.hidden === true, 'Échap doit fermer la modale');
+});
+
+test('DOM : le clic sur le fond (backdrop) ferme la modale, le clic DANS la modale ne la ferme pas', () => {
+  const { document } = loadApp();
+  const modal = document.getElementById('fp-modal');
+  document.getElementById('fp-add').click();
+  assert(modal.hidden === false);
+  // clic dans la carte -> target = enfant, pas le backdrop : ne ferme PAS
+  modal.fire('click', { target: document.getElementById('fp-modal-title') });
+  assert(modal.hidden === false, 'clic dans la modale ne doit pas fermer');
+  // clic sur le backdrop -> target = la modale elle-même : ferme
+  modal.fire('click', { target: modal });
+  assert(modal.hidden === true, 'clic sur le fond doit fermer');
+});
+
+test('DOM : Enregistrer avec un titre crée un événement et ferme la modale', () => {
+  const { document, sandbox } = loadApp();
+  document.getElementById('fp-add').click();
+  document.getElementById('fp-modal-title').value = 'Test DOM';
+  document.getElementById('fp-modal-date').value = '2026-11-09';
+  document.getElementById('fp-modal-save').click();
+  assert(document.getElementById('fp-modal').hidden === true, 'modale fermée après save');
+  const events = sandbox.FlowPlanStore.load();
+  assert(events.some(e => e.title === 'Test DOM'), 'événement persisté dans le store');
+});
+
+test('DOM : le bouton Annuler ferme sans enregistrer', () => {
+  const { document, sandbox } = loadApp();
+  document.getElementById('fp-add').click();
+  document.getElementById('fp-modal-title').value = 'Non enregistré';
+  document.getElementById('fp-modal-cancel').click();
+  assert(document.getElementById('fp-modal').hidden === true);
+  assert(!sandbox.FlowPlanStore.load().some(e => e.title === 'Non enregistré'), 'rien persisté');
+});
+
+// ---------- boot.js : kill switch ?fresh ----------
+test('boot : ?fresh=1 désinscrit les SW et purge les caches puis recharge', () => {
+  const registered = [];
+  const unregistered = [];
+  const cachesDeleted = [];
+  let replaced = null;
+  const sandbox = {
+    console,
+    URLSearchParams,
+    location: { protocol: 'http:', search: '?fresh=1', pathname: '/', replace(u) { replaced = u; } },
+    navigator: {
+      serviceWorker: {
+        getRegistrations: () => Promise.resolve([{ unregister: () => { unregistered.push(1); return Promise.resolve(); } }]),
+        register: (f) => { registered.push(f); return Promise.resolve(); },
+      },
+    },
+    caches: {
+      keys: () => Promise.resolve(['flowplan-v2', 'flowplan-v3']),
+      delete: (k) => { cachesDeleted.push(k); return Promise.resolve(true); },
+    },
+    window: {},
+  };
+  sandbox.window = sandbox; sandbox.self = sandbox;
+  vm.createContext(sandbox);
+  const code = fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8');
+  vm.runInContext(code, sandbox, { filename: 'boot.js' });
+  return new Promise(resolve => setTimeout(() => {
+    try {
+      assert(unregistered.length === 1, 'SW désinscrit');
+      assert(cachesDeleted.length === 2, 'caches purgés: ' + cachesDeleted);
+      assert(replaced === '/', 'reload vers URL propre, reçu: ' + replaced);
+      assert(registered.length === 0, 'aucun SW réenregistré en mode fresh');
+      passes.push('boot : ?fresh=1 (async) OK');
+    } catch (e) { failures.push({ name: 'boot : ?fresh=1 (async)', error: e.message }); }
+    resolve();
+  }, 20));
+});
+
+test('boot : sans paramètre, enregistre sw.js normalement', () => {
+  const registered = [];
+  const sandbox = {
+    console,
+    URLSearchParams,
+    location: { protocol: 'http:', search: '', pathname: '/' },
+    navigator: { serviceWorker: { register: (f) => { registered.push(f); return Promise.resolve(); } } },
+    window: {},
+  };
+  sandbox.window = sandbox; sandbox.self = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8'), sandbox, { filename: 'boot.js' });
+  eq(registered[0], 'sw.js');
+});
+
+test('boot : ?nosw=1 ne enregistre JAMAIS de SW (mode dev sans cache)', () => {
+  const registered = [];
+  const unregistered = [];
+  const sandbox = {
+    console,
+    URLSearchParams,
+    location: { protocol: 'http:', search: '?nosw=1', pathname: '/' },
+    navigator: {
+      serviceWorker: {
+        getRegistrations: () => Promise.resolve([{ unregister: () => { unregistered.push(1); return Promise.resolve(); } }]),
+        register: (f) => { registered.push(f); return Promise.resolve(); },
+      },
+    },
+    caches: { keys: () => Promise.resolve([]), delete: () => Promise.resolve(true) },
+    window: {},
+  };
+  sandbox.window = sandbox; sandbox.self = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8'), sandbox, { filename: 'boot.js' });
+  return new Promise(resolve => setTimeout(() => {
+    try {
+      assert(registered.length === 0, 'aucun SW enregistré en ?nosw=1');
+      assert(unregistered.length === 1, 'SW existant désinscrit');
+      passes.push('boot : ?nosw=1 (async) OK');
+    } catch (e) { failures.push({ name: 'boot : ?nosw=1 (async)', error: e.message }); }
+    resolve();
+  }, 20));
+});
+
+// ---------- résumé (async) ----------
+setTimeout(() => {
+  console.log('');
+  for (const p of passes) console.log('  ✓ ' + p);
+  if (failures.length) {
+    console.log('');
+    for (const f of failures) console.log('  ✗ ' + f.name + '\n      ' + f.error);
+    console.log('\n' + passes.length + ' OK, ' + failures.length + ' ÉCHEC(S)');
+    process.exit(1);
+  }
+  console.log('\n' + passes.length + ' tests DOM OK, 0 échec 🎉');
+}, 60);
