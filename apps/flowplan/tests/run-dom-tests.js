@@ -173,6 +173,13 @@ test('DOM : le bouton Annuler ferme sans enregistrer', () => {
   assert(!sandbox.FlowPlanStore.load().some(e => e.title === 'Non enregistré'), 'rien persisté');
 });
 
+// ---------- régression CSS : [hidden] doit gagner sur display:flex ----------
+test('CSS : .fp-modal-backdrop[hidden] { display:none } existe (sinon la modale ne se ferme jamais visuellement)', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'app.css'), 'utf8');
+  assert(/\.fp-modal-backdrop\[hidden\]\s*\{[^}]*display:\s*none/.test(css),
+    'règle .fp-modal-backdrop[hidden] manquante dans app.css — la modale resterait visible malgré hidden=true');
+});
+
 // ---------- boot.js : kill switch ?fresh ----------
 test('boot : ?fresh=1 désinscrit les SW et purge les caches puis recharge', () => {
   const registered = [];

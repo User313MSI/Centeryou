@@ -158,6 +158,8 @@ body {
 .fp-cell-more { font-size: 11px; color: var(--muted); }
 
 .fp-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+/* INDISPENSABLE : display:flex (règle auteur) bat [hidden] (règle navigateur) sinon la modale ne se cache jamais */
+.fp-modal-backdrop[hidden] { display: none !important; }
 .fp-modal { background: var(--panel); border: 1px solid var(--border-strong); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 40px var(--shadow); }
 .fp-modal h2 { margin: 0 0 4px; font-size: 20px; }
 .fp-modal-head { display: flex; align-items: center; justify-content: space-between; }
