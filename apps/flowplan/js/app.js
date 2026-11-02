@@ -314,7 +314,7 @@
         const dayName = ev.date ? DAYS_FR[(new Date(ev.date + 'T12:00:00').getDay() + 6) % 7] : '';
         speak((dayName ? dayName + ' ' : '') + (ev.start || '') + ' ' + ev.title, { rate: 1.25 });
       }
-      setTimeout(stepAdd, 650); // la file d attente gère le rythme, on accélère le visuel
+      setTimeout(stepAdd, 750); // la file d attente gère le rythme, on accélère le visuel
     }
     stepAdd();
   }
@@ -672,7 +672,9 @@
   });
 
   // ---------- modale ----------
+  let lastFocused = null;
   function openModal(ev) {
+    lastFocused = document.activeElement;
     editingId = ev ? ev.id : null;
     els.modal.hidden = false;
     els.modal.classList.add('open'); // pilotage visuel robuste (ne dépend pas que de [hidden])
@@ -692,7 +694,17 @@
     els.modal.hidden = true;
     els.modal.classList.remove('open');
     editingId = null;
+    if (lastFocused && lastFocused.focus) { try { lastFocused.focus(); } catch (e) {} }
   }
+  // focus trap : Tab reste dans la modale ouverte
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab' || els.modal.hidden) return;
+    const focusables = els.modal.querySelectorAll('input, select, textarea, button');
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
   // fermer la modale en cliquant sur le fond gris (pas sur la carte elle-même)
   els.modal.addEventListener('click', function (e) {
@@ -922,7 +934,7 @@
       }
       if (voiceEnabled()) speak(added.title, { rate: 1.25 });
       setStatus('🎲 ' + i + '/' + demo.length);
-      setTimeout(stepDemo, 550);
+      setTimeout(stepDemo, 950);
     }
     stepDemo();
   });
@@ -1065,9 +1077,9 @@
     c.width = innerWidth; c.height = innerHeight;
     const ctx = c.getContext('2d');
     const parts = [];
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < 30; i++) {
       const a = Math.random() * Math.PI * 2;
-      const v = 2 + Math.random() * 4;
+      const v = 1 + Math.random() * 2.5;
       parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, color: color || '#5b8cff', size: 2 + Math.random() * 3 });
     }
     let frames = 0;
@@ -1075,7 +1087,7 @@
       ctx.clearRect(0, 0, c.width, c.height);
       let alive = false;
       for (const p of parts) {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.02;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.life -= 0.012;
         if (p.life > 0) {
           alive = true;
           ctx.globalAlpha = Math.max(0, p.life);
@@ -1083,7 +1095,7 @@
           ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
         }
       }
-      if (alive && frames++ < 60) requestAnimationFrame(tick);
+      if (alive && frames++ < 90) requestAnimationFrame(tick);
       else ctx.clearRect(0, 0, c.width, c.height);
     }
     requestAnimationFrame(tick);

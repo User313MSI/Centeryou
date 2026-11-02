@@ -456,6 +456,16 @@ test('DOM : horloge affichée au chargement', () => {
   assert(/^\d{2}:\d{2}:\d{2}$/.test(c.textContent), 'horloge au format HH:MM:SS, reçu: ' + c.textContent);
 });
 
+// ---------- audit pro v4.4 ----------
+test('A11Y : modales ont role=dialog + aria-modal, bouton Générer a aria-label, meta description présente', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert(html.includes('role="dialog" aria-modal="true"'), 'modale accessible');
+  assert(html.includes('aria-label="Générer le planning'), 'bouton générer accessible');
+  assert(html.includes('name="description"'), 'meta description SEO');
+  assert(html.includes('property="og:title"'), 'Open Graph présent');
+  assert(html.includes('name="color-scheme"'), 'color-scheme dark light');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');

@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FlowPlan — dis ta semaine en français (texte ou voix), le planning se construit tout seul. 100 % local, chiffré, hors-ligne. Gratuit, sans compte.">
+  <meta name="keywords" content="planning, agenda, emploi du temps, semaine, voix, français, local, gratuit, PWA">
+  <meta property="og:title" content="FlowPlan — Ton planning en un mot">
+  <meta property="og:description" content="Dis ta semaine, FlowPlan fait le planning. 100 % local et privé.">
+  <meta property="og:type" content="website">
+  <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#101418">
@@ -178,7 +184,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v4.3 — design system premium (dark + light)
+   FlowPlan v4.4 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -589,7 +595,7 @@ body {
     <div class="fp-input-row">
       <textarea id="fp-input" rows="1" placeholder="Écris ou dicte ton planning… (Ctrl+Entrée)"></textarea>
       <button id="fp-voice" class="fp-btn" title="Saisie vocale">🎙️</button>
-      <button id="fp-generate" class="fp-btn primary">✨ Générer</button>
+      <button id="fp-generate" class="fp-btn primary" aria-label="Générer le planning à partir du texte">✨ Générer</button>
     </div>
     <button id="fp-examples-toggle" class="fp-link">voir des exemples ▾</button>
     <div id="fp-examples" class="fp-examples" hidden>
@@ -616,14 +622,14 @@ body {
   <div id="fp-conflicts" class="fp-conflicts" hidden></div>
   <div id="fp-filters" class="fp-filters"></div>
 
-  <main id="fp-week" class="fp-week"></main>
+  <main id="fp-week" class="fp-week" aria-label="Planning de la semaine"></main>
   <main id="fp-month" class="fp-month" style="display:none"></main>
   <main id="fp-day" class="fp-day-view" style="display:none"></main>
 
-  <div id="fp-modal" class="fp-modal-backdrop" hidden>
+  <div id="fp-modal" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="fp-modal-h">
     <div class="fp-modal">
       <div class="fp-modal-head">
-        <h2>Événement</h2>
+        <h2 id="fp-modal-h">Événement</h2>
         <button id="fp-modal-close" class="fp-modal-x" title="Fermer (Échap)" aria-label="Fermer">✕</button>
       </div>
       <label>Titre <input id="fp-modal-title" type="text" maxlength="120"></label>
@@ -668,7 +674,7 @@ body {
   </div>
 
   <!-- Écran de verrouillage (vault) -->
-  <div id="fp-lock" class="fp-modal-backdrop" hidden>
+  <div id="fp-lock" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Verrouillage">
     <div class="fp-modal fp-lock-modal">
       <h2>🔒 FlowPlan est verrouillé</h2>
       <p class="fp-muted">Entre ton code pour déchiffrer tes données (elles restent chiffrées sur cet appareil).</p>
@@ -680,7 +686,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v4.3 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v4.4 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
