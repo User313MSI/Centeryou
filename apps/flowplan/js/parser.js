@@ -54,6 +54,15 @@
     return toISODate(now || new Date());
   }
 
+  // prochain lundi (strictement futur) — utilisé quand "prochain" est dit explicitement
+  function nextDayOfWeekStrict(target, now) {
+    const n = now || new Date();
+    const cur = n.getDay();
+    let diff = (target - cur + 7) % 7;
+    if (diff === 0) diff = 7;
+    return toISODate(new Date(n.getFullYear(), n.getMonth(), n.getDate() + diff));
+  }
+
   function nextDayOfWeek(target, now) {
     const n = now || new Date();
     const cur = n.getDay();
@@ -188,7 +197,9 @@
         recurrence = 'weekly';
         strip('tous les'); strip('toutes les'); strip('chaque');
       }
-      if (!date) date = nextDayOfWeek(DAYS[dayMatch[1]], now);
+      // "prochain lundi" / "lundi prochain" = strictement la semaine prochaine
+      const hasProchain = /\bprochain(e)?\b/.test(text);
+      if (!date) date = hasProchain ? nextDayOfWeekStrict(DAYS[dayMatch[1]], now) : nextDayOfWeek(DAYS[dayMatch[1]], now);
       strip(dayMatch[0]);
     } else {
       // faute de frappe : "mecredi" -> mercredi
@@ -204,7 +215,7 @@
         }
       }
     }
-    // "lundi prochain" / "prochain lundi" : on retire juste le mot
+    // on retire juste le mot "prochain" du titre
     strip('prochain'); strip('prochaine');
 
     // plage horaire "18h à 20h" / "18h-20h" / "18h jusqu'à 20h"
@@ -294,5 +305,5 @@
     return events;
   }
 
-  return { parse, parseEvent, expandRecurring, normalize, todayISO, nextDayOfWeek, isValidDate, matchDayWord };
+  return { parse, parseEvent, expandRecurring, normalize, todayISO, nextDayOfWeek, nextDayOfWeekStrict, isValidDate, matchDayWord };
 });

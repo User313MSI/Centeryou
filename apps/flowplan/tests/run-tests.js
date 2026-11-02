@@ -267,10 +267,32 @@ test('audit : "dans 3 jours 10h truc"', () => {
   eq(ev.date, '2026-11-05');
 });
 
-test('audit : "lundi prochain 9h truc" -> lundi du jour (2/11), sans le mot dans le titre', () => {
+test('audit : "lundi prochain 9h truc" -> lundi PROCHAIN (9/11), sans le mot dans le titre', () => {
   const ev = Parser.parseEvent('lundi prochain 9h truc', NOW);
-  eq(ev.date, '2026-11-02');
+  eq(ev.date, '2026-11-09'); // NOW = lundi 2/11 -> "prochain" = 9/11
   eq(ev.title, 'Truc');
+});
+
+test('parser : date complète "9 novembre 2026 18h stream" -> 2026-11-09', () => {
+  const ev = Parser.parseEvent('9 novembre 2026 18h stream', NOW);
+  eq(ev.date, '2026-11-09');
+  eq(ev.start, '18:00');
+});
+
+test('parser : date numérique "09/11/2026 18h stream" -> 2026-11-09', () => {
+  const ev = Parser.parseEvent('09/11/2026 18h stream', NOW);
+  eq(ev.date, '2026-11-09');
+  eq(ev.start, '18:00');
+});
+
+test('parser : "prochain mardi 10h" un lundi -> mardi 3/11 (lendemain, strictement futur)', () => {
+  const ev = Parser.parseEvent('prochain mardi 10h truc', NOW);
+  eq(ev.date, '2026-11-03');
+});
+
+test('parser : "prochain lundi" un lundi -> lundi 9/11 (semaine prochaine, strict)', () => {
+  const ev = Parser.parseEvent('prochain lundi 10h truc', NOW);
+  eq(ev.date, '2026-11-09');
 });
 
 test('audit : entrée très longue tronquée à 300 caractères', () => {
