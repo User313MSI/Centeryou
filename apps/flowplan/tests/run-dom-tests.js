@@ -108,6 +108,8 @@ function loadApp() {
     Blob: function () {},
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
     setTimeout: (fn) => fn(),
+    setInterval: () => 0,
+    clearInterval: () => {},
     __toastCount: 0,
     window: null,
   };
