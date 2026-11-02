@@ -46,6 +46,10 @@
     examples: $('fp-examples'),
     reset: $('fp-reset'),
     reminders: $('fp-reminders'),
+    demo: $('fp-demo'),
+    present: $('fp-present'),
+    welcome: $('fp-welcome'),
+    welcomeGo: $('fp-welcome-go'),
     undo: $('fp-undo'),
     toasts: $('fp-toasts'),
     modal: $('fp-modal'),
@@ -786,6 +790,72 @@
   }
 
 
+  // ---------- écran d'accueil (une seule fois) ----------
+  function maybeShowWelcome() {
+    let seen = false;
+    try { seen = localStorage.getItem('flowplan.welcome') === '1'; } catch (e) {}
+    if (!seen && !Vault.isEnabled(localStorage)) {
+      els.welcome.hidden = false;
+      els.welcome.classList.add('open');
+    }
+  }
+  els.welcomeGo.addEventListener('click', function () {
+    els.welcome.classList.remove('open');
+    els.welcome.hidden = true;
+    try { localStorage.setItem('flowplan.welcome', '1'); } catch (e) {}
+  });
+
+  // 1) données de démo
+  els.demo.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    const monday = Planner.weekStartISO(null);
+    const demo = [
+      ['Lundi 9h00 réunion équipe', 0, '09:00', '10:00', 'travail'],
+      ['Lundi 12h30 déjeuner avec Sam', 0, '12:30', '13:30', 'perso'],
+      ['Lundi 18h30 sport salle', 0, '18:30', '19:30', 'sport'],
+      ['Mardi 10h00 visio client Durand', 1, '10:00', '11:00', 'travail'],
+      ['Mardi 19h00 cinéma', 1, '19:00', '21:00', 'perso'],
+      ['Mercredi 14h30 dentiste', 2, '14:30', '15:30', 'sante'],
+      ['Jeudi 9h00 envoi du devis', 3, '09:00', '09:30', 'travail'],
+      ['Vendredi 18h00 apéro équipe', 4, '18:00', '20:00', 'travail'],
+      ['Samedi 10h00 brunch', 5, '10:00', '12:00', 'perso'],
+      ['Samedi mariage de Julie', 5, null, null, 'perso'],
+      ['Dimanche 11h00 courses', 6, '11:00', '12:00', 'courses'],
+    ];
+    let added = 0;
+    for (const [title, dayOffset, start, end, cat] of demo) {
+      const rule = Categories.RULES.find(r => r.cat === cat);
+      const before = planner.all().length;
+      planner.add({
+        title: title.replace(/^\w+ \d+h\d{2} /, ''),
+        date: Planner.addDaysISO(monday, dayOffset),
+        start: start, end: end,
+        allDay: !start,
+        cat: cat, color: rule ? rule.color : null,
+      });
+      if (planner.all().length > before) added++;
+    }
+    persist();
+    render();
+    toast('🎲 ' + added + ' événements de démo ajoutés — Annuler si tu veux revenir en arrière', false, added > 0);
+  });
+
+  // 4) mode présentation : plein écran, cache hero/menus, F11-like
+  els.present.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    document.body.classList.toggle('presenting');
+    const on = document.body.classList.contains('presenting');
+    els.present.textContent = on ? '🚪 Quitter la présentation' : '🎬 Mode présentation';
+    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(function(){});
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'F11' && document.body.classList.contains('presenting')) {
+      e.preventDefault();
+      els.present.click();
+    }
+  });
+
   // ---------- boot : verrouillage ----------
   async function boot() {
     if (Vault.isEnabled(localStorage)) {
@@ -805,6 +875,7 @@
           planner.load(evs);
           booted = true;
           render();
+          maybeShowWelcome();
           setStatus('🔓 Déverrouillé.');
         } else {
           errEl.textContent = 'Code incorrect.';
@@ -820,7 +891,7 @@
     planner.load(evs);
     booted = true;
     render();
-    setStatus('Bienvenue dans FlowPlan 👋 Décris ta semaine ci-dessous.');
+    maybeShowWelcome();
   }
 
   boot();

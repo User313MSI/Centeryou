@@ -14,6 +14,42 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+
+/* 3) écran d'accueil animé */
+.fp-welcome {
+  position: fixed; inset: 0; z-index: 200; display: none;
+  align-items: center; justify-content: center;
+  background: radial-gradient(800px 500px at 50% 20%, rgba(91,140,255,.25), transparent 60%), #0b0e14;
+}
+.fp-welcome.open { display: flex; }
+.fp-welcome-card { text-align: center; animation: welcomeIn .5s cubic-bezier(.2,.9,.3,1.1); }
+@keyframes welcomeIn { from { opacity: 0; transform: scale(.9) translateY(20px); } }
+.fp-welcome-logo { font-size: 72px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-10px); } }
+.fp-welcome-title {
+  font-size: 56px; font-weight: 800; margin: 10px 0 4px; letter-spacing: -1.5px;
+  background: linear-gradient(120deg, #fff 20%, #5b8cff 60%, #8b5cf6 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+}
+.fp-welcome-sub { color: #97a3b6; font-size: 18px; margin: 0 0 14px; }
+.fp-welcome-hint { color: #5b6b82; font-size: 14px; margin-bottom: 22px; }
+
+/* 4) mode présentation */
+body.presenting .fp-top, body.presenting .fp-hero, body.presenting .fp-filters, body.presenting .fp-footer { display: none !important; }
+body.presenting .fp-weekbar { padding-top: 26px; }
+body.presenting .fp-week { max-width: 1600px; }
+body.presenting .fp-day { min-height: 420px; }
+body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
+
+/* 2) micro-animations supplémentaires */
+.fp-day { animation: rise .3s ease-out; }
+.fp-toast { animation: slidein .3s cubic-bezier(.2,.9,.3,1.15); }
+.fp-modal { animation: pop .2s cubic-bezier(.2,.9,.3,1.15); }
+.fp-menu-panel { animation: pop .16s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .fp-day, .fp-event, .fp-toast, .fp-modal, .fp-menu-panel, .fp-welcome-card, .fp-welcome-logo { animation: none !important; }
+}
+
 /* SÛR v3.5 : thème sombre en dur, aucune variable, aucun sélecteur complexe */
 html { background: #0b0e14 !important; }
 body {
@@ -44,7 +80,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.8 — design system premium (dark + light)
+   FlowPlan v3.9 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -437,6 +473,8 @@ body {
           <button id="fp-import" class="fp-menu-item">📥 Importer (.ics)</button>
           <button id="fp-reminders" class="fp-menu-item">🔕 Rappels : désactivés</button>
           <button id="fp-vault" class="fp-menu-item">🔐 Verrouiller (code PIN)</button>
+          <button id="fp-demo" class="fp-menu-item">🎲 Remplir avec un exemple</button>
+          <button id="fp-present" class="fp-menu-item">🎬 Mode présentation</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
           <hr>
           <button id="fp-reset" class="fp-menu-item danger">🗑️ Réinitialiser mes données</button>
@@ -517,6 +555,17 @@ body {
 
   <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
 
+  <!-- Écran d'accueil animé (vu une seule fois) -->
+  <div id="fp-welcome" class="fp-welcome" hidden>
+    <div class="fp-welcome-card">
+      <div class="fp-welcome-logo">🌊</div>
+      <h1 class="fp-welcome-title">FlowPlan</h1>
+      <p class="fp-welcome-sub">Dis ta semaine. On fait le planning.</p>
+      <div class="fp-welcome-hint">✨ Texte &nbsp;·&nbsp; 🎙️ Voix &nbsp;·&nbsp; 📅 Export .ics</div>
+      <button id="fp-welcome-go" class="fp-btn primary">C'est parti →</button>
+    </div>
+  </div>
+
   <!-- Écran de verrouillage (vault) -->
   <div id="fp-lock" class="fp-modal-backdrop" hidden>
     <div class="fp-modal fp-lock-modal">
@@ -530,7 +579,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.8 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.9 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

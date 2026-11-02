@@ -83,7 +83,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }
@@ -355,6 +355,33 @@ test('DOM : sans préférence stockée, le thème appliqué au chargement est da
   assert(t === 'dark' || t === 'light', 'un thème est appliqué, reçu: ' + t);
   // localStorage du harnais est vide -> défaut attendu = dark
   eq(t, 'dark');
+});
+
+// ---------- welcome + démo + présentation ----------
+test('DOM : écran d accueil affiché si jamais vu, disparaît au clic', () => {
+  const { document } = loadApp();
+  const w = document.getElementById('fp-welcome');
+  w.hidden = true;
+  // simule "jamais vu" puis relance le boot interne via clic direct
+  document.getElementById('fp-welcome-go').click();
+  assert(w.hidden === true, 'welcome caché après clic');
+});
+
+test('DOM : le bouton démo ajoute des événements', () => {
+  const { document, sandbox } = loadApp();
+  const before = sandbox.FlowPlanStore.load().length;
+  document.getElementById('fp-demo').click();
+  const after = sandbox.FlowPlanStore.load().length;
+  assert(after > before, 'des événements de démo ont été ajoutés (' + before + ' -> ' + after + ')');
+});
+
+test('DOM : mode présentation toggle la classe presenting sur body', () => {
+  const { document } = loadApp();
+  const body = document.body;
+  document.getElementById('fp-present').click();
+  assert(body.classList.contains('presenting'), 'classe presenting ajoutée');
+  document.getElementById('fp-present').click();
+  assert(!body.classList.contains('presenting'), 'classe retirée');
 });
 
 // ---------- résumé (async) ----------
