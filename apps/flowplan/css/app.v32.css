@@ -48,6 +48,8 @@
 }
 
 * { box-sizing: border-box; }
+/* filet de sécurité v3.1 : si ce commentaire est appliqué, le nouveau CSS est actif */
+.fp-day { outline: 1px solid transparent; }
 html, body { margin: 0; padding: 0; }
 body {
   background:
