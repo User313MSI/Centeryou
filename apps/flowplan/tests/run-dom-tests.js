@@ -29,6 +29,8 @@ function makeEl(id) {
     hidden: false,
     value: '',
     textContent: '',
+    set innerHTML(v) { if (v === '') this.children.length = 0; this._innerHTML = v; },
+    get innerHTML() { return this._innerHTML || ''; },
     className: '',
     draggable: false,
     classList: {
@@ -63,7 +65,7 @@ function makeDocument() {
   const docListeners = {};
   const document = {
     documentElement: { setAttribute() {}, getAttribute() { return 'dark'; } },
-    body: makeEl('body'),
+    body: Object.assign(makeEl('body'), { tagName: 'BODY' }),
     getElementById(id) { return byId[id] || (byId[id] = makeEl(id)); },
     createElement(tag) { return makeEl('<' + tag + '>'); },
     createTextNode(t) { return { textContent: t }; },
@@ -81,7 +83,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }
@@ -325,6 +327,25 @@ test('DOM : Ctrl+Z annule le dernier ajout et affiche un toast', () => {
   // le harnais exécute setTimeout immédiatement, donc le toast a pu être retiré :
   // on vérifie via un espion posé AVANT le fire sur appendChild du conteneur toasts
   assert(toastSpy.count >= 2, 'au moins 2 toasts créés (save + undo), reçu: ' + toastSpy.count);
+});
+
+// ---------- focus / raccourcis ----------
+test('DOM : Échap quitte le mode focus (filtre actif -> null)', () => {
+  const { document } = loadApp();
+  document.getElementById('fp-add').click();
+  document.getElementById('fp-modal-title').value = 'Dentiste';
+  document.getElementById('fp-modal-cat').value = 'sante';
+  document.getElementById('fp-modal-save').click();
+  const filters = document.getElementById('fp-filters');
+  const santeBtn = filters.children.find(c => c.getAttribute && c.getAttribute('data-cat') === 'sante');
+  assert(santeBtn, 'bouton filtre sante présent');
+  santeBtn.click();
+  const badgeAvant = filters.children.find(c => (c.className || '').includes('fp-focus-badge'));
+  assert(badgeAvant, 'badge focus présent AVANT Échap');
+  document.fire('keydown', { key: 'Escape', target: document.body });
+  // après Échap, le badge focus ne doit plus être là
+  const badge = filters.children.find(c => (c.className || '').includes('fp-focus-badge'));
+  assert(!badge, 'badge focus retiré après Échap');
 });
 
 // ---------- résumé (async) ----------

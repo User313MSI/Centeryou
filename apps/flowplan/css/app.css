@@ -132,6 +132,11 @@ body {
   border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .fp-filter.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+.fp-focus-badge {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid var(--accent); color: var(--text);
+  border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700;
+}
 
 .fp-week { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 10px; padding: 0 20px 30px; max-width: 1400px; margin: 0 auto; }
 .fp-day {

@@ -42,6 +42,7 @@
     examplesToggle: $('fp-examples-toggle'),
     examples: $('fp-examples'),
     reset: $('fp-reset'),
+    reminders: $('fp-reminders'),
     undo: $('fp-undo'),
     toasts: $('fp-toasts'),
     modal: $('fp-modal'),
@@ -64,17 +65,31 @@
   let activeCat = null;
   let dragId = null;
 
-  // ---------- thème ----------
+  // ---------- thème : 'auto' suit le système, sinon dark/light forcé ----------
+  function currentSavedTheme() {
+    try { return localStorage.getItem('flowplan.theme') || 'auto'; } catch (e) { return 'auto'; }
+  }
   function applyTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    els.theme.textContent = t === 'light' ? '🌙 Sombre' : '☀️ Clair';
+    if (t === 'auto') {
+      const sys = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', sys);
+      els.theme.textContent = '🖥️ Auto (système)';
+    } else {
+      document.documentElement.setAttribute('data-theme', t);
+      els.theme.textContent = t === 'light' ? '🌙 Sombre' : '☀️ Clair';
+    }
     try { localStorage.setItem('flowplan.theme', t); } catch (e) {}
   }
-  const savedTheme = (function () { try { return localStorage.getItem('flowplan.theme'); } catch (e) { return null; } })();
-  applyTheme(savedTheme || 'dark');
+  applyTheme(currentSavedTheme());
   els.theme.addEventListener('click', function () {
-    applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    const cur = currentSavedTheme();
+    applyTheme(cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto'); // cycle auto -> light -> dark
   });
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function () {
+      if (currentSavedTheme() === 'auto') applyTheme('auto');
+    });
+  }
 
   els.undo.addEventListener('click', function () { els.menuPanel.hidden = true; doUndo(); });
   document.addEventListener('keydown', function (e) {
@@ -100,6 +115,45 @@
   });
 
   // réinitialisation des données SANS console : modale de confirmation maison
+  // ---------- rappels navigateur (opt-in) ----------
+  function remindersEnabled() {
+    try { return localStorage.getItem('flowplan.reminders') === '1'; } catch (e) { return false; }
+  }
+  function setReminders(on) {
+    try { localStorage.setItem('flowplan.reminders', on ? '1' : '0'); } catch (e) {}
+    els.reminders.textContent = on ? '🔔 Rappels : activés' : '🔕 Rappels : désactivés';
+    if (on && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    scheduleReminders();
+  }
+  els.reminders.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    setReminders(!remindersEnabled());
+    toast(remindersEnabled() ? '🔔 Rappels activés (demande de permission au navigateur si besoin)' : '🔕 Rappels désactivés');
+  });
+  let reminderTimer = null;
+  function scheduleReminders() {
+    if (reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = null;
+    if (!remindersEnabled() || !('Notification' in window) || Notification.permission !== 'granted') return;
+    reminderTimer = setInterval(checkReminders, 60000);
+    checkReminders();
+  }
+  function checkReminders() {
+    const now = new Date();
+    const today = Parser.todayISO(now);
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    for (const ev of planner.byDate(today)) {
+      if (!ev.start || ev.allDay) continue;
+      const [h, m] = ev.start.split(':').map(Number);
+      const evMin = h * 60 + m;
+      if (evMin - nowMin === 15 && !ev._notified) { // 15 min avant
+        ev._notified = true;
+        new Notification('Dans 15 min : ' + ev.title, { body: ev.start + ' — FlowPlan', icon: 'assets/icon-192.png' });
+      }
+    }
+  }
+  if (remindersEnabled()) scheduleReminders();
+
   els.reset.addEventListener('click', function () {
     els.menuPanel.hidden = true;
     const ok = window.confirm('Supprimer TOUS tes événements FlowPlan sur cet appareil ?\n(Cette action est irréversible.)');
@@ -201,6 +255,12 @@
   function renderFilters() {
     const box = els.filters;
     box.innerHTML = '';
+    if (activeCat) {
+      const badge = document.createElement('span');
+      badge.className = 'fp-focus-badge';
+      badge.textContent = '🎯 focus : ' + activeCat + ' (Échap pour tout voir)';
+      box.appendChild(badge);
+    }
     const mk = (label, cat, color) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -649,7 +709,16 @@
   els.mDelete.addEventListener('click', deleteModal);
   $('fp-modal-close').addEventListener('click', closeModal);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !els.modal.hidden) closeModal();
+    if (e.key === 'Escape') {
+      if (!els.modal.hidden) { closeModal(); return; }
+      if (activeCat) { activeCat = null; render(); toast('🎯 Mode focus désactivé'); return; }
+      if (!els.menuPanel.hidden) els.menuPanel.hidden = true;
+    }
+    // raccourcis : ←/→ = semaine/jour précédent/suivant ; ? = aide raccourcis
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); toast('⌨️ Raccourcis : ←/→ changer de période · Ctrl+Z annuler · Échap fermer/quitter focus · Ctrl+Entrée générer', false); }
   });
   for (const ex of document.querySelectorAll('.fp-example')) {
     ex.addEventListener('click', function () {
