@@ -71,7 +71,7 @@
 
   // ---------- thème : 'auto' suit le système, sinon dark/light forcé ----------
   function currentSavedTheme() {
-    try { return localStorage.getItem('flowplan.theme') || 'auto'; } catch (e) { return 'auto'; }
+    try { return localStorage.getItem('flowplan.theme') || 'dark'; } catch (e) { return 'dark'; }
   }
   function applyTheme(t) {
     if (t === 'auto') {
