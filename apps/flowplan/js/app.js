@@ -704,6 +704,12 @@
 
   // ---------- navigation ----------
   function step(days) {
+    const weekEl = els.week;
+    if (view === 'week' && weekEl) {
+      weekEl.classList.remove('slide-left', 'slide-right');
+      void weekEl.offsetWidth;
+      weekEl.classList.add(days > 0 ? 'slide-left' : 'slide-right');
+    }
     if (view === 'day') { currentDay = Planner.addDaysISO(currentDay, days); renderView(); renderStats(); return; }
     if (view === 'week') currentWeekStart = Planner.addDaysISO(currentWeekStart, days * 7);
     else {
@@ -988,6 +994,12 @@
         els.btnVoice.click(); // réutilise le micro existant
       }
     }, msg.length * 90 + 800);
+  });
+
+  // ripple au clic sur tous les .fp-btn
+  document.addEventListener('click', function (e) {
+    const b = e.target && e.target.closest ? e.target.closest('.fp-btn') : null;
+    if (b) { b.classList.remove('ripple'); void b.offsetWidth; b.classList.add('ripple'); }
   });
 
   // ---------- boot : verrouillage ----------
