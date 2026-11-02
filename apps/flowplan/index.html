@@ -16,39 +16,45 @@
   <header class="fp-top">
     <div class="fp-brand">🌊 FlowPlan</div>
     <div class="fp-top-actions">
-      <input id="fp-search" class="fp-search" type="search" placeholder="🔍 Rechercher…" aria-label="Rechercher un événement">
-      <button id="fp-theme" class="fp-btn" title="Changer de thème">☀️ Clair</button>
-      <button id="fp-export" class="fp-btn" title="Exporter au format calendrier (.ics)">📅 Export .ics</button>
-      <button id="fp-print" class="fp-btn" title="Imprimer">🖨️ Imprimer</button>
+      <input id="fp-search" class="fp-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un événement">
       <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
+      <div class="fp-menu">
+        <button id="fp-menu-btn" class="fp-btn" aria-label="Menu" aria-haspopup="true">⋯</button>
+        <div id="fp-menu-panel" class="fp-menu-panel" hidden>
+          <button id="fp-theme" class="fp-menu-item">☀️ Thème clair</button>
+          <button id="fp-export" class="fp-menu-item">📅 Exporter (.ics)</button>
+          <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
+          <hr>
+          <button id="fp-reset" class="fp-menu-item danger">🗑️ Réinitialiser mes données</button>
+        </div>
+      </div>
     </div>
   </header>
 
   <section class="fp-hero">
     <h1>Dis ta semaine. On fait le planning.</h1>
-    <p class="fp-sub">Écris ou dicte : « Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; samedi soirée chez Léa »</p>
     <div class="fp-input-row">
-      <textarea id="fp-input" rows="2" placeholder="Écris ton planning ici… (Ctrl+Entrée pour générer)"></textarea>
-      <button id="fp-voice" class="fp-btn" title="Saisie vocale">🎙️ Voix</button>
+      <textarea id="fp-input" rows="1" placeholder="Écris ou dicte ton planning… (Ctrl+Entrée)"></textarea>
+      <button id="fp-voice" class="fp-btn" title="Saisie vocale">🎙️</button>
       <button id="fp-generate" class="fp-btn primary">✨ Générer</button>
     </div>
-    <div class="fp-examples">
-      <span>Essayer :</span>
-      <button class="fp-example" data-example="Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; vendredi 18h apéro">Exemple 1</button>
-      <button class="fp-example" data-example="Tous les lundis 18h30 sport ; tous les jours 7h réveil ; jeudi 12 mai 2026 10h dentiste">Récurrence</button>
-      <button class="fp-example" data-example="Samedi mariage de Julie ; dimanche 10h brunch ; 25/12/2026 journée en famille">Dates précises</button>
+    <button id="fp-examples-toggle" class="fp-link">voir des exemples ▾</button>
+    <div id="fp-examples" class="fp-examples" hidden>
+      <button class="fp-example" data-example="Lundi 9h réunion équipe ; mercredi 14h30 dentiste ; vendredi 18h apéro">Semaine type</button>
+      <button class="fp-example" data-example="Tous les lundis 18h30 sport ; tous les jours 7h réveil ; 12 mai 2026 10h dentiste">Récurrence + date</button>
+      <button class="fp-example" data-example="Samedi mariage de Julie ; 25/12/2026 Noël en famille">Dates précises</button>
     </div>
     <div id="fp-status" class="fp-status"></div>
   </section>
 
   <section class="fp-weekbar">
-    <button id="fp-prev-week" class="fp-btn" aria-label="Précédent">←</button>
+    <button id="fp-prev-week" class="fp-btn ghost" aria-label="Précédent">←</button>
     <span id="fp-week-label" class="fp-week-label"></span>
-    <button id="fp-today-week" class="fp-btn">Aujourd'hui</button>
-    <button id="fp-next-week" class="fp-btn" aria-label="Suivant">→</button>
+    <button id="fp-today-week" class="fp-btn ghost">Aujourd'hui</button>
+    <button id="fp-next-week" class="fp-btn ghost" aria-label="Suivant">→</button>
     <span class="fp-view-switch">
-      <button id="fp-view-week" class="fp-btn active">Semaine</button>
-      <button id="fp-view-month" class="fp-btn">Mois</button>
+      <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
+      <button id="fp-view-month" class="fp-btn ghost">Mois</button>
     </span>
   </section>
 
@@ -92,7 +98,7 @@
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v2.2 — tes données restent sur ton appareil (100 % local). Glisse un événement d'un jour à l'autre pour le déplacer.</footer>
+  <footer class="fp-footer">FlowPlan v2.2 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

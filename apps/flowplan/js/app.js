@@ -34,6 +34,11 @@
     viewWeek: $('fp-view-week'),
     viewMonth: $('fp-view-month'),
     theme: $('fp-theme'),
+    menuBtn: $('fp-menu-btn'),
+    menuPanel: $('fp-menu-panel'),
+    examplesToggle: $('fp-examples-toggle'),
+    examples: $('fp-examples'),
+    reset: $('fp-reset'),
     modal: $('fp-modal'),
     mTitle: $('fp-modal-title'),
     mDate: $('fp-modal-date'),
@@ -63,6 +68,33 @@
   applyTheme(savedTheme || 'dark');
   els.theme.addEventListener('click', function () {
     applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+  });
+
+  // menu ⋯ : s'ouvre/ferme, se ferme au clic ailleurs ou avec Échap
+  els.menuBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    els.menuPanel.hidden = !els.menuPanel.hidden;
+  });
+  document.addEventListener('click', function (e) {
+    if (!els.menuPanel.hidden && !els.menuPanel.contains(e.target)) els.menuPanel.hidden = true;
+  });
+
+  // exemples repliés par défaut
+  els.examplesToggle.addEventListener('click', function () {
+    els.examples.hidden = !els.examples.hidden;
+    els.examplesToggle.textContent = els.examples.hidden ? 'voir des exemples ▾' : 'masquer les exemples ▴';
+  });
+
+  // réinitialisation des données SANS console : modale de confirmation maison
+  els.reset.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    const ok = window.confirm('Supprimer TOUS tes événements FlowPlan sur cet appareil ?\n(Cette action est irréversible.)');
+    if (!ok) return;
+    planner.load([]);
+    Store.clear();
+    activeCat = null;
+    render();
+    setStatus('Données réinitialisées ✓');
   });
 
   // ---------- persistance ----------

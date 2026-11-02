@@ -73,6 +73,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }
@@ -275,6 +276,25 @@ test('boot : ?nosw=1 ne enregistre JAMAIS de SW (mode dev sans cache)', () => {
     } catch (e) { failures.push({ name: 'boot : ?nosw=1 (async)', error: e.message }); }
     resolve();
   }, 20));
+});
+
+// ---------- menu ⋯ et reset sans console ----------
+test('DOM : le menu ⋯ s\'ouvre et se ferme', () => {
+  const { document } = loadApp();
+  const panel = document.getElementById('fp-menu-panel');
+  panel.hidden = true;
+  document.getElementById('fp-menu-btn').fire('click', { stopPropagation() {} });
+  assert(panel.hidden === false, 'menu ouvert');
+  document.fire('click', { target: document.body });
+  assert(panel.hidden === true, 'menu fermé au clic ailleurs');
+});
+
+test('DOM : les exemples sont repliés par défaut et se déplient', () => {
+  const { document } = loadApp();
+  const ex = document.getElementById('fp-examples');
+  ex.hidden = true; // fidèle au HTML (hidden)
+  document.getElementById('fp-examples-toggle').click();
+  assert(ex.hidden === false, 'exemples visibles après clic');
 });
 
 // ---------- résumé (async) ----------
