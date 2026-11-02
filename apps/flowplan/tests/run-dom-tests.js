@@ -411,6 +411,21 @@ test('CSS : en mode présentation, les blocs haut/bas sont display:none PUR (pas
   assert(!m[0].includes('display: block'), 'plus de display:block contradictoire');
 });
 
+// ---------- fix fullscreenchange ----------
+test('DOM : si le fullscreen se ferme (Échap navigateur) pendant la présentation, on quitte le mode présentation', () => {
+  const { document } = loadApp();
+  const body = document.body;
+  document.getElementById('fp-present').click();
+  assert(body.classList.contains('presenting'), 'en présentation');
+  // simule : fullscreen actif puis fermé (document.fullscreenElement devient null)
+  Object.defineProperty(document, 'fullscreenElement', { value: {}, configurable: true });
+  document.fire('fullscreenchange');
+  assert(body.classList.contains('presenting'), 'toujours en présentation tant que fullscreen actif');
+  Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true });
+  document.fire('fullscreenchange');
+  assert(!body.classList.contains('presenting'), 'quitte la présentation quand le fullscreen se ferme');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');

@@ -844,11 +844,19 @@
   function setPresent(on) {
     document.body.classList.toggle('presenting', on);
     els.present.textContent = on ? '🚪 Quitter la présentation (Échap)' : '🎬 Mode présentation';
-    if (on && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(function(){});
-    }
+    // PAS de requestFullscreen automatique : en fullscreen, Échap est volé par le navigateur.
+    // L'utilisateur peut appuyer sur F11 lui-même pour le vrai plein écran.
     if (!on && document.fullscreenElement) document.exitFullscreen().catch(function(){});
   }
+  // BUG FIX : en plein écran, Échap est intercepté par le navigateur (sortie fullscreen)
+  // et n'atteint jamais la page -> on écoute fullscreenchange pour quitter la présentation aussi.
+  document.addEventListener('fullscreenchange', function () {
+    if (!document.fullscreenElement && document.body.classList.contains('presenting')) {
+      setPresent(false);
+      render();
+      void document.body.offsetHeight;
+    }
+  });
   els.present.addEventListener('click', function () {
     els.menuPanel.hidden = true;
     setPresent(!document.body.classList.contains('presenting'));
