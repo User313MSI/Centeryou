@@ -114,7 +114,7 @@ function loadApp() {
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   const jsDir = path.join(__dirname, '..', 'js');
-  for (const f of ['parser.js', 'planner.js', 'store.js', 'voice.js', 'categories.js', 'ics.js', 'app.js']) {
+  for (const f of ['parser.js', 'planner.js', 'store.js', 'voice.js', 'categories.js', 'ics.js', 'ics-import.js', 'lock.js', 'secure-store.js', 'app.js']) {
     const code = fs.readFileSync(path.join(jsDir, f), 'utf8');
     vm.runInContext(code, sandbox, { filename: f });
   }
