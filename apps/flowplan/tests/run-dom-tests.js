@@ -83,7 +83,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome', 'fp-voice-toggle',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }

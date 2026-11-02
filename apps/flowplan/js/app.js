@@ -47,6 +47,7 @@
     reset: $('fp-reset'),
     reminders: $('fp-reminders'),
     demo: $('fp-demo'),
+    voiceToggle: $('fp-voice-toggle'),
     present: $('fp-present'),
     welcome: $('fp-welcome'),
     welcomeGo: $('fp-welcome-go'),
@@ -296,7 +297,12 @@
       const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
       if (card) card.classList.add('just-added');
       setStatus(i + '/' + total + ' — « ' + ev.title + ' »');
-      setTimeout(stepAdd, 220);
+      // VOIX en direct : annonce chaque événement ajouté (tac tac tac parlé)
+      if (voiceEnabled()) {
+        const dayName = ev.date ? DAYS_FR[(new Date(ev.date + 'T12:00:00').getDay() + 6) % 7] : '';
+        speak((dayName ? dayName + ' ' : '') + (ev.start || '') + ' ' + ev.title, { queue: false, rate: 1.1 });
+      }
+      setTimeout(stepAdd, 900); // 900ms pour laisser la voix finir avant le suivant
     }
     stepAdd();
   }
@@ -836,22 +842,33 @@
       ['Samedi mariage de Julie', 5, null, null, 'perso'],
       ['Dimanche 11h00 courses', 6, '11:00', '12:00', 'courses'],
     ];
-    let added = 0;
-    for (const [title, dayOffset, start, end, cat] of demo) {
+    // démo progressive aussi : un par un, animé + parlé
+    let i = 0;
+    els.menuPanel.hidden = true;
+    function stepDemo() {
+      if (i >= demo.length) {
+        persist();
+        toast('🎲 ' + demo.length + ' événements de démo ajoutés — Annuler pour revenir en arrière', false, true);
+        return;
+      }
+      const [title, dayOffset, start, end, cat] = demo[i++];
       const rule = Categories.RULES.find(r => r.cat === cat);
-      const before = planner.all().length;
-      planner.add({
+      const added = planner.add({
         title: title.replace(/^\w+ \d+h\d{2} /, ''),
         date: Planner.addDaysISO(monday, dayOffset),
         start: start, end: end,
         allDay: !start,
         cat: cat, color: rule ? rule.color : null,
       });
-      if (planner.all().length > before) added++;
+      persist();
+      render();
+      const card = document.querySelector('.fp-event[data-id="' + added.id + '"]');
+      if (card) card.classList.add('just-added');
+      if (voiceEnabled()) speak(added.title, { queue: false, rate: 1.1 });
+      setStatus('🎲 ' + i + '/' + demo.length);
+      setTimeout(stepDemo, 700);
     }
-    persist();
-    render();
-    toast('🎲 ' + added + ' événements de démo ajoutés — Annuler si tu veux revenir en arrière', false, added > 0);
+    stepDemo();
   });
 
   // 4) mode présentation : plein écran, cache hero/menus, Échap/F11 pour quitter
@@ -897,19 +914,47 @@
 
 
   // ---------- voix d'accueil (TTS local, speechSynthesis) ----------
-  function speak(text) {
+  let bestVoice = null;
+  function pickBestVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const voices = speechSynthesis.getVoices();
+    const fr = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
+    if (!fr.length) return null;
+    // priorité : voix neuronales/cloud (nettement meilleures), puis noms connus, puis local
+    const score = v => {
+      const n = (v.name + ' ' + (v.voiceURI || '')).toLowerCase();
+      let sc = 0;
+      if (n.includes('neural') || n.includes('online') || n.includes('cloud') || n.includes('wavenet')) sc += 100;
+      if (n.includes('hortense') || n.includes('denise') || n.includes('google') || n.includes('paul') || n.includes('lea')) sc += 50;
+      if (n.includes('natural')) sc += 30;
+      if (v.localService === false) sc += 10; // voix en ligne = souvent meilleure
+      if (n.includes('microsoft')) sc += 20;
+      return sc;
+    };
+    fr.sort((a, b) => score(b) - score(a));
+    bestVoice = fr[0];
+    return bestVoice;
+  }
+  if ('speechSynthesis' in window) {
+    pickBestVoice();
+    speechSynthesis.onvoiceschanged = pickBestVoice; // les voix arrivent parfois en async
+  }
+  function speak(text, opts) {
     if (!('speechSynthesis' in window)) return false;
     try {
-      speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'fr-FR';
-      u.rate = 1.05;
-      const voices = speechSynthesis.getVoices();
-      const fr = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
-      if (fr) u.voice = fr;
+      u.rate = (opts && opts.rate) || 1.0;
+      u.pitch = (opts && opts.pitch) || 1.0;
+      if (!bestVoice) pickBestVoice();
+      if (bestVoice) u.voice = bestVoice;
+      if (opts && opts.queue === false) speechSynthesis.cancel();
       speechSynthesis.speak(u);
       return true;
     } catch (e) { return false; }
+  }
+  function voiceEnabled() {
+    try { return localStorage.getItem('flowplan.voice') !== '0'; } catch (e) { return true; }
   }
   function voiceWelcome() {
     const today = new Date();
@@ -921,6 +966,16 @@
     if (speak(msg)) toast('🔊 ' + msg, false);
     else toast(msg, false);
   }
+  function refreshVoiceToggle() {
+    els.voiceToggle.textContent = voiceEnabled() ? '🔊 Voix : activée' : '🔇 Voix : désactivée';
+  }
+  refreshVoiceToggle();
+  els.voiceToggle.addEventListener('click', function () {
+    try { localStorage.setItem('flowplan.voice', voiceEnabled() ? '0' : '1'); } catch (e) {}
+    refreshVoiceToggle();
+    if (!voiceEnabled() && 'speechSynthesis' in window) speechSynthesis.cancel();
+    toast(voiceEnabled() ? '🔊 Voix activée' : '🔇 Voix désactivée');
+  });
   // bouton voix d'accueil dans le menu
   document.getElementById('fp-voice-welcome').addEventListener('click', function () {
     els.menuPanel.hidden = true;
@@ -971,6 +1026,10 @@
     booted = true;
     render();
     maybeShowWelcome();
+    // VOIX AUTO au lancement (désactivable dans le menu)
+    if (voiceEnabled() && 'speechSynthesis' in window) {
+      setTimeout(voiceWelcome, 600);
+    }
   }
 
   boot();
