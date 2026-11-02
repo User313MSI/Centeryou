@@ -61,6 +61,7 @@
       allDay: !!e.allDay,
       cat: typeof e.cat === 'string' ? e.cat.slice(0, 30) : null,
       color: /^#[0-9a-fA-F]{6}$/.test(e.color || '') ? e.color : null,
+      notes: typeof e.notes === 'string' ? e.notes.slice(0, 2000) : null,
       createdAt: typeof e.createdAt === 'string' ? e.createdAt.slice(0, 40) : new Date().toISOString(),
     };
     return out;

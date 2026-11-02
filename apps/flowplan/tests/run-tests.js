@@ -7,6 +7,8 @@ const Store = require(path.join(__dirname, '..', 'js', 'store.js'));
 const Categories = require(path.join(__dirname, '..', 'js', 'categories.js'));
 const ICS = require(path.join(__dirname, '..', 'js', 'ics.js'));
 const ICSImport = require(path.join(__dirname, '..', 'js', 'ics-import.js'));
+const Vault = require(path.join(__dirname, '..', 'js', 'lock.js'));
+const SecureStore = require(path.join(__dirname, '..', 'js', 'secure-store.js'));
 
 const passes = [];
 const failures = [];
@@ -663,6 +665,97 @@ test('ics-import : aller-retour export -> import conserve les données', () => {
   eq(back[0].title, 'Réunion; équipe, bureau');
   eq(back[0].start, '09:00');
   eq(back[1].allDay, true);
+});
+
+// ---------- Vault (chiffrement AES-GCM) ----------
+function memStorage() {
+  const m = {};
+  return { getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; }, _m: m };
+}
+
+test('vault : enable stocke uniquement salt+hash, jamais le PIN', async () => {
+  const st = memStorage();
+  await Vault.enable('1234', st);
+  const meta = st._m[Vault.KEY];
+  assert(meta, 'meta présente');
+  assert(!meta.includes('1234'), 'le PIN en clair ne doit PAS apparaître');
+  const parsed = JSON.parse(meta);
+  assert(parsed.salt && parsed.hash && !parsed.pin, 'seulement salt+hash');
+});
+
+test('vault : mauvais PIN rejeté, bon PIN accepté', async () => {
+  const st = memStorage();
+  await Vault.enable('1234', st);
+  assert(!(await Vault.unlock('0000', st)).ok, 'mauvais PIN rejeté');
+  assert((await Vault.unlock('1234', st)).ok, 'bon PIN accepté');
+});
+
+test('vault : PIN < 4 caractères rejeté', async () => {
+  const st = memStorage();
+  let threw = false;
+  try { await Vault.enable('12', st); } catch (e) { threw = true; }
+  assert(threw, 'PIN trop court rejeté');
+});
+
+test('vault : chiffrement/déchiffrement AES-GCM aller-retour', async () => {
+  const st = memStorage();
+  await Vault.enable('1234', st);
+  const { key } = await Vault.unlock('1234', st);
+  const secret = JSON.stringify([{ id: 'e1', title: 'Secret 🔒', date: '2026-11-04' }]);
+  const ct = await Vault.encrypt(secret, key);
+  assert(!ct.includes('Secret'), 'le clair ne fuité pas dans le chiffré');
+  const back = await Vault.decrypt(ct, key);
+  eq(back, secret);
+});
+
+test('vault : déchiffrement avec une autre clé échoue proprement', async () => {
+  const st = memStorage();
+  await Vault.enable('1234', st);
+  const { key } = await Vault.unlock('1234', st);
+  const ct = await Vault.encrypt('données secrètes', key);
+  const st2 = memStorage();
+  await Vault.enable('9999', st2);
+  const { key: wrongKey } = await Vault.unlock('9999', st2);
+  let threw = false;
+  try { await Vault.decrypt(ct, wrongKey); } catch (e) { threw = true; }
+  assert(threw, 'mauvaise clé = erreur');
+});
+
+test('secure-store : avec vault ON, save chiffre et load déchiffre ; verrouillé = rien', async () => {
+  const st = memStorage();
+  const ss = SecureStore.create(Store, Vault, st);
+  // vault off d'abord
+  let ok = await ss.save([{ id: 'a', title: 'Clair' }]);
+  assert(ok);
+  eq((await ss.load()).length, 1);
+  // active le vault
+  await Vault.enable('1234', st);
+  await ss.unlock('1234');
+  await ss.save([{ id: 'a', title: 'Secret 🔒', date: '2026-11-04' }]);
+  assert(!st._m[Store.KEY], 'ancienne clé claire supprimée');
+  const enc = st._m[SecureStore.ENC_KEY];
+  assert(enc && !enc.includes('Secret'), 'données chiffrées dans le stockage');
+  const loaded = await ss.load();
+  eq(loaded.length, 1);
+  eq(loaded[0].title, 'Secret 🔒');
+  // re-verrouille : load renvoie vide
+  ss.lock();
+  eq((await ss.load()).length, 0, 'verrouillé = aucune donnée lisible');
+});
+
+test('planner : duplicate() crée une copie avec un nouvel id', () => {
+  const p = Planner.createPlanner();
+  const a = p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00', cat: 'travail', notes: 'n1' });
+  const b = p.duplicate(a.id);
+  assert(b && b.id !== a.id, 'nouvel id');
+  eq(b.title, 'A');
+  eq(b.notes, 'n1');
+  eq(p.all().length, 2);
+});
+
+test('store : sanitize conserve les notes (tronquées à 2000)', () => {
+  const e = Store.sanitizeEvent({ id: 'x', title: 'T', notes: 'N'.repeat(5000) });
+  eq(e.notes.length, 2000);
 });
 
 // ---------- Résumé ----------

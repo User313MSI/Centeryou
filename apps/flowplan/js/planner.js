@@ -73,6 +73,27 @@
         e.allDay === !!ev.allDay);
     }
 
+    // duplique un événement (nouvel id, même contenu, même jour) — bypass du dédoublonnage
+    function duplicate(id) {
+      const src = events.find(e => e.id === id);
+      if (!src) return null;
+      const copy = {
+        id: 'ev' + (++seq) + '_' + Date.now().toString(36) + 'd',
+        title: src.title,
+        date: src.date,
+        start: src.start,
+        end: src.end,
+        allDay: src.allDay,
+        cat: src.cat,
+        color: src.color,
+        notes: src.notes,
+        createdAt: new Date().toISOString(),
+      };
+      events.push(copy);
+      pushHistory({ type: 'add', id: copy.id });
+      return copy;
+    }
+
     function add(ev) {
       if (!ev || typeof ev.title !== 'string' || !ev.title.trim()) {
         throw new Error('Un événement a besoin d\'un titre');
@@ -96,6 +117,7 @@
         allDay: !!ev.allDay,
         cat: ev.cat || null,
         color: ev.color || null,
+        notes: typeof ev.notes === 'string' ? ev.notes.slice(0, 2000) : null,
         createdAt: new Date().toISOString(),
       };
       events.push(clean);
@@ -123,6 +145,7 @@
       if (patch.allDay !== undefined) ev.allDay = !!patch.allDay;
       if (patch.cat !== undefined) ev.cat = patch.cat || null;
       if (patch.color !== undefined) ev.color = patch.color || null;
+      if (patch.notes !== undefined) ev.notes = typeof patch.notes === 'string' ? patch.notes.slice(0, 2000) : null;
       pushHistory({ type: 'update', id: ev.id, before: before, after: snapshot(ev) });
       return ev;
     }
@@ -278,7 +301,7 @@
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
+    return { add, remove, update, duplicate, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };

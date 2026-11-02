@@ -9,9 +9,12 @@
   const Categories = window.FlowPlanCategories;
   const ICS = window.FlowPlanICS;
   const ICSImport = window.FlowPlanICSImport;
+  const Vault = window.FlowPlanVault;
+  const SecureStore = window.FlowPlanSecureStore;
 
   const planner = Planner.createPlanner();
-  planner.load(Store.load());
+  const secureStore = SecureStore.create(Store, Vault, localStorage);
+  let booted = false;
 
   const DAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
   const MONTHS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -52,6 +55,7 @@
     mEnd: $('fp-modal-end'),
     mAllDay: $('fp-modal-allday'),
     mCat: $('fp-modal-cat'),
+    mNotes: $('fp-modal-notes'),
     mSave: $('fp-modal-save'),
     mDelete: $('fp-modal-delete'),
     mCancel: $('fp-modal-cancel'),
@@ -93,6 +97,12 @@
 
   els.undo.addEventListener('click', function () { els.menuPanel.hidden = true; doUndo(); });
   document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && editingId) {
+      e.preventDefault();
+      const copy = planner.duplicate(editingId);
+      if (copy) { persist(); closeModal(); render(); toast('📑 Événement dupliqué', false, true); }
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && els.modal.hidden) {
       e.preventDefault();
       doUndo();
@@ -154,6 +164,38 @@
   }
   if (remindersEnabled()) scheduleReminders();
 
+  // ---------- vault (PIN) ----------
+  function refreshVaultMenu() {
+    const on = Vault.isEnabled(localStorage);
+    $('fp-vault').textContent = on ? '🔒 Verrou activé — cliquer pour désactiver' : '🔐 Verrouiller (code PIN)';
+  }
+  refreshVaultMenu();
+  $('fp-vault').addEventListener('click', async function () {
+    els.menuPanel.hidden = true;
+    if (!Vault.isEnabled(localStorage)) {
+      const pin = window.prompt('Choisis un code à 4+ caractères pour verrouiller FlowPlan :');
+      if (pin == null) return;
+      const pin2 = window.prompt('Confirme le code :');
+      if (pin !== pin2) { toast('❌ Les codes ne correspondent pas', true); return; }
+      try {
+        await Vault.enable(pin, localStorage);
+        await persist(); // re-chiffre immédiatement les données existantes
+        refreshVaultMenu();
+        toast('🔐 Verrou activé : tes données sont maintenant chiffrées (AES-GCM)');
+      } catch (e) { toast('❌ ' + e.message, true); }
+    } else {
+      const pin = window.prompt('Entre ton code pour DÉSACTIVER le verrou (les données repassent en clair local) :');
+      if (pin == null) return;
+      const ok = await secureStore.unlock(pin);
+      if (!ok) { toast('❌ Code incorrect', true); return; }
+      Vault.disable(localStorage);
+      await persist();
+      secureStore.lock();
+      refreshVaultMenu();
+      toast('🔓 Verrou désactivé');
+    }
+  });
+
   els.reset.addEventListener('click', function () {
     els.menuPanel.hidden = true;
     const ok = window.confirm('Supprimer TOUS tes événements FlowPlan sur cet appareil ?\n(Cette action est irréversible.)');
@@ -167,8 +209,15 @@
 
   // ---------- persistance ----------
   function persist() {
-    const ok = Store.save(planner.toJSON());
-    if (!ok) setStatus('⚠️ Stockage local plein : le planning n\'a pas pu être sauvegardé.', true);
+    const data = planner.toJSON();
+    if (Vault.isEnabled(localStorage)) {
+      secureStore.save(data).then(function (ok) {
+        if (!ok) toast('⚠️ Stockage plein : non sauvegardé', true);
+      });
+      return true;
+    }
+    const ok = Store.save(data);
+    if (!ok) toast('⚠️ Stockage local plein : le planning n\'a pas pu être sauvegardé.', true);
     return ok;
   }
 
@@ -302,6 +351,7 @@
       if (ev.color) chip.style.background = ev.color + '33';
       card.appendChild(chip);
     }
+    if (ev.notes) card.title = ev.notes;
     card.addEventListener('click', function () { openModal(ev); });
     card.addEventListener('dragstart', function (e) {
       dragId = ev.id;
@@ -564,6 +614,7 @@
     els.mEnd.value = ev && ev.end ? ev.end : '';
     els.mAllDay.checked = ev ? ev.allDay : false;
     els.mCat.value = ev && ev.cat ? ev.cat : 'autre';
+    els.mNotes.value = ev && ev.notes ? ev.notes : '';
     els.mDelete.style.display = ev ? '' : 'none';
     els.modal.hidden = false;
     els.mTitle.focus();
@@ -593,6 +644,7 @@
       allDay: els.mAllDay.checked,
       cat: catName,
       color: rule ? rule.color : Categories.FALLBACK.color,
+      notes: (els.mNotes.value || '').slice(0, 2000),
     };
     if (editingId) planner.update(editingId, patch);
     else planner.add(patch);
@@ -716,6 +768,7 @@
     }
     // raccourcis : ←/→ = semaine/jour précédent/suivant ; ? = aide raccourcis
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === 't' || e.key === 'T') { currentWeekStart = Planner.weekStartISO(null); currentDay = Parser.todayISO(new Date()); renderView(); renderStats(); return; }
     if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); toast('⌨️ Raccourcis : ←/→ changer de période · Ctrl+Z annuler · Échap fermer/quitter focus · Ctrl+Entrée générer', false); }
@@ -727,6 +780,43 @@
     });
   }
 
-  render();
-  setStatus('Bienvenue dans FlowPlan 👋 Décris ta semaine ci-dessous.');
+
+  // ---------- boot : verrouillage ----------
+  async function boot() {
+    if (Vault.isEnabled(localStorage)) {
+      const lockEl = $('fp-lock');
+      lockEl.hidden = false;
+      lockEl.classList.add('open');
+      const pinEl = $('fp-lock-pin');
+      const errEl = $('fp-lock-error');
+      pinEl.focus();
+      async function tryUnlock() {
+        errEl.textContent = '';
+        const ok = await secureStore.unlock(pinEl.value);
+        if (ok) {
+          lockEl.classList.remove('open');
+          lockEl.hidden = true;
+          const evs = await secureStore.load();
+          planner.load(evs);
+          booted = true;
+          render();
+          setStatus('🔓 Déverrouillé.');
+        } else {
+          errEl.textContent = 'Code incorrect.';
+          pinEl.value = '';
+          pinEl.focus();
+        }
+      }
+      $('fp-lock-submit').addEventListener('click', tryUnlock);
+      pinEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
+      return; // on attend le PIN
+    }
+    const evs = await secureStore.load();
+    planner.load(evs);
+    booted = true;
+    render();
+    setStatus('Bienvenue dans FlowPlan 👋 Décris ta semaine ci-dessous.');
+  }
+
+  boot();
 })();

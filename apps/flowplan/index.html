@@ -26,6 +26,7 @@
           <button id="fp-export" class="fp-menu-item">📅 Exporter (.ics)</button>
           <button id="fp-import" class="fp-menu-item">📥 Importer (.ics)</button>
           <button id="fp-reminders" class="fp-menu-item">🔕 Rappels : désactivés</button>
+          <button id="fp-vault" class="fp-menu-item">🔐 Verrouiller (code PIN)</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
           <hr>
           <button id="fp-reset" class="fp-menu-item danger">🗑️ Réinitialiser mes données</button>
@@ -94,6 +95,7 @@
           <option value="etudes">études</option>
         </select>
       </label>
+      <label>Notes <textarea id="fp-modal-notes" rows="2" maxlength="2000" placeholder="Détails éventuels…"></textarea></label>
       <div class="fp-modal-actions">
         <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
         <span class="fp-spacer"></span>
@@ -105,7 +107,20 @@
 
   <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
 
-  <footer class="fp-footer">FlowPlan v2.6 — 100 % local, tes données restent sur cet appareil.</footer>
+  <!-- Écran de verrouillage (vault) -->
+  <div id="fp-lock" class="fp-modal-backdrop" hidden>
+    <div class="fp-modal fp-lock-modal">
+      <h2>🔒 FlowPlan est verrouillé</h2>
+      <p class="fp-muted">Entre ton code pour déchiffrer tes données (elles restent chiffrées sur cet appareil).</p>
+      <input id="fp-lock-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Code à 4+ chiffres" maxlength="64">
+      <div id="fp-lock-error" class="fp-status error"></div>
+      <div class="fp-modal-actions">
+        <button id="fp-lock-submit" class="fp-btn primary">Déverrouiller</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="fp-footer">FlowPlan v3.0 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
@@ -114,6 +129,8 @@
   <script src="js/categories.js"></script>
   <script src="js/ics.js"></script>
   <script src="js/ics-import.js"></script>
+  <script src="js/lock.js"></script>
+  <script src="js/secure-store.js"></script>
   <script src="js/app.js"></script>
   <script src="js/boot.js"></script>
 </body>
