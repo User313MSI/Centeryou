@@ -22,7 +22,14 @@
   }
 
   function save(events) {
-    set(JSON.stringify({ version: 1, savedAt: new Date().toISOString(), events }));
+    const payload = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), events });
+    try {
+      set(payload);
+      return true;
+    } catch (e) {
+      // quota dépassé (localStorage ~5 Mo) : on tente un nettoyage puis on réessaie
+      try { clear(); set(payload); return true; } catch (e2) { return false; }
+    }
   }
 
   function load() {
@@ -31,7 +38,9 @@
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.events)) return [];
-      return parsed.events.filter(e => e && typeof e === 'object' && typeof e.id === 'string');
+      // filtre défensif : chaque événement doit avoir id + titre
+      return parsed.events.filter(e =>
+        e && typeof e === 'object' && typeof e.id === 'string' && typeof e.title === 'string');
     } catch (e) {
       return [];
     }
@@ -42,5 +51,5 @@
     else delete mem[KEY];
   }
 
-  return { save, load, clear, KEY };
+  return { save, load, clear, KEY, QUOTA_ERROR: 'QUOTA' };
 });

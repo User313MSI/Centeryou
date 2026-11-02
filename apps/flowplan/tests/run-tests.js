@@ -213,6 +213,103 @@ test('store : JSON corrompu -> tableau vide (pas de crash)', () => {
   Store.clear();
 });
 
+// ---------- Audit : cas limites ----------
+test('audit : date invalide "12/13/2026" rejetée (pas de date)', () => {
+  const ev = Parser.parseEvent('12/13/2026 10h truc', NOW);
+  assert(!ev.date, '12/13/2026 ne doit pas produire de date');
+  eq(ev.start, '10:00');
+});
+
+test('audit : "32 janvier 2026" rejeté', () => {
+  const ev = Parser.parseEvent('32 janvier 2026 10h truc', NOW);
+  assert(!ev.date, '32 janvier ne doit pas produire de date');
+});
+
+test('audit : plage inversée "9h à 8h" -> fin rejetée, durée implicite 1h', () => {
+  const ev = Parser.parseEvent('lundi 9h à 8h truc', NOW);
+  eq(ev.start, '09:00');
+  eq(ev.end, '10:00'); // jamais end <= start
+});
+
+test('audit : "lundi 23h truc" coince la fin à 23:59 (pas 00:00)', () => {
+  const ev = Parser.parseEvent('lundi 23h truc', NOW);
+  eq(ev.start, '23:00');
+  eq(ev.end, '23:59');
+});
+
+test('audit : "lundi 9h99 truc" -> heure invalide retirée du titre', () => {
+  const ev = Parser.parseEvent('lundi 9h99 truc', NOW);
+  assert(!ev.start, '9h99 n\'est pas une heure valide');
+  eq(ev.title, 'Truc');
+});
+
+test('audit : "lundi 25h30 réunion" -> heure invalide ignorée proprement', () => {
+  const ev = Parser.parseEvent('lundi 25h30 réunion', NOW);
+  assert(!ev.start, '25h30 invalide');
+  eq(ev.title, 'Réunion');
+  eq(ev.allDay, true);
+});
+
+test('audit : faute de frappe "mecredi 14h30" -> mercredi', () => {
+  const ev = Parser.parseEvent('mecredi 14h30 dentiste', NOW);
+  eq(ev.date, '2026-11-04'); // mercredi de la semaine du lundi 3/11
+  eq(ev.start, '14:30');
+});
+
+test('audit : "ce soir 20h film" -> aujourd\'hui', () => {
+  const ev = Parser.parseEvent('ce soir 20h film', NOW);
+  eq(ev.date, '2026-11-03');
+  eq(ev.start, '20:00');
+});
+
+test('audit : "dans 3 jours 10h truc"', () => {
+  const ev = Parser.parseEvent('dans 3 jours 10h truc', NOW);
+  eq(ev.date, '2026-11-06');
+});
+
+test('audit : "lundi prochain 9h truc" -> lundi prochain, sans le mot dans le titre', () => {
+  const ev = Parser.parseEvent('lundi prochain 9h truc', NOW);
+  eq(ev.date, '2026-11-09');
+  eq(ev.title, 'Truc');
+});
+
+test('audit : entrée très longue tronquée à 300 caractères', () => {
+  const ev = Parser.parseEvent('a'.repeat(500), NOW);
+  assert(ev.title.length <= 301, 'titre tronqué');
+});
+
+test('audit : planner refuse un end <= start même si on le force', () => {
+  const p = Planner.createPlanner();
+  const ev = p.add({ title: 'X', date: '2026-11-04', start: '10:00', end: '09:00' });
+  assert(!ev.end, 'end <= start doit être annulé');
+});
+
+test('audit : planner rejette une date au mauvais format', () => {
+  const p = Planner.createPlanner();
+  const ev = p.add({ title: 'X', date: '04/11/2026' });
+  assert(!ev.date, 'date non ISO doit être annulée');
+});
+
+test('audit : categories() regroupe par catégorie', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'Réunion', date: '2026-11-04', cat: 'travail', color: '#4f9cff' });
+  p.add({ title: 'Sport', date: '2026-11-04', cat: 'sport', color: '#4ade80' });
+  p.add({ title: 'Sport 2', date: '2026-11-05', cat: 'sport', color: '#4ade80' });
+  const cats = p.categories();
+  const sport = cats.find(c => c.cat === 'sport');
+  eq(sport.count, 2);
+});
+
+test('audit : conflictedIds() renvoie les ids en conflit', () => {
+  const p = Planner.createPlanner();
+  const a = p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  const b = p.add({ title: 'B', date: '2026-11-04', start: '09:30', end: '10:30' });
+  const c = p.add({ title: 'C', date: '2026-11-04', start: '12:00', end: '13:00' });
+  const ids = p.conflictedIds();
+  assert(ids.has(a.id) && ids.has(b.id), 'a et b en conflit');
+  assert(!ids.has(c.id), 'c hors conflit');
+});
+
 // ---------- Récurrence ----------
 test('parser : "tous les lundis 18h30 sport" -> 9 occurrences hebdo', () => {
   const evs = Parser.parse('tous les lundis 18h30 sport', NOW);

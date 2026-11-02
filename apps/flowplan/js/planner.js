@@ -52,6 +52,14 @@
       if (!ev || typeof ev.title !== 'string' || !ev.title.trim()) {
         throw new Error('Un événement a besoin d\'un titre');
       }
+      // normalisation défensive : end jamais <= start, date valide
+      if (ev.start && ev.end) {
+        const s = minutesOf(ev.start), e = minutesOf(ev.end);
+        if (s != null && e != null && e <= s) ev = Object.assign({}, ev, { end: null });
+      }
+      if (ev.date && !/^\d{4}-\d{2}-\d{2}$/.test(ev.date)) {
+        ev = Object.assign({}, ev, { date: null });
+      }
       const clean = {
         id: 'ev' + (++seq) + '_' + Date.now().toString(36),
         title: ev.title.trim().slice(0, 120),
@@ -131,6 +139,24 @@
       return out;
     }
 
+    // ids des événements impliqués dans un conflit (pour les surligner dans l'UI)
+    function conflictedIds() {
+      const set = new Set();
+      for (const c of conflicts()) { set.add(c.a.id); set.add(c.b.id); }
+      return set;
+    }
+
+    // catégories présentes (pour les filtres UI)
+    function categories() {
+      const map = new Map();
+      for (const e of events) {
+        const key = e.cat || 'autre';
+        if (!map.has(key)) map.set(key, { cat: key, color: e.color || '#8b98a8', count: 0 });
+        map.get(key).count++;
+      }
+      return Array.from(map.values());
+    }
+
     function stats(weekStart) {
       const w = week(weekStart);
       let count = 0, timed = 0, minutes = 0;
@@ -161,7 +187,7 @@
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, all, byDate, week, conflicts, stats, toJSON, load };
+    return { add, remove, update, all, byDate, week, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, overlaps, minutesOf };

@@ -42,8 +42,13 @@
   let currentWeekStart = Planner.weekStartISO(null);
   let editingId = null;
   let voiceCtl = null;
+  let activeCat = null; // filtre catégorie actif
 
-  function persist() { Store.save(planner.toJSON()); }
+  function persist() {
+    const ok = Store.save(planner.toJSON());
+    if (!ok) setStatus('⚠️ Stockage local plein : le planning n\'a pas pu être sauvegardé.', true);
+    return ok;
+  }
 
   function fmtDate(iso) {
     if (!iso) return 'Sans date';
@@ -95,7 +100,30 @@
     });
   }
 
+  function renderFilters() {
+    const box = $('fp-filters');
+    if (!box) return;
+    const cats = planner.categories();
+    box.innerHTML = '';
+    const mk = (label, cat, color) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fp-filter' + (activeCat === cat ? ' active' : '');
+      b.setAttribute('data-cat', cat || '');
+      if (color) b.style.borderColor = color;
+      b.textContent = label; // textContent = jamais d'injection HTML
+      b.addEventListener('click', function () {
+        activeCat = cat || null;
+        renderFilters(); renderWeek();
+      });
+      box.appendChild(b);
+    };
+    mk('Tous (' + planner.all().length + ')', null);
+    for (const c of cats) mk(c.cat + ' (' + c.count + ')', c.cat, c.color);
+  }
+
   function renderWeek() {
+    const conflicted = planner.conflictedIds();
     const w = planner.week(currentWeekStart);
     const start = new Date(w.start + 'T12:00:00');
     const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
@@ -108,13 +136,19 @@
       const dObj = new Date(d.date + 'T12:00:00');
       const head = document.createElement('div');
       head.className = 'fp-day-head';
-      head.innerHTML = '<span>' + DAYS_FR[(dObj.getDay() + 6) % 7] + '</span><span>' + dObj.getDate() + '</span>';
+      const h1 = document.createElement('span');
+      h1.textContent = DAYS_FR[(dObj.getDay() + 6) % 7];
+      const h2 = document.createElement('span');
+      h2.textContent = dObj.getDate();
+      head.appendChild(h1);
+      head.appendChild(h2);
       if (d.date === Parser.todayISO(new Date())) head.classList.add('today');
       col.appendChild(head);
       for (const ev of d.events) {
+        if (activeCat && (ev.cat || 'autre') !== activeCat) continue;
         const card = document.createElement('button');
         card.type = 'button';
-        card.className = 'fp-event' + (ev.allDay ? ' allday' : '');
+        card.className = 'fp-event' + (ev.allDay ? ' allday' : '') + (conflicted.has(ev.id) ? ' conflicted' : '');
         if (ev.color) card.style.borderLeft = '4px solid ' + ev.color;
         const time = ev.allDay ? 'Journée' : (ev.start || '') + (ev.end ? ' – ' + ev.end : '');
         card.innerHTML = '';
@@ -136,10 +170,10 @@
         card.addEventListener('click', function () { openModal(ev); });
         col.appendChild(card);
       }
-      if (!d.events.length) {
+      if (!d.events.length || (activeCat && !d.events.some(e => (e.cat || 'autre') === activeCat))) {
         const empty = document.createElement('div');
         empty.className = 'fp-empty';
-        empty.textContent = 'Rien de prévu';
+        empty.textContent = activeCat ? 'Aucun « ' + activeCat + ' » ce jour' : 'Rien de prévu';
         col.appendChild(empty);
       }
       els.week.appendChild(col);
@@ -148,10 +182,19 @@
 
   function renderStats() {
     const s = planner.stats(currentWeekStart);
-    els.stats.innerHTML =
-      '<span><b>' + s.totalEvents + '</b> événement(s)</span>' +
-      '<span><b>' + s.plannedHours + ' h</b> planifiées</span>' +
-      '<span class="' + (s.conflicts ? 'warn' : 'ok') + '">' + (s.conflicts ? s.conflicts + ' conflit(s) ⚠️' : 'Aucun conflit ✓') + '</span>';
+    els.stats.innerHTML = '';
+    const mk = (label, cls) => {
+      const span = document.createElement('span');
+      if (cls) span.className = cls;
+      const b = document.createElement('b');
+      b.textContent = label[0];
+      span.appendChild(b);
+      span.appendChild(document.createTextNode(label[1]));
+      els.stats.appendChild(span);
+    };
+    mk([s.totalEvents, ' événement(s)']);
+    mk([s.plannedHours + ' h', ' planifiées']);
+    mk([s.conflicts ? s.conflicts + ' conflit(s) ⚠️' : 'Aucun conflit ✓', ''], s.conflicts ? 'warn' : 'ok');
     const conflicts = planner.conflicts();
     if (conflicts.length) {
       els.conflictBox.hidden = false;
@@ -162,7 +205,12 @@
     }
   }
 
-  function render() { renderWeek(); renderStats(); }
+  function render() { renderFilters(); renderWeek(); renderStats(); }
+
+  function closeOnEscape(e) {
+    if (e.key === 'Escape' && !els.modal.hidden) closeModal();
+  }
+  document.addEventListener('keydown', closeOnEscape);
 
   function openModal(ev) {
     editingId = ev ? ev.id : null;
