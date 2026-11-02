@@ -8,6 +8,7 @@
   const Voice = window.FlowPlanVoice;
   const Categories = window.FlowPlanCategories;
   const ICS = window.FlowPlanICS;
+  const ICSImport = window.FlowPlanICSImport;
 
   const planner = Planner.createPlanner();
   planner.load(Store.load());
@@ -33,6 +34,8 @@
     search: $('fp-search'),
     viewWeek: $('fp-view-week'),
     viewMonth: $('fp-view-month'),
+    viewDay: $('fp-view-day'),
+    day: $('fp-day'),
     theme: $('fp-theme'),
     menuBtn: $('fp-menu-btn'),
     menuPanel: $('fp-menu-panel'),
@@ -54,7 +57,8 @@
   };
 
   let currentWeekStart = Planner.weekStartISO(null);
-  let view = 'week'; // 'week' | 'month'
+  let view = 'week'; // 'week' | 'month' | 'day'
+  let currentDay = Parser.todayISO(new Date());
   let editingId = null;
   let voiceCtl = null;
   let activeCat = null;
@@ -354,13 +358,78 @@
     }
   }
 
+  // ---------- rendu : jour ----------
+  function renderDay() {
+    const conflicted = planner.conflictedIds();
+    const dayEvents = planner.byDate(currentDay);
+    const dObj = new Date(currentDay + 'T12:00:00');
+    els.weekLabel.textContent = DAYS_FR[(dObj.getDay() + 6) % 7] + ' ' + dObj.getDate() + ' ' + MONTHS_FR[dObj.getMonth()] + ' ' + dObj.getFullYear();
+    els.day.innerHTML = '';
+    // grille horaire 0h-24h
+    for (let h = 0; h < 24; h++) {
+      const row = document.createElement('div');
+      row.className = 'fp-hour-row';
+      row.setAttribute('data-hour', h);
+      const lbl = document.createElement('span');
+      lbl.className = 'fp-hour-label';
+      lbl.textContent = pad2h(h) + ':00';
+      row.appendChild(lbl);
+      const slot = document.createElement('div');
+      slot.className = 'fp-hour-slot';
+      slot.setAttribute('data-date', currentDay);
+      slot.setAttribute('data-hour', h);
+      slot.addEventListener('dragover', function (e) { e.preventDefault(); slot.classList.add('droptarget'); });
+      slot.addEventListener('dragleave', function () { slot.classList.remove('droptarget'); });
+      slot.addEventListener('drop', function (e) {
+        e.preventDefault();
+        slot.classList.remove('droptarget');
+        const id = e.dataTransfer.getData('text/plain') || dragId;
+        if (id) {
+          planner.update(id, { date: currentDay, start: pad2h(h) + ':00' });
+          persist();
+          toast('📅 Déplacé au ' + fmtDate(currentDay) + ' ' + pad2h(h) + ':00', false, true);
+          render();
+        }
+      });
+      row.appendChild(slot);
+      els.day.appendChild(row);
+    }
+    // événements positionnés en hauteur proportionnelle
+    for (const ev of dayEvents) {
+      if (activeCat && (ev.cat || 'autre') !== activeCat) continue;
+      const card = eventCard(ev, conflicted, false);
+      card.classList.add('fp-day-event');
+      if (ev.start) {
+        const [h, m] = ev.start.split(':').map(Number);
+        card.style.top = ((h * 60 + m) / 1440 * 100) + '%';
+        const endM = ev.end ? ev.end.split(':').map(Number) : [h + 1, m];
+        const dur = Math.max(30, (endM[0] * 60 + endM[1]) - (h * 60 + m));
+        card.style.height = (dur / 1440 * 100) + '%';
+      } else {
+        card.style.top = '2px';
+        card.style.height = 'auto';
+      }
+      els.day.appendChild(card);
+    }
+    if (!dayEvents.length || (activeCat && !dayEvents.some(e => (e.cat || 'autre') === activeCat))) {
+      const empty = document.createElement('div');
+      empty.className = 'fp-empty';
+      empty.textContent = 'Rien ce jour — glisse un événement ici ou ajoute-en un';
+      els.day.appendChild(empty);
+    }
+  }
+  function pad2h(h) { return String(h).padStart(2, '0'); }
+
   function renderView() {
     const isWeek = view === 'week';
+    const isMonth = view === 'month';
     els.week.style.display = isWeek ? '' : 'none';
-    els.month.style.display = isWeek ? 'none' : 'grid';
+    els.month.style.display = isMonth ? 'grid' : 'none';
+    els.day.style.display = view === 'day' ? 'block' : 'none';
     els.viewWeek.classList.toggle('active', isWeek);
-    els.viewMonth.classList.toggle('active', !isWeek);
-    if (isWeek) renderWeek(); else renderMonth();
+    els.viewMonth.classList.toggle('active', isMonth);
+    els.viewDay.classList.toggle('active', view === 'day');
+    if (isWeek) renderWeek(); else if (isMonth) renderMonth(); else renderDay();
   }
 
   function renderStats() {
@@ -490,9 +559,11 @@
   }
   els.viewWeek.addEventListener('click', function () { setView('week'); });
   els.viewMonth.addEventListener('click', function () { setView('month'); });
+  els.viewDay.addEventListener('click', function () { currentDay = Parser.todayISO(new Date()); setView('day'); });
 
   // ---------- navigation ----------
   function step(days) {
+    if (view === 'day') { currentDay = Planner.addDaysISO(currentDay, days); renderView(); renderStats(); return; }
     if (view === 'week') currentWeekStart = Planner.addDaysISO(currentWeekStart, days * 7);
     else {
       const [y, m] = Planner.monthOfISO(currentWeekStart).split('-').map(Number);
@@ -515,7 +586,45 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 100);
-    setStatus('Calendrier exporté (flowplan.ics) — importable dans Google Agenda / Outlook / Apple Calendrier ✓');
+    toast('📅 Exporté : flowplan.ics (importable dans Google Agenda / Outlook / Apple Calendrier) ✓');
+  }
+
+  // ---------- import .ics ----------
+  let fileInput = null;
+  function importICS() {
+    if (!fileInput) {
+      fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.ics,text/calendar';
+      fileInput.style.display = 'none';
+      fileInput.addEventListener('change', function () {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const events = ICSImport.parse(String(reader.result || ''));
+            let added = 0;
+            for (const ev of events) {
+              const cat = Categories.categorize(ev.title);
+              const before = planner.all().length;
+              planner.add({ title: ev.title, date: ev.date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
+              if (planner.all().length > before) added++;
+            }
+            persist();
+            render();
+            toast('📥 ' + added + ' événement(s) importé(s) depuis ' + f.name + (events.length > added ? ' (' + (events.length - added) + ' doublon(s) ignoré(s))' : ''), added > 0, added > 0);
+          } catch (e) {
+            toast('❌ Fichier .ics illisible : ' + e.message, true);
+          }
+          fileInput.value = '';
+        };
+        reader.onerror = function () { toast('❌ Impossible de lire le fichier', true); };
+        reader.readAsText(f);
+      });
+      document.body.appendChild(fileInput);
+    }
+    fileInput.click();
   }
 
   els.btnGen.addEventListener('click', generate);
@@ -525,6 +634,15 @@
   els.btnVoice.addEventListener('click', toggleVoice);
   $('fp-add').addEventListener('click', function () { openModal(null); });
   $('fp-export').addEventListener('click', exportICS);
+  $('fp-import').addEventListener('click', function () { els.menuPanel.hidden = true; importICS(); });
+  // double-clic sur un jour en vue mois/semaine -> vue jour de ce jour
+  document.addEventListener('dblclick', function (e) {
+    const cell = e.target && e.target.closest ? e.target.closest('[data-date]') : null;
+    if (cell && cell.getAttribute('data-date') && (view === 'month' || view === 'week')) {
+      currentDay = cell.getAttribute('data-date');
+      setView('day');
+    }
+  });
   $('fp-print').addEventListener('click', function () { window.print(); });
   els.mSave.addEventListener('click', saveModal);
   els.mCancel.addEventListener('click', closeModal);

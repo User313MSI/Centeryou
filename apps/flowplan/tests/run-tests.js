@@ -6,6 +6,7 @@ const Planner = require(path.join(__dirname, '..', 'js', 'planner.js'));
 const Store = require(path.join(__dirname, '..', 'js', 'store.js'));
 const Categories = require(path.join(__dirname, '..', 'js', 'categories.js'));
 const ICS = require(path.join(__dirname, '..', 'js', 'ics.js'));
+const ICSImport = require(path.join(__dirname, '..', 'js', 'ics-import.js'));
 
 const passes = [];
 const failures = [];
@@ -610,6 +611,58 @@ test('undo : doublon (add ignoré) ne pousse pas dans l historique', () => {
   p.undo();
   eq(p.all().length, 0);
   eq(p.undo(), null); // pas de 2e undo pour le doublon
+});
+
+// ---------- Import ICS ----------
+test('ics-import : parse un .ics standard (horaires, journée entière, échappement)', () => {
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0',
+    'BEGIN:VEVENT', 'UID:a@b', 'DTSTAMP:20261101T080000Z',
+    'DTSTART:20261104T143000', 'DTEND:20261104T153000',
+    'SUMMARY:Dentiste\, Dr Martin', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:c@d', 'DTSTAMP:20261101T080000Z',
+    'DTSTART;VALUE=DATE:20261225', 'SUMMARY:Noël en famille', 'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+  const evs = ICSImport.parse(ics);
+  eq(evs.length, 2);
+  eq(evs[0].title, 'Dentiste, Dr Martin');
+  eq(evs[0].date, '2026-11-04');
+  eq(evs[0].start, '14:30');
+  eq(evs[0].end, '15:30');
+  eq(evs[0].allDay, false);
+  eq(evs[1].allDay, true);
+  eq(evs[1].date, '2026-12-25');
+  assert(!evs[1].start, 'journée entière = pas d heure');
+});
+
+test('ics-import : déplie les lignes coupées (continuation espace) et DURATION', () => {
+  const ics = 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Réunion très long\r\n  titre sur 2 lignes\r\nDTSTART:20261104T090000\r\nDURATION:PT1H30M\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+  const evs = ICSImport.parse(ics);
+  eq(evs.length, 1);
+  eq(evs[0].title, 'Réunion très long titre sur 2 lignes');
+  eq(evs[0].start, '09:00');
+  eq(evs[0].end, '10:30');
+});
+
+test('ics-import : ignore les entrées sans date, tolère un fichier vide/corrompu', () => {
+  eq(ICSImport.parse('').length, 0);
+  eq(ICSImport.parse('pas du ics du tout').length, 0);
+  const ics = 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Sans date\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  eq(ICSImport.parse(ics).length, 0);
+});
+
+test('ics-import : aller-retour export -> import conserve les données', () => {
+  const original = [
+    { id: 'e1', title: 'Réunion; équipe, bureau', date: '2026-11-04', start: '09:00', end: '10:00', allDay: false },
+    { id: 'e2', title: 'Jour férié', date: '2026-11-11', allDay: true },
+  ];
+  const ics = ICS.toICS(original);
+  const back = ICSImport.parse(ics);
+  eq(back.length, 2);
+  eq(back[0].title, 'Réunion; équipe, bureau');
+  eq(back[0].start, '09:00');
+  eq(back[1].allDay, true);
 });
 
 // ---------- Résumé ----------

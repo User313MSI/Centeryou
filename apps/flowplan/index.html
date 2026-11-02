@@ -24,6 +24,7 @@
           <button id="fp-undo" class="fp-menu-item">↩️ Annuler (Ctrl+Z)</button>
           <button id="fp-theme" class="fp-menu-item">☀️ Thème clair</button>
           <button id="fp-export" class="fp-menu-item">📅 Exporter (.ics)</button>
+          <button id="fp-import" class="fp-menu-item">📥 Importer (.ics)</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
           <hr>
           <button id="fp-reset" class="fp-menu-item danger">🗑️ Réinitialiser mes données</button>
@@ -54,6 +55,7 @@
     <button id="fp-today-week" class="fp-btn ghost">Aujourd'hui</button>
     <button id="fp-next-week" class="fp-btn ghost" aria-label="Suivant">→</button>
     <span class="fp-view-switch">
+      <button id="fp-view-day" class="fp-btn ghost">Jour</button>
       <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
       <button id="fp-view-month" class="fp-btn ghost">Mois</button>
     </span>
@@ -65,6 +67,7 @@
 
   <main id="fp-week" class="fp-week"></main>
   <main id="fp-month" class="fp-month" style="display:none"></main>
+  <main id="fp-day" class="fp-day-view" style="display:none"></main>
 
   <div id="fp-modal" class="fp-modal-backdrop" hidden>
     <div class="fp-modal">
@@ -101,7 +104,7 @@
 
   <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
 
-  <footer class="fp-footer">FlowPlan v2.4 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v2.5 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
@@ -109,6 +112,7 @@
   <script src="js/voice.js"></script>
   <script src="js/categories.js"></script>
   <script src="js/ics.js"></script>
+  <script src="js/ics-import.js"></script>
   <script src="js/app.js"></script>
   <script src="js/boot.js"></script>
 </body>
