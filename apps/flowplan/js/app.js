@@ -354,6 +354,8 @@
   // ---------- modale ----------
   function openModal(ev) {
     editingId = ev ? ev.id : null;
+    els.modal.hidden = false;
+    els.modal.classList.add('open'); // pilotage visuel robuste (ne dépend pas que de [hidden])
     els.mTitle.value = ev ? ev.title : '';
     els.mDate.value = ev && ev.date ? ev.date : currentWeekStart;
     els.mStart.value = ev && ev.start ? ev.start : '';
@@ -365,7 +367,11 @@
     els.mTitle.focus();
   }
 
-  function closeModal() { els.modal.hidden = true; editingId = null; }
+  function closeModal() {
+    els.modal.hidden = true;
+    els.modal.classList.remove('open');
+    editingId = null;
+  }
 
   // fermer la modale en cliquant sur le fond gris (pas sur la carte elle-même)
   els.modal.addEventListener('click', function (e) {

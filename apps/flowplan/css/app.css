@@ -157,8 +157,10 @@ body {
 .fp-cell-ev span { color: #fff; }
 .fp-cell-more { font-size: 11px; color: var(--muted); }
 
-.fp-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
-/* INDISPENSABLE : display:flex (règle auteur) bat [hidden] (règle navigateur) sinon la modale ne se cache jamais */
+/* Pilotage robuste : cachée par défaut via la classe, visible UNIQUEMENT avec .open.
+   (display:flex en dur aurait battu [hidden] ; ici rien ne peut écraser display:none) */
+.fp-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.fp-modal-backdrop.open { display: flex; }
 .fp-modal-backdrop[hidden] { display: none !important; }
 .fp-modal { background: var(--panel); border: 1px solid var(--border-strong); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 40px var(--shadow); }
 .fp-modal h2 { margin: 0 0 4px; font-size: 20px; }

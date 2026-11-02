@@ -173,11 +173,26 @@ test('DOM : le bouton Annuler ferme sans enregistrer', () => {
   assert(!sandbox.FlowPlanStore.load().some(e => e.title === 'Non enregistré'), 'rien persisté');
 });
 
-// ---------- régression CSS : [hidden] doit gagner sur display:flex ----------
-test('CSS : .fp-modal-backdrop[hidden] { display:none } existe (sinon la modale ne se ferme jamais visuellement)', () => {
+// ---------- régression CSS : la modale ne dépend plus que de [hidden] ----------
+test('CSS : .fp-modal-backdrop est display:none par défaut et display:flex UNIQUEMENT avec .open', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'app.css'), 'utf8');
+  assert(/\.fp-modal-backdrop\s*\{[^}]*display:\s*none/.test(css),
+    'la classe de base doit être display:none');
+  assert(/\.fp-modal-backdrop\.open\s*\{[^}]*display:\s*flex/.test(css),
+    'règle .fp-modal-backdrop.open { display:flex } manquante');
   assert(/\.fp-modal-backdrop\[hidden\]\s*\{[^}]*display:\s*none/.test(css),
-    'règle .fp-modal-backdrop[hidden] manquante dans app.css — la modale resterait visible malgré hidden=true');
+    'règle de secours [hidden] manquante');
+});
+
+test('DOM : openModal ajoute la classe .open, closeModal la retire (pilotage visuel robuste)', () => {
+  const { document } = loadApp();
+  const modal = document.getElementById('fp-modal');
+  modal.hidden = true;
+  document.getElementById('fp-add').click();
+  assert(modal.classList.contains('open'), '.open présent après ouverture');
+  document.getElementById('fp-modal-close').click();
+  assert(!modal.classList.contains('open'), '.open retiré après fermeture via ✕');
+  assert(modal.hidden === true, 'hidden=true après ✕');
 });
 
 // ---------- boot.js : kill switch ?fresh ----------
