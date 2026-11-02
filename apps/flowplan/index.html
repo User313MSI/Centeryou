@@ -34,8 +34,14 @@
 .fp-welcome-sub { color: #97a3b6; font-size: 18px; margin: 0 0 14px; }
 .fp-welcome-hint { color: #5b6b82; font-size: 14px; margin-bottom: 22px; }
 
-/* 4) mode présentation */
-body.presenting .fp-top, body.presenting .fp-hero, body.presenting .fp-filters, body.presenting .fp-footer { display: none !important; }
+/* 4) mode présentation : transition douce + contenu qui grandit */
+.fp-top, .fp-hero, .fp-filters, .fp-footer { transition: opacity .25s, transform .25s; }
+body.presenting .fp-top, body.presenting .fp-hero, body.presenting .fp-filters, body.presenting .fp-footer {
+  opacity: 0; transform: translateY(-12px); pointer-events: none; height: 0; overflow: hidden; padding: 0; margin: 0; display: block !important;
+}
+body.presenting .fp-week { animation: presentZoom .35s cubic-bezier(.2,.9,.3,1); }
+@keyframes presentZoom { from { opacity: 0; transform: scale(.96); } }
+body.presenting .fp-event { cursor: zoom-in; }
 body.presenting .fp-weekbar { padding-top: 26px; }
 body.presenting .fp-week { max-width: 1600px; }
 body.presenting .fp-day { min-height: 420px; }
@@ -80,7 +86,7 @@ body {
 .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.9 — design system premium (dark + light)
+   FlowPlan v3.10 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -579,7 +585,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.9 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.10 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

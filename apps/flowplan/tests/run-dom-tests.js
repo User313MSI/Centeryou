@@ -384,6 +384,23 @@ test('DOM : mode présentation toggle la classe presenting sur body', () => {
   assert(!body.classList.contains('presenting'), 'classe retirée');
 });
 
+test('DOM : Échap QUITTE la présentation (bug utilisateur)', () => {
+  const { document } = loadApp();
+  const body = document.body;
+  document.getElementById('fp-present').click();
+  assert(body.classList.contains('presenting'), 'en présentation');
+  document.fire('keydown', { key: 'Escape', target: body });
+  assert(!body.classList.contains('presenting'), 'Échap doit quitter la présentation');
+});
+
+test('DOM : F11 quitte aussi la présentation', () => {
+  const { document } = loadApp();
+  const body = document.body;
+  document.getElementById('fp-present').click();
+  document.fire('keydown', { key: 'F11', target: body });
+  assert(!body.classList.contains('presenting'), 'F11 doit quitter');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');

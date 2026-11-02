@@ -840,19 +840,33 @@
     toast('🎲 ' + added + ' événements de démo ajoutés — Annuler si tu veux revenir en arrière', false, added > 0);
   });
 
-  // 4) mode présentation : plein écran, cache hero/menus, F11-like
+  // 4) mode présentation : plein écran, cache hero/menus, Échap/F11 pour quitter
+  function setPresent(on) {
+    document.body.classList.toggle('presenting', on);
+    els.present.textContent = on ? '🚪 Quitter la présentation (Échap)' : '🎬 Mode présentation';
+    if (on && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(function(){});
+    }
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(function(){});
+  }
   els.present.addEventListener('click', function () {
     els.menuPanel.hidden = true;
-    document.body.classList.toggle('presenting');
-    const on = document.body.classList.contains('presenting');
-    els.present.textContent = on ? '🚪 Quitter la présentation' : '🎬 Mode présentation';
-    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){});
-    if (!on && document.fullscreenElement) document.exitFullscreen().catch(function(){});
+    setPresent(!document.body.classList.contains('presenting'));
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'F11' && document.body.classList.contains('presenting')) {
+    if ((e.key === 'Escape' || e.key === 'F11') && document.body.classList.contains('presenting')) {
       e.preventDefault();
-      els.present.click();
+      setPresent(false);
+    }
+  });
+  // en présentation : double-clic sur un jour -> zoom vue jour plein écran (interactif)
+  document.addEventListener('dblclick', function (e) {
+    if (!document.body.classList.contains('presenting')) return;
+    const cell = e.target && e.target.closest ? e.target.closest('[data-date]') : null;
+    if (cell && cell.getAttribute('data-date')) {
+      currentDay = cell.getAttribute('data-date');
+      setView('day');
+      toast('🔍 Zoom sur le ' + fmtDate(currentDay) + ' — Échap pour revenir à la semaine', false);
     }
   });
 
