@@ -442,9 +442,10 @@ test('CSS : le bloc de secours sombre est scopé à data-theme=dark (le thème c
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   // aucune règle !important non scopée qui écraserait le light
   // on cherche une règle !important au sombre hors du scope dark (la ligne welcome a un fond sombre normal, c'est ok)
-  const lines = html.split('\n');
-  const bad = lines.filter(l => l.includes('#0b0e14') && l.includes('!important') && !l.includes('data-theme="dark"'));
-  assert(bad.length === 0, 'règles sombres !important non scopées: ' + JSON.stringify(bad));
+  // on découpe en blocs de règles et on vérifie que chaque bloc contenant #0b0e14+!important commence par un sélecteur scopé dark
+  const blocks = html.split('}');
+  const bad = blocks.filter(b => b.includes('#0b0e14') && b.includes('!important') && !b.trimStart().startsWith(':root[data-theme="dark"]'));
+  assert(bad.length === 0, 'blocs sombres !important non scopés: ' + bad.length);
   assert(html.includes(':root[data-theme="dark"] body'), 'sécurité scopée dark présente');
   assert(html.includes(':root[data-theme="light"]'), 'variables light présentes');
 });
