@@ -45,6 +45,7 @@ function makeEl(id) {
     addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
     removeEventListener() {},
     querySelectorAll() { return []; },
+    contains(c) { return c === el || el.children.includes(c); },
     focus() {},
     click() { (listeners.click || []).forEach(fn => fn({ target: el })); },
     fire(type, event) { (listeners[type] || []).forEach(fn => fn(event || { target: el, key: '', preventDefault() {}, dataTransfer: null })); },
