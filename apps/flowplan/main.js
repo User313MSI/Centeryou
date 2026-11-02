@@ -41,9 +41,11 @@ app.whenReady().then(() => {
   // Liens externes ouverts dans le navigateur système
   app.on('web-contents-created', (event, contents) => {
     contents.on('will-navigate', (e, url) => {
-      if (url.startsWith('http://') || url.startsWith('https://')) {
+      if (url.startsWith('https://')) {
         e.preventDefault();
-        shell.openExternal(url);
+        shell.openExternal(url); // uniquement HTTPS, jamais http://
+      } else if (url.startsWith('http://')) {
+        e.preventDefault(); // http non ouvrable depuis l'app
       }
     });
   });

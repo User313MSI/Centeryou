@@ -43,7 +43,8 @@ function isCode(url) {
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   const url = event.request.url;
-  if (!url.startsWith(self.location.origin)) return; // rien d'externe, jamais
+  // aucune requête externe, jamais — le SW ne relaie que l'origine locale
+  if (!url.startsWith(self.location.origin)) { event.respondWith(Response.error()); return; }
 
   if (isCode(url)) {
     // network-first : le code frais prime toujours
