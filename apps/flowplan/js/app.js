@@ -857,6 +857,9 @@
     if ((e.key === 'Escape' || e.key === 'F11') && document.body.classList.contains('presenting')) {
       e.preventDefault();
       setPresent(false);
+      // purge tout résidu visuel : re-render complet + reflow forcé
+      render();
+      void document.body.offsetHeight;
     }
   });
   // en présentation : double-clic sur un jour -> zoom vue jour plein écran (interactif)
