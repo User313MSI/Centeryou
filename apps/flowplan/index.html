@@ -14,8 +14,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+/* SÛR v3.5 : thème sombre en dur, aucune variable, aucun sélecteur complexe */
+html { background: #0b0e14 !important; }
+body {
+  background: #0b0e14 !important;
+  background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.18), transparent 60%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.14), transparent 55%) !important;
+  color: #eef2f8 !important;
+}
+.fp-top { background: rgba(20,26,36,.85) !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
+.fp-brand { color: #5b8cff !important; }
+.fp-hero h1 { color: #eef2f8 !important; }
+.fp-day { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1) !important; }
+.fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
+.fp-empty { color: #97a3b6 !important; }
+.fp-btn { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
+.fp-input-row textarea { background: #141a24 !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.16) !important; }
+.fp-week-label { color: #eef2f8 !important; }
+.fp-stats span { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
+.fp-filter { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
+.fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
+.fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v3.4 — design system premium (dark + light)
+   FlowPlan v3.5 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -501,7 +521,7 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v3.4 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v3.5 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
