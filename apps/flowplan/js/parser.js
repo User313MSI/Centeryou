@@ -162,6 +162,30 @@
       date = toISODate(new Date(n.getFullYear(), n.getMonth(), n.getDate() + 7));
       strip(m[0]);
     }
+    // POINT 8: "dans N semaines/mois/jours" + "le mois prochain"
+    m = text.match(/\bdans\s+(\d{1,3})\s+(semaines?|mois|jours?)\b/);
+    if (m && !date) {
+      const n = now || new Date();
+      const val = Math.min(+m[1], 365);
+      const unit = m[2];
+      let d;
+      if (unit.startsWith('mois')) d = new Date(n.getFullYear(), n.getMonth() + val, n.getDate());
+      else d = new Date(n.getFullYear(), n.getMonth(), n.getDate() + val * (unit.startsWith('semaine') ? 7 : 1));
+      date = toISODate(d);
+      strip(m[0]);
+    }
+    m = text.match(/\ble\s+mois\s+prochain\b/);
+    if (m && !date) {
+      const n = now || new Date();
+      date = toISODate(new Date(n.getFullYear(), n.getMonth() + 1, 1));
+      strip(m[0]);
+    }
+    m = text.match(/\ble\s+mois\s+dernier\b/);
+    if (m && !date) {
+      const n = now || new Date();
+      date = toISODate(new Date(n.getFullYear(), n.getMonth() - 1, 1));
+      strip(m[0]);
+    }
 
     // récurrence quotidienne
     if (/\btous les jours\b/.test(text)) { recurrence = 'daily'; strip('tous les jours'); }
@@ -220,7 +244,8 @@
 
     // plage horaire "18h à 20h" / "18h-20h" / "18h jusqu'à 20h"
     let start = null, end = null;
-    const range = text.match(/\b(\d{1,2}[h:]\d{2}|\d{1,2}h)\s*(?:a|à|jusqu ?a|jusqu ?au|-|–|—)\s*(\d{1,2}[h:]\d{2}|\d{1,2}h)\b/);
+    // POINT 7: "de 9h à 11h", "entre 14h et 16h", "9h-11h", "9h à 11h"
+    const range = text.match(/\b(?:de\s+|entre\s+)?(\d{1,2}[h:]\d{2}|\d{1,2}h)\s*(?:a|à|jusqu ?a|jusqu ?au|et|-|–|—)\s*(\d{1,2}[h:]\d{2}|\d{1,2}h)\b/);
     if (range) {
       const t1 = parseTimeToken(range[1]);
       const t2 = parseTimeToken(range[2]);
@@ -255,7 +280,7 @@
     if (!start) allDay = true;
 
     // titre : découpage en mots, retrait des mots-liens UNIQUEMENT en tête
-    const LINK_WORDS = new Set(['le', 'la', 'les', 'du', 'de', 'des', 'au', 'aux', 'a', 'à', 'en', 'et', 'avec', 'pour', 'par', 'vers', "jusqu'au", 'jusquau', 'dans']);
+    const LINK_WORDS = new Set(['le', 'la', 'les', 'du', 'de', 'des', 'au', 'aux', 'a', 'à', 'en', 'et', 'avec', 'pour', 'par', 'vers', "jusqu'au", 'jusquau', 'dans', 'entre', 'de']);
     let words = disp.replace(/\b\d{1,2}[h:]\d{2}\b|\b\d{1,2}h\b/gu, ' ').split(/\s+/).filter(Boolean);
     while (words.length && LINK_WORDS.has(words[0].toLowerCase().replace(/[.,;:!?]$/, ''))) words.shift();
     let title = words.join(' ').trim();

@@ -48,6 +48,8 @@
     reminders: $('fp-reminders'),
     demo: $('fp-demo'),
     voiceToggle: $('fp-voice-toggle'),
+    fab: $('fp-fab'),
+    freeSlots: $('fp-free-slots'),
     clock: $('fp-clock'),
     present: $('fp-present'),
     welcome: $('fp-welcome'),
@@ -291,6 +293,8 @@
       const ev = events[i++];
       const cat = Categories.categorize(ev.title);
       const date = ev.date || currentWeekStart;
+      const conflictWith = planner.wouldConflict({ date: date, start: ev.start, end: ev.end, allDay: ev.allDay });
+      if (conflictWith) toast('⚠️ Chevauche « ' + conflictWith.title + ' » le même jour', true);
       const added = planner.add({ title: ev.title, date: date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
       persist();
       render();
@@ -331,6 +335,9 @@
       onResult: function (txt) {
         els.input.value = (els.input.value ? els.input.value + ' ; ' : '') + txt;
         setStatus('Reconnu : « ' + txt + ' » — clique sur Générer.');
+      },
+      onInterim: function (txt) {
+        setStatus('🎙️ … « ' + txt + ' »');
       },
       onError: function (e) { setStatus(e.message, true); },
       onEnd: function () {
@@ -646,7 +653,12 @@
   }
 
   // ---------- recherche ----------
+  let searchTimer = null;
   els.search.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 150); // POINT 46: debounce
+  });
+  function doSearch() {
     const q = els.search.value;
     if (!q) { render(); return; }
     const found = planner.search(q);
@@ -669,7 +681,7 @@
     els.week.appendChild(col);
     els.stats.innerHTML = '';
     els.conflictBox.hidden = true;
-  });
+  }
 
   // ---------- modale ----------
   let lastFocused = null;
@@ -831,6 +843,33 @@
   });
   els.btnVoice.addEventListener('click', toggleVoice);
   $('fp-add').addEventListener('click', function () { openModal(null); });
+  els.fab.addEventListener('click', function () { openModal(null); }); // POINT 5: bouton flottant mobile
+  // POINT 12: créneaux libres du jour de la modale
+  els.freeSlots.addEventListener('click', function () {
+    const d = els.mDate.value || currentWeekStart;
+    const slots = planner.freeSlots(d, 60).slice(0, 8);
+    if (!slots.length) { toast('🕳️ Aucun créneau libre ≥ 1h ce jour', true); return; }
+    const old = els.modal.querySelector('.fp-slots');
+    if (old) old.remove();
+    const ul = document.createElement('ul');
+    ul.className = 'fp-slots';
+    slots.forEach(sl => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = sl.start + ' – ' + sl.end;
+      b.addEventListener('click', function () {
+        els.mStart.value = sl.start;
+        els.mEnd.value = sl.end;
+        ul.remove();
+        toast('🕳️ Créneau ' + sl.start + '–' + sl.end + ' appliqué');
+      });
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    els.modal.insertBefore(ul, els.modal.querySelector('.fp-modal-actions'));
+    toast('🕳️ ' + slots.length + ' créneaux libres le ' + d);
+  });
   $('fp-export').addEventListener('click', exportICS);
   $('fp-import').addEventListener('click', function () { els.menuPanel.hidden = true; importICS(); });
   // double-clic sur un jour en vue mois/semaine -> vue jour de ce jour
@@ -1100,6 +1139,57 @@
     }
     requestAnimationFrame(tick);
   }
+
+
+  // ---------- POINT 1 : autocomplétion du champ (basée sur les titres existants) ----------
+  let autoList = null, autoIdx = -1;
+  function setupAutocomplete() {
+    autoList = document.createElement('div');
+    autoList.className = 'fp-auto';
+    autoList.hidden = true;
+    (els.input.parentNode || document.body).appendChild(autoList);
+    els.input.addEventListener('input', function () {
+      const q = els.input.value.trim().toLowerCase();
+      if (q.length < 2) { autoList.hidden = true; return; }
+      const titles = [...new Set(planner.all().map(e => e.title))];
+      const matches = titles.filter(t => t.toLowerCase().includes(q) && t.toLowerCase() !== q).slice(0, 5);
+      if (!matches.length) { autoList.hidden = true; return; }
+      autoList.innerHTML = '';
+      autoIdx = -1;
+      matches.forEach(t => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'fp-auto-item';
+        b.textContent = t;
+        b.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          els.input.value = t;
+          autoList.hidden = true;
+        });
+        autoList.appendChild(b);
+      });
+      autoList.hidden = false;
+    });
+    els.input.addEventListener('keydown', function (e) {
+      if (autoList.hidden) return;
+      const items = autoList.querySelectorAll('.fp-auto-item');
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        autoIdx = e.key === 'ArrowDown' ? Math.min(autoIdx + 1, items.length - 1) : Math.max(autoIdx - 1, 0);
+        items.forEach((it, i) => it.classList.toggle('active', i === autoIdx));
+      } else if (e.key === 'Enter' && autoIdx >= 0 && items[autoIdx]) {
+        e.preventDefault();
+        els.input.value = items[autoIdx].textContent;
+        autoList.hidden = true;
+      } else if (e.key === 'Escape') {
+        autoList.hidden = true;
+      }
+    });
+    document.addEventListener('click', function (e) {
+      if (!autoList.contains(e.target) && e.target !== els.input) autoList.hidden = true;
+    });
+  }
+  setupAutocomplete();
 
   // ripple au clic sur tous les .fp-btn
   document.addEventListener('click', function (e) {

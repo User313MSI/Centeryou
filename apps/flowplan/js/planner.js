@@ -301,7 +301,36 @@
       if (Array.isArray(list)) for (const e of list) { events.push(e); seq++; }
     }
 
-    return { add, remove, update, duplicate, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, conflicts, conflictedIds, categories, stats, toJSON, load };
+    // POINT 12: créneaux libres d'une journée (de 8h à 20h, blocs de 30 min)
+    function freeSlots(iso, minMinutes) {
+      const dur = Math.max(30, minMinutes || 60);
+      const day = byDate(iso).filter(e => !e.allDay && e.start && e.end)
+        .map(e => [minutesOf(e.start), minutesOf(e.end)]).sort((a, b) => a[0] - b[0]);
+      const busy = [];
+      for (const [s, e] of day) {
+        if (busy.length && s <= busy[busy.length - 1][1]) busy[busy.length - 1][1] = Math.max(busy[busy.length - 1][1], e);
+        else busy.push([s, e]);
+      }
+      const slots = [];
+      let cursor = 8 * 60;
+      for (const [s, e] of busy) {
+        if (s - cursor >= dur) slots.push([cursor, s]);
+        cursor = Math.max(cursor, e);
+      }
+      if (20 * 60 - cursor >= dur) slots.push([cursor, 20 * 60]);
+      return slots.map(([a, b]) => ({ start: fmtMin(a), end: fmtMin(Math.min(b, a + dur)) }));
+    }
+    function fmtMin(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+
+    // POINT 11: avertit si un nouvel événement chevauche un existant (même jour)
+    function wouldConflict(ev) {
+      if (!ev.date || ev.allDay || !ev.start || !ev.end) return null;
+      const s = minutesOf(ev.start), e = minutesOf(ev.end);
+      return events.find(o => o.date === ev.date && !o.allDay && o.start && o.end &&
+        s < minutesOf(o.end) && minutesOf(o.start) < e) || null;
+    }
+
+    return { add, remove, update, duplicate, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, freeSlots, wouldConflict, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };

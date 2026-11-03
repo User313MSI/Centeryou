@@ -758,6 +758,42 @@ test('store : sanitize conserve les notes (tronquées à 2000)', () => {
   eq(e.notes.length, 2000);
 });
 
+// ---------- P1 batch v5.0 ----------
+test('P7 : "de 9h à 11h" et "entre 14h et 16h" donnent la bonne plage', () => {
+  eq(Parser.parseEvent('de 9h à 11h réunion', NOW).start, '09:00');
+  eq(Parser.parseEvent('de 9h à 11h réunion', NOW).end, '11:00');
+  eq(Parser.parseEvent('entre 14h et 16h atelier', NOW).start, '14:00');
+  eq(Parser.parseEvent('entre 14h et 16h atelier', NOW).end, '16:00');
+  eq(Parser.parseEvent('entre 14h et 16h atelier', NOW).title, 'Atelier');
+});
+
+test('P8 : "dans 2 semaines", "dans 3 mois", "le mois prochain"', () => {
+  eq(Parser.parseEvent('dans 2 semaines 10h bilan', NOW).date, '2026-11-16');
+  eq(Parser.parseEvent('dans 3 mois 9h rdv', NOW).date, '2027-02-02');
+  eq(Parser.parseEvent('le mois prochain 10h bilan', NOW).date, '2026-12-01');
+  eq(Parser.parseEvent('dans 5 jours 10h truc', NOW).date, '2026-11-07');
+});
+
+test('P11 : wouldConflict détecte un chevauchement avant ajout', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  assert(p.wouldConflict({ date: '2026-11-04', start: '09:30', end: '10:30' }), 'chevauchement détecté');
+  assert(!p.wouldConflict({ date: '2026-11-04', start: '10:00', end: '11:00' }), 'pas de chevauchement si juste après');
+  assert(!p.wouldConflict({ date: '2026-11-05', start: '09:30', end: '10:30' }), 'autre jour = ok');
+});
+
+test('P12 : freeSlots renvoie les trous d une journée entre 8h et 20h', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' });
+  p.add({ title: 'B', date: '2026-11-04', start: '14:00', end: '15:00' });
+  const slots = p.freeSlots('2026-11-04', 60);
+  assert(slots.length >= 2, 'au moins 2 créneaux (matin + aprem)');
+  eq(slots[0].start, '08:00');
+  assert(slots.some(s => s.start === '10:00'), 'créneau 10:00 présent');
+  assert(slots.some(s => s.start === '15:00'), 'créneau 15:00 présent');
+  assert(slots.every(s => s.start >= '08:00' && s.end <= '20:00'), 'borné 8h-20h');
+});
+
 // ---------- Résumé ----------
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);

@@ -28,13 +28,14 @@
     }
     const rec = new Ctor();
     rec.lang = opts.lang || 'fr-FR';
-    rec.interimResults = false;
+    rec.interimResults = true; // POINT 2: affichage live de la reconnaissance
     rec.maxAlternatives = 1;
     rec.continuous = false;
     let stopped = false;
     rec.onresult = function (event) {
       const res = event.results[event.results.length - 1];
       if (res && res.isFinal && opts.onResult) opts.onResult(res[0].transcript);
+      else if (res && opts.onInterim) opts.onInterim(res[0].transcript); // live
     };
     rec.onerror = function (event) {
       if (opts.onError) opts.onError(new Error(event.error || 'Erreur vocale'));

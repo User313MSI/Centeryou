@@ -42,7 +42,7 @@ function makeEl(id) {
     },
     setAttribute(k, v) { this.dataset[k] = v; },
     getAttribute(k) { return this.dataset[k] ?? null; },
-    appendChild(c) { c._parent = this; this.children.push(c); return c; },
+    appendChild(c) { c._parent = this; this.children.push(c); c.parentNode = this; return c; },
     insertBefore(c) { c._parent = this; this.children.unshift(c); return c; },
     remove() { const p = this._parent; if (p) { const i = p.children.indexOf(this); if (i !== -1) p.children.splice(i, 1); } },
     addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
@@ -85,7 +85,7 @@ function makeDocument() {
    'fp-view-week', 'fp-view-month', 'fp-theme', 'fp-modal', 'fp-modal-title', 'fp-modal-date',
    'fp-modal-start', 'fp-modal-end', 'fp-modal-allday', 'fp-modal-cat', 'fp-modal-save',
    'fp-modal-delete', 'fp-modal-cancel', 'fp-modal-close', 'fp-add', 'fp-export', 'fp-print',
-   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome', 'fp-voice-toggle', 'fp-clock',
+   'fp-menu-btn', 'fp-menu-panel', 'fp-examples-toggle', 'fp-examples', 'fp-reset', 'fp-undo', 'fp-toasts', 'fp-reminders', 'fp-view-day', 'fp-day', 'fp-import', 'fp-demo', 'fp-present', 'fp-welcome', 'fp-welcome-go', 'fp-voice-welcome', 'fp-voice-toggle', 'fp-clock', 'fp-fab', 'fp-free-slots',
   ].forEach(id => { byId[id] = makeEl(id); });
   return document;
 }

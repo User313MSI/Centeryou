@@ -140,6 +140,26 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+/* autocomplétion */
+.fp-auto{
+  position:absolute; z-index:60; background:var(--panel-solid); border:1px solid var(--border-strong);
+  border-radius:12px; box-shadow:var(--shadow-lg); padding:6px; min-width:240px; max-height:220px; overflow:auto;
+}
+.fp-auto[hidden]{display:none !important}
+.fp-auto-item{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit}
+.fp-auto-item:hover, .fp-auto-item.active{background:var(--accent); color:#fff}
+/* bouton flottant + (mobile) */
+.fp-fab{
+  display:none; position:fixed; right:18px; bottom:18px; z-index:50;
+  width:58px; height:58px; border-radius:50%; border:none; font-size:28px; font-weight:800; color:#fff;
+  background:var(--grad); box-shadow:0 10px 30px rgba(91,140,255,.45); cursor:pointer;
+}
+@media (max-width:760px){ .fp-fab{display:block} }
+/* liste des créneaux libres */
+.fp-slots{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+.fp-slots button{width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:8px 12px; cursor:pointer; font-family:inherit; font-size:14px}
+.fp-slots button:hover{border-color:var(--ok); color:var(--ok)}
+
 /* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
 :root[data-theme="dark"] html { background: #0b0e14 !important; }
 :root[data-theme="dark"] body::before {
@@ -184,7 +204,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v4.4 — design system premium (dark + light)
+   FlowPlan v5.0 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -652,6 +672,7 @@ body {
       </label>
       <label>Notes <textarea id="fp-modal-notes" rows="2" maxlength="2000" placeholder="Détails éventuels…"></textarea></label>
       <div class="fp-modal-actions">
+        <button id="fp-free-slots" class="fp-btn" title="Voir les créneaux libres de ce jour">🕳️ Créneaux libres</button>
         <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
         <span class="fp-spacer"></span>
         <button id="fp-modal-cancel" class="fp-btn">Annuler</button>
@@ -686,7 +707,9 @@ body {
     </div>
   </div>
 
-  <footer class="fp-footer">FlowPlan v4.4 — 100 % local, tes données restent sur cet appareil.</footer>
+  <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
+
+  <footer class="fp-footer">FlowPlan v5.0 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>
