@@ -223,7 +223,7 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v5.2 — design system premium (dark + light)
+   FlowPlan v5.3 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -502,6 +502,8 @@ body {
 .fp-hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--muted); padding-top: 2px; text-align: right; padding-right: 8px; }
 .fp-hour-slot { flex: 1; border-left: 1px solid var(--border); }
 .fp-day-event { position: absolute; left: 64px; right: 8px; min-height: 26px; z-index: 5; }
+.fp-day-event .fp-resize-handle{position:absolute; left:0; right:0; bottom:-4px; height:10px; cursor:ns-resize; z-index:7; border-radius:0 0 10px 10px}
+.fp-day-event.resizing{opacity:.85; outline:2px solid var(--accent)}
 .fp-day-view .fp-empty { position: absolute; top: 40%; width: 100%; }
 
 /* ---------- modales ---------- */
@@ -586,6 +588,7 @@ body {
 }
 
 @media print {
+  @page { size: A4 landscape; margin: 12mm; }
   .fp-top, .fp-hero, .fp-weekbar, .fp-modal-backdrop, .fp-footer, .fp-conflicts, .fp-filters, .fp-toasts { display: none !important; }
   body { background: #fff; color: #000; }
   .fp-week, .fp-month { grid-template-columns: repeat(7, 1fr); padding: 0; display: grid !important; }
@@ -745,7 +748,7 @@ body {
 
   <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
 
-  <footer class="fp-footer">FlowPlan v5.2 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v5.3 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

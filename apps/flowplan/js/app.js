@@ -434,6 +434,41 @@
       card.appendChild(chip);
     }
     if (ev.notes) card.title = ev.notes;
+    if (!compact) {
+      const handle = document.createElement('div');
+      handle.className = 'fp-resize-handle';
+      handle.title = 'Tirer pour changer la durée';
+      card.appendChild(handle);
+      let resizing = null;
+      handle.addEventListener('mousedown', function (e) {
+        if (!ev.start) return;
+        e.preventDefault(); e.stopPropagation();
+        resizing = { id: ev.id, startY: e.clientY, origEnd: ev.end, origH: card.offsetHeight };
+        card.classList.add('resizing');
+        card.setAttribute('draggable', 'false');
+      });
+      document.addEventListener('mousemove', function (e) {
+        if (!resizing) return;
+        const dy = e.clientY - resizing.startY;
+        const dayH = els.day.offsetHeight || 1440;
+        const deltaMin = Math.round((dy / dayH * 1440) / 30) * 30; // blocs de 30 min
+        const [h, m] = resizing.origEnd ? resizing.origEnd.split(':').map(Number) : [0, 0];
+        const base = (h * 60 + m) + deltaMin;
+        if (base > (parseInt(ev.start.split(':')[0], 10) * 60 + parseInt(ev.start.split(':')[1], 10)) + 30) {
+          const nh = Math.floor(base / 60) % 24, nm = base % 60;
+          planner.update(resizing.id, { end: String(nh).padStart(2, '0') + ':' + String(nm).padStart(2, '0') });
+        }
+      });
+      document.addEventListener('mouseup', function () {
+        if (!resizing) return;
+        resizing = null;
+        card.classList.remove('resizing');
+        card.setAttribute('draggable', 'true');
+        persist();
+        render();
+        toast('⏱️ Durée ajustée', false, true);
+      });
+    }
     card.addEventListener('click', function () { openModal(ev); });
     card.addEventListener('dragstart', function (e) {
       dragId = ev.id;
