@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowPlan — Étude 50 points · Rapport d'amélioration</title>
+<style>
+:root {
+  --bg:#0b0e14; --panel:rgba(255,255,255,.045); --panel-solid:#141a24; --text:#eef2f8; --muted:#97a3b6;
+  --border:rgba(255,255,255,.09); --accent:#5b8cff; --accent2:#8b5cf6; --ok:#34d399; --warn:#fbbf24;
+  --grad:linear-gradient(135deg,#5b8cff,#8b5cf6);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--text); font-family:'Inter','Segoe UI',system-ui,sans-serif; line-height:1.6;
+  background:radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.16), transparent 60%),
+             radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.12), transparent 55%), var(--bg);
+  min-height:100vh;
+}
+header.hero{
+  text-align:center; padding:70px 20px 50px;
+}
+header.hero .kicker{color:var(--accent); font-weight:700; letter-spacing:2px; text-transform:uppercase; font-size:12px}
+header.hero h1{
+  font-size:52px; margin:10px 0 6px; letter-spacing:-1.5px; font-weight:800;
+  background:linear-gradient(120deg,#fff 20%,#5b8cff 60%,#8b5cf6 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+header.hero p{color:var(--muted); max-width:640px; margin:0 auto; font-size:17px}
+.stats{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:30px}
+.stat{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px 26px; text-align:center}
+.stat b{font-size:28px; display:block; background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+.stat span{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:1px}
+
+.layout{display:grid; grid-template-columns:250px 1fr; gap:30px; max-width:1240px; margin:0 auto; padding:0 20px 80px}
+nav.toc{
+  position:sticky; top:20px; align-self:start; background:var(--panel); border:1px solid var(--border);
+  border-radius:16px; padding:16px;
+}
+nav.toc h4{margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted)}
+.toc-link{display:block; color:var(--muted); text-decoration:none; padding:7px 10px; border-radius:9px; font-size:14px; font-weight:600}
+.toc-link:hover{background:rgba(255,255,255,.06); color:var(--text)}
+.filters{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap}
+.filters button{background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--muted); border-radius:999px; padding:5px 13px; font-size:12px; cursor:pointer; font-weight:700}
+.filters button.active{background:var(--grad); color:#fff; border:none}
+
+.charts{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:26px}
+.chart{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px}
+.chart h3{margin:0 0 12px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:1px}
+.chart .donut-wrap{display:flex; align-items:center; gap:14px}
+.legend{font-size:13px; color:var(--muted)}
+.legend div{display:flex; align-items:center; gap:7px; margin:4px 0}
+.dot{width:10px; height:10px; border-radius:3px; display:inline-block}
+.bar-row{display:flex; align-items:center; gap:10px; margin:7px 0}
+.bar-label{width:90px; font-size:12px; color:var(--muted); font-weight:700}
+.bar-track{flex:1; height:10px; background:rgba(255,255,255,.06); border-radius:99px; overflow:hidden}
+.bar-fill{height:100%; border-radius:99px; transition:width .6s cubic-bezier(.22,1.2,.36,1)}
+.bar-val{width:26px; font-size:12px; color:var(--text); font-weight:700; text-align:right}
+
+.point{
+  display:flex; gap:18px; background:var(--panel); border:1px solid var(--border); border-radius:18px;
+  padding:20px 22px; margin-bottom:14px; transition:border-color .15s, transform .15s;
+}
+.point:hover{border-color:rgba(91,140,255,.5); transform:translateY(-2px)}
+.point-num{
+  font-size:30px; font-weight:800; min-width:52px; text-align:center; border-radius:14px; padding:8px 0;
+  background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  height:fit-content;
+}
+.point-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.point-head h3{margin:0; font-size:18px; letter-spacing:-.3px}
+.prio{font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px}
+.prio.P1{background:rgba(91,140,255,.18); color:#8fb4ff; border:1px solid rgba(91,140,255,.5)}
+.prio.P2{background:rgba(139,92,246,.18); color:#c4b0fb; border:1px solid rgba(139,92,246,.5)}
+.prio.P3{background:rgba(52,211,153,.15); color:#6ee7b7; border:1px solid rgba(52,211,153,.45)}
+.point-desc{margin:8px 0 4px; color:var(--text)}
+.point-why{margin:0; color:var(--muted); font-size:14px}
+.point-why strong{color:var(--accent)}
+.point-meta{display:flex; gap:8px; margin-top:10px}
+.chip{font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:99px; background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--muted)}
+.chip.impact{color:var(--warn); border-color:rgba(251,191,36,.35)}
+.point.hidden{display:none}
+footer{text-align:center; color:var(--muted); font-size:13px; padding:30px; border-top:1px solid var(--border)}
+@media (max-width:900px){ .layout{grid-template-columns:1fr} nav.toc{position:static} .charts{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="kicker">Étude produit · 2 novembre 2026</div>
+  <h1>FlowPlan — 50 pistes d'amélioration</h1>
+  <p>Audit complet de l'application : 50 points distincts, chacun justifié, noté en impact et effort, priorisé. Conçu pour être lu par un entrepreneur comme par un étudiant.</p>
+  <div class="stats">
+    <div class="stat"><b>50</b><span>points</span></div>
+    <div class="stat"><b>20</b><span>à faire maintenant (P1)</span></div>
+    <div class="stat"><b>25</b><span>rapides (S)</span></div>
+    <div class="stat"><b>7</b><span>impact ⭐⭐⭐⭐+</span></div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc">
+    <h4>Sommaire</h4>
+    <a href="#sec-A" class="toc-link">A — Expérience de saisie (texte & voix)</a><a href="#sec-B" class="toc-link">B — Compréhension du langage (parser)</a><a href="#sec-C" class="toc-link">C — Vues & navigation</a><a href="#sec-D" class="toc-link">D — Édition & interactions</a><a href="#sec-E" class="toc-link">E — Design & animations</a><a href="#sec-F" class="toc-link">F — Données, export & partage</a><a href="#sec-G" class="toc-link">G — Rappels & notifications</a><a href="#sec-H" class="toc-link">H — Sécurité & confiance</a><a href="#sec-I" class="toc-link">I — Performance & technique</a><a href="#sec-J" class="toc-link">J — Voix & accessibilité</a><a href="#sec-S" class="toc-link">Synthèse graphique (priorités)</a>
+    <h4 style="margin-top:14px">Filtrer</h4>
+    <div class="filters">
+      <button class="active" data-f="all">Tous</button>
+      <button data-f="P1">P1</button>
+      <button data-f="P2">P2</button>
+      <button data-f="P3">P3</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="charts">
+      <div class="chart"><h3>Priorités</h3><div class="donut-wrap"><svg viewBox="0 0 190 190" width="190" height="190"><circle cx="95" cy="95" r="81" fill="none" stroke="#5b8cff" stroke-width="22"
+      stroke-dasharray="203.6 508.9" stroke-dashoffset="0.0"
+      transform="rotate(-90 95 95)" stroke-linecap="butt"/><circle cx="95" cy="95" r="81" fill="none" stroke="#8b5cf6" stroke-width="22"
+      stroke-dasharray="213.8 508.9" stroke-dashoffset="-203.6"
+      transform="rotate(-90 95 95)" stroke-linecap="butt"/><circle cx="95" cy="95" r="81" fill="none" stroke="#34d399" stroke-width="22"
+      stroke-dasharray="91.6 508.9" stroke-dashoffset="-417.3"
+      transform="rotate(-90 95 95)" stroke-linecap="butt"/>
+    <text x="50%" y="47%" text-anchor="middle" fill="#eef2f8" font-size="26" font-weight="800">50</text>
+    <text x="50%" y="60%" text-anchor="middle" fill="#97a3b6" font-size="11">POINTS</text></svg>
+        <div class="legend">
+          <div><span class="dot" style="background:#5b8cff"></span>P1 — maintenant (20)</div>
+          <div><span class="dot" style="background:#8b5cf6"></span>P2 — ensuite (21)</div>
+          <div><span class="dot" style="background:#34d399"></span>P3 — plus tard (9)</div>
+        </div></div></div>
+      <div class="chart"><h3>Impact ressenti</h3>
+    <div class="bar-row">
+      <span class="bar-label">⭐</span>
+      <div class="bar-track"><div class="bar-fill" style="width:3.6%;background:#fbbf24"></div></div>
+      <span class="bar-val">1</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">⭐⭐</span>
+      <div class="bar-track"><div class="bar-fill" style="width:50.0%;background:#fbbf24"></div></div>
+      <span class="bar-val">14</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">⭐⭐⭐</span>
+      <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#fbbf24"></div></div>
+      <span class="bar-val">28</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">⭐⭐⭐⭐</span>
+      <div class="bar-track"><div class="bar-fill" style="width:25.0%;background:#fbbf24"></div></div>
+      <span class="bar-val">7</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">⭐⭐⭐⭐⭐</span>
+      <div class="bar-track"><div class="bar-fill" style="width:0.0%;background:#fbbf24"></div></div>
+      <span class="bar-val">0</span>
+    </div></div>
+      <div class="chart"><h3>Effort de développement</h3>
+    <div class="bar-row">
+      <span class="bar-label">S (rapide)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#8b5cf6"></div></div>
+      <span class="bar-val">25</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">M (moyen)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:92.0%;background:#8b5cf6"></div></div>
+      <span class="bar-val">23</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">L (gros)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:8.0%;background:#8b5cf6"></div></div>
+      <span class="bar-val">2</span>
+    </div></div>
+    </div>
+    
+  <article class="point" data-prio="P1" data-sec="A">
+    <div class="point-num">01</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Autocomplétion intelligente du champ</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">propose des événements fréquents (« réunion équipe », « dentiste ») au fur et à mesure.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> la saisie vocale/texte répétitive fatigue ; l'autocomplétion divise par 2 le temps de saisie.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="A">
+    <div class="point-num">02</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Correction vocale en direct</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">affiche la phrase reconnue en live (interim results) au lieu d'attendre la fin.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on voit immédiatement si la reconnaissance a raté, on corrige tout de suite.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="A">
+    <div class="point-num">03</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Commandes vocales de contrôle</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">« annule », « supprime le dernier », « montre le mois ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> vrai contrôle mains-libres, utile en conduisant/cuisine.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="A">
+    <div class="point-num">04</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Dictionnaire perso</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">l'app apprend tes mots (noms de clients, lieux.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> « chez Martin » reconnu même si « Martin » est rare.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="A">
+    <div class="point-num">05</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Saisie rapide « + » flottant</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">bouton fixe en bas à droite sur mobile pour ajouter sans remonter.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> sur téléphone, le haut est loin du pouce.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="B">
+    <div class="point-num">06</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Historique des 20 dernières phrases</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">réutiliser une saisie d'hier en un appui.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on redit souvent les mêmes choses chaque semaine.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="B">
+    <div class="point-num">07</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Plages horaires naturelles</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">« de 9h à 11h », « entre 14 et 16h ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> tout le monde parle comme ça.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="B">
+    <div class="point-num">08</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Durées relatives</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">« dans 2 semaines », « le mois prochain ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on pense en relatifs, pas qu'en dates.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="B">
+    <div class="point-num">09</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Lieux extraits</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">« dentiste chez Dr Martin à Lyon » → champ lieu.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> un planning sans lieu est incomplet ; utile pour les itinéraires.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="B">
+    <div class="point-num">10</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Événements liés</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">« déj avec Sam juste avant le dentiste » → proposition de chaînage.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> la vraie vie enchaîne les RDV.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort L</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="C">
+    <div class="point-num">11</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Détection de conflits à la saisie</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">avertir AVANT d'ajouter si ça chevauche.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> corriger avant, pas après.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="C">
+    <div class="point-num">12</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Suggestions de créneaux libres</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">« propose-moi 3 créneaux libres mardi ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> c'est le vrai besoin derrière un planning.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="C">
+    <div class="point-num">13</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Événements sur plusieurs jours</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">« du 12 au 14 juillet ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> vacances, déplacements.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="C">
+    <div class="point-num">14</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Répétition personnalisée</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">« tous les 2 lundis », « le 1er lundi du mois ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> les vraies récurrences ne sont pas hebdo simples.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="C">
+    <div class="point-num">15</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Annulation d'une occurrence</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">« pas le 9 novembre ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> une récurrence a toujours une exception.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="D">
+    <div class="point-num">16</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Vue Agenda (liste chronologique)</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">4e vue à côté de Jour/Semaine/Mois.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> certains pensent en liste, d'autres en grille.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="D">
+    <div class="point-num">17</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Mini-calendrier permanent</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">à côté, cliquable pour sauter à une date.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> navigation directe sans les flèches.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="D">
+    <div class="point-num">18</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Recherche de date</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">taper « 12 mai » dans la recherche = saute à cette date.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on cherche souvent une date, pas un mot.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="D">
+    <div class="point-num">19</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Zoom sur la semaine (2 jours en grand)</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">mode « focus 2 jours ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> leWednesday-only view n'existe pas.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="D">
+    <div class="point-num">20</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Vue « année »</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">12 mini-mois avec compteurs.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> vue d'ensemble pour planifier les vacances.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="E">
+    <div class="point-num">21</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Resize par les bords en vue Jour</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">tirer le bas d'un événement pour changer sa durée.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> plus rapide que la modale pour ajuster.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="E">
+    <div class="point-num">22</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Dupliquer vers le lendemain</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">« répéter demain » en un clic.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> les routines quotidiennes se recopient.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="E">
+    <div class="point-num">23</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Déplacer par clavier</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">Ctrl+flèches déplace l'événement d'un jour.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> accessibilité + rapidité clavier.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="E">
+    <div class="point-num">24</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Sélection multiple</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">Shift+clic pour déplacer/supprimer un groupe.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> « décaler toute ma semaine » en une fois.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="E">
+    <div class="point-num">25</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Copier-coller d'événement</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">Ctrl+C / Ctrl+V.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> standard universel attendu.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="F">
+    <div class="point-num">26</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Barre de progression du jour</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">ligne « maintenant » qui traverse la vue Jour en direct.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on sait où on en est dans la journée.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="F">
+    <div class="point-num">27</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Couleurs par catégorie éditables</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">choisir sa palette.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> chacun a ses codes couleur.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="F">
+    <div class="point-num">28</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Thème « saisons »</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">palettes automatiques selon la saison.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> détail wow, zéro config.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="F">
+    <div class="point-num">29</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Mode « papier »</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">thème clair style agenda papier pour impression.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> certains impriment leur semaine.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="F">
+    <div class="point-num">30</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Transitions de page fluides (View Transitions API)</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">entre les vues.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> le changement Jour→Semaine doit couler, pas couper.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="G">
+    <div class="point-num">31</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Export PDF paysage de la semaine</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">mise en page propre.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> l'impression actuelle est brute.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="G">
+    <div class="point-num">32</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Partage lecture seule par lien</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">URL temporaire qui montre le planning sans compte.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> montrer son dispo à quelqu'un sans lui donner l'édition.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort L</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="G">
+    <div class="point-num">33</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Import CSV</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">Excel) — colonnes titre/date/heure.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> migration depuis un tableur existant.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="G">
+    <div class="point-num">34</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Export JSON</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">sauvegarde complète lisible/modifiable.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> souveraineté totale des données.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="G">
+    <div class="point-num">35</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Auto-backup horodaté</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">un fichier .ics/JSON par jour dans un dossier choisi.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> protection contre la perte, zéro cloud.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="H">
+    <div class="point-num">36</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Comparaison semaine vs semaine</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">« j'ai 4h de sport en moins cette semaine ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> bilan chiffré motivant.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="H">
+    <div class="point-num">37</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Rappel personnalisable par événement</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">5 min, 15 min, 1h, veille.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> pas tout le monde veut 15 min.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="H">
+    <div class="point-num">38</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Rappel « partir maintenant »</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">basé sur la durée de trajet estimée.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> le vrai moment critique c'est le départ.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="H">
+    <div class="point-num">39</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Mode « ne pas déranger »</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">couper les rappels sur une plage horaire.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> réunions, sieste, nuit.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="H">
+    <div class="point-num">40</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Résumé du lendemain le soir</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">notification récapitulative à 20h.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> préparer sa journée en avance.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="I">
+    <div class="point-num">41</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Verrouillage auto après inactivité</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">re-lock après 5 min sans action.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> un PC ouvert ne doit pas rester déverrouillé.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="I">
+    <div class="point-num">42</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Journal d'audit local</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">qui a modifié quoi, quand (local only.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> traçabilité sans serveur.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="I">
+    <div class="point-num">43</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Export chiffré du vault</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">backup du planning chiffré avec le même PIN.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> restaurer sur un autre appareil sans le cloud.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="I">
+    <div class="point-num">44</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Indicateur visuel « verrouillé/déverrouillé »</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">cadenas visible en permanence.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> on sait toujours dans quel état sont ses données.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P3" data-sec="I">
+    <div class="point-num">45</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Virtualisation de la vue année</h3>
+        <span class="prio P3">P3</span>
+      </div>
+      <p class="point-desc">ne rendre que les cellules visibles.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> 365 jours × événements = lag potentiel.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="J">
+    <div class="point-num">46</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Debounce de la recherche</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">150 ms.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> la recherche tape à chaque frappe, actuellement re-render à chaque touche.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="J">
+    <div class="point-num">47</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Migration de schéma du stockage</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">versionner le localStorage (v1→v2) avec migration auto.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> aujourd'hui un changement de format casse les données.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P2" data-sec="J">
+    <div class="point-num">48</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Mode hors-ligne PWA installée testé</h3>
+        <span class="prio P2">P2</span>
+      </div>
+      <p class="point-desc">badge « hors-ligne » quand le réseau tombe.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> l'app est déjà offline-first, il faut le montrer.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="J">
+    <div class="point-num">49</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Lecture du planning du jour à la demande</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">« lis-moi ma journée ».</p>
+      <p class="point-why"><strong>Pourquoi :</strong> accessibilité (malvoyants) + conduite.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort M</span>
+      </div>
+    </div>
+  </article>
+  <article class="point" data-prio="P1" data-sec="J">
+    <div class="point-num">50</div>
+    <div class="point-body">
+      <div class="point-head">
+        <h3>Taille de police réglable + contraste renforcé (AAA)</h3>
+        <span class="prio P1">P1</span>
+      </div>
+      <p class="point-desc">3 tailles, mode contraste max.</p>
+      <p class="point-why"><strong>Pourquoi :</strong> seniors et malvoyants = vrai public, aujourd'hui c'est AA seulement.</p>
+      <div class="point-meta">
+        <span class="chip impact">Impact ⭐⭐⭐⭐</span>
+        <span class="chip effort">Effort S</span>
+      </div>
+    </div>
+  </article>
+  </main>
+</div>
+
+<footer>FlowPlan · Étude 50 points · générée automatiquement depuis ETUDE-50-POINTS-FLOWPLAN.md · 100 % local, aucune donnée envoyée</footer>
+<script>
+document.querySelectorAll('.filters button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filters button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const f = b.dataset.f;
+    document.querySelectorAll('.point').forEach(p => {
+      p.classList.toggle('hidden', f !== 'all' && p.dataset.prio !== f);
+    });
+  });
+});
+</script>
+</body>
+</html>
