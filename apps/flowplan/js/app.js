@@ -50,6 +50,15 @@
     voiceToggle: $('fp-voice-toggle'),
     fab: $('fp-fab'),
     freeSlots: $('fp-free-slots'),
+    minical: $('fp-minical'),
+    viewList: $('fp-view-list'),
+    list: $('fp-list'),
+    textsize: $('fp-textsize'),
+    lockstate: $('fp-lockstate'),
+    readDay: $('fp-read-day'),
+    exportJson: $('fp-export-json'),
+    mReminder: $('fp-modal-reminder'),
+    repeatTomorrow: $('fp-repeat-tomorrow'),
     clock: $('fp-clock'),
     present: $('fp-present'),
     welcome: $('fp-welcome'),
@@ -70,7 +79,7 @@
   };
 
   let currentWeekStart = Planner.weekStartISO(null);
-  let view = 'week'; // 'week' | 'month' | 'day'
+  let view = 'week'; // 'week' | 'month' | 'day' | 'list'
   let currentDay = Parser.todayISO(new Date());
   let editingId = null;
   let voiceCtl = null;
@@ -169,15 +178,40 @@
       if (!ev.start || ev.allDay) continue;
       const [h, m] = ev.start.split(':').map(Number);
       const evMin = h * 60 + m;
-      if (evMin - nowMin === 15 && !ev._notified) { // 15 min avant
+      const reminderMin = ev.reminder != null ? ev.reminder : 15; // POINT 37
+      if (reminderMin > 0 && evMin - nowMin === reminderMin && !ev._notified) {
         ev._notified = true;
-        new Notification('Dans 15 min : ' + ev.title, { body: ev.start + ' — FlowPlan', icon: 'assets/icon-192.png' });
+        const label = reminderMin >= 1440 ? 'Demain' : 'Dans ' + reminderMin + ' min';
+        new Notification(label + ' : ' + ev.title, { body: ev.start + ' — FlowPlan', icon: 'assets/icon-192.png' });
       }
     }
   }
   if (remindersEnabled()) scheduleReminders();
+  // POINT 41: verrouillage auto après 5 min d inactivité (si vault actif)
+  let idleTimer = null;
+  function resetIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () {
+      if (Vault.isEnabled(localStorage) && booted) {
+        secureStore.lock();
+        booted = false;
+        const lockEl = $('fp-lock');
+        lockEl.hidden = false;
+        lockEl.classList.add('open');
+        toast('🔒 Verrouillé après inactivité', true);
+      }
+    }, 5 * 60 * 1000);
+  }
+  ['click', 'keydown', 'mousemove', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, resetIdle, { passive: true });
+  });
+  resetIdle();
 
   // ---------- vault (PIN) ----------
+  function refreshLockState() {
+    els.lockstate.hidden = !Vault.isEnabled(localStorage);
+  }
+  refreshLockState();
   function refreshVaultMenu() {
     const on = Vault.isEnabled(localStorage);
     $('fp-vault').textContent = on ? '🔒 Verrou activé — cliquer pour désactiver' : '🔐 Verrouiller (code PIN)';
@@ -578,16 +612,64 @@
   }
   function pad2h(h) { return String(h).padStart(2, '0'); }
 
+  function renderList() {
+    const w = planner.week(currentWeekStart);
+    els.weekLabel.textContent = els.weekLabel.textContent; // garde
+    els.list.innerHTML = '';
+    for (const d of w.days) {
+      const visible = d.events.filter(ev => !activeCat || (ev.cat || 'autre') === activeCat);
+      if (!visible.length) continue;
+      const box = document.createElement('div');
+      box.className = 'fp-list-day';
+      const h = document.createElement('h4');
+      const dObj = new Date(d.date + 'T12:00:00');
+      h.textContent = DAYS_FR[(dObj.getDay() + 6) % 7] + ' ' + dObj.getDate() + ' ' + MONTHS_FR[dObj.getMonth()];
+      box.appendChild(h);
+      const conflicted = planner.conflictedIds();
+      for (const ev of visible) {
+        const row = document.createElement('div');
+        row.className = 'fp-list-ev';
+        const t = document.createElement('span');
+        t.className = 't';
+        t.textContent = ev.allDay ? 'Journée' : (ev.start || '') + (ev.end ? '–' + ev.end : '');
+        const n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = ev.title;
+        row.appendChild(t); row.appendChild(n);
+        if (ev.cat && ev.cat !== 'autre') {
+          const c = document.createElement('span');
+          c.className = 'c fp-chip';
+          c.textContent = ev.cat;
+          if (ev.color) c.style.background = ev.color + '33';
+          row.appendChild(c);
+        }
+        if (conflicted.has(ev.id)) row.style.color = 'var(--warn)';
+        row.addEventListener('click', function () { openModal(ev); });
+        box.appendChild(row);
+      }
+      els.list.appendChild(box);
+    }
+    if (!els.list.children.length) {
+      const e = document.createElement('div');
+      e.className = 'fp-empty';
+      e.textContent = 'Rien cette semaine';
+      els.list.appendChild(e);
+    }
+  }
+
   function renderView() {
     const isWeek = view === 'week';
     const isMonth = view === 'month';
+    const isList = view === 'list';
     els.week.style.display = isWeek ? '' : 'none';
     els.month.style.display = isMonth ? 'grid' : 'none';
     els.day.style.display = view === 'day' ? 'block' : 'none';
+    els.list.style.display = isList ? 'flex' : 'none';
     els.viewWeek.classList.toggle('active', isWeek);
     els.viewMonth.classList.toggle('active', isMonth);
     els.viewDay.classList.toggle('active', view === 'day');
-    if (isWeek) renderWeek(); else if (isMonth) renderMonth(); else renderDay();
+    els.viewList.classList.toggle('active', isList);
+    if (isWeek) renderWeek(); else if (isMonth) renderMonth(); else if (isList) renderList(); else renderDay();
   }
 
   function renderStats() {
@@ -737,6 +819,7 @@
       cat: catName,
       color: rule ? rule.color : Categories.FALLBACK.color,
       notes: (els.mNotes.value || '').slice(0, 2000),
+      reminder: +els.mReminder.value || 0,
     };
     if (editingId) planner.update(editingId, patch);
     else planner.add(patch);
@@ -782,6 +865,14 @@
     }
     renderView(); renderStats();
   }
+  els.minical.addEventListener('change', function () {
+    if (!els.minical.value) return;
+    currentWeekStart = Planner.weekStartISO(els.minical.value);
+    currentDay = els.minical.value;
+    renderView(); renderStats();
+    toast('📅 Semaine du ' + fmtDate(currentWeekStart));
+  });
+  els.viewList.addEventListener('click', function () { setView('list'); });
   els.btnPrev.addEventListener('click', function () { step(-1); });
   els.btnNext.addEventListener('click', function () { step(1); });
   els.btnToday.addEventListener('click', function () { currentWeekStart = Planner.weekStartISO(null); renderView(); renderStats(); });
@@ -881,6 +972,17 @@
     }
   });
   $('fp-print').addEventListener('click', function () { window.print(); });
+  els.repeatTomorrow.addEventListener('click', function () {
+    if (!editingId) { toast('Ouvre un événement d abord', true); return; }
+    const src = planner.all().find(e => e.id === editingId);
+    if (!src || !src.date) { toast('Pas de date', true); return; }
+    const tomorrow = Planner.addDaysISO(src.date, 1);
+    const cat = Categories.categorize(src.title);
+    planner.add({ title: src.title, date: tomorrow, start: src.start, end: src.end, allDay: src.allDay, cat: src.cat || cat.cat, color: src.color || cat.color, notes: src.notes });
+    persist();
+    render();
+    toast('📅 « ' + src.title + ' » recopié le ' + fmtDate(tomorrow), false, true);
+  });
   els.mSave.addEventListener('click', saveModal);
   els.mCancel.addEventListener('click', closeModal);
   els.mDelete.addEventListener('click', deleteModal);
@@ -1081,6 +1183,50 @@
     els.voiceToggle.textContent = voiceEnabled() ? '🔊 Voix : activée' : '🔇 Voix : désactivée';
   }
   refreshVoiceToggle();
+  const TEXTS = ['s', 'm', 'l', 'xl'];
+  const TEXTNAMES = { s: 'S', m: 'M', l: 'L', xl: 'XL' };
+  function curText() { try { return localStorage.getItem('flowplan.text') || 'm'; } catch (e) { return 'm'; } }
+  function applyText() {
+    document.documentElement.setAttribute('data-text', curText());
+    els.textsize.textContent = '🔤 Taille du texte : ' + TEXTNAMES[curText()];
+  }
+  applyText();
+  els.textsize.addEventListener('click', function () {
+    const i = TEXTS.indexOf(curText());
+    const next = TEXTS[(i + 1) % TEXTS.length];
+    try { localStorage.setItem('flowplan.text', next); } catch (e) {}
+    applyText();
+    toast('🔤 Texte : ' + TEXTNAMES[next]);
+  });
+  // POINT 49: lis-moi ma journée
+  els.readDay.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    const today = Parser.todayISO(new Date());
+    const evs = planner.byDate(today).filter(e => !e.allDay).sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+    const allDay = planner.byDate(today).filter(e => e.allDay);
+    let msg;
+    if (!evs.length && !allDay.length) msg = 'Ta journée est libre aujourd hui. Aucun rendez-vous.';
+    else {
+      const parts = [];
+      if (allDay.length) parts.push(allDay.length + ' événement toute la journée : ' + allDay.map(e => e.title).join(', '));
+      parts.push(evs.length + ' rendez-vous : ' + evs.map(e => e.start + ' ' + e.title).join(', '));
+      msg = 'Aujourd hui, ' + parts.join('. ');
+    }
+    if (voiceEnabled()) speak(msg, { rate: 1.05 });
+    toast('📖 ' + msg, false);
+  });
+  // POINT 34: export JSON
+  els.exportJson.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    const blob = new Blob([JSON.stringify({ app: 'FlowPlan', version: 1, exportedAt: new Date().toISOString(), events: planner.all() }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'flowplan-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+    toast('🧾 Export JSON téléchargé ✓');
+  });
   els.voiceToggle.addEventListener('click', function () {
     try { localStorage.setItem('flowplan.voice', voiceEnabled() ? '0' : '1'); } catch (e) {}
     refreshVoiceToggle();

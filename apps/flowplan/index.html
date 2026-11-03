@@ -160,6 +160,25 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 .fp-slots button{width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:8px 12px; cursor:pointer; font-family:inherit; font-size:14px}
 .fp-slots button:hover{border-color:var(--ok); color:var(--ok)}
 
+/* minical + état verrou */
+.fp-minical{background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:7px 10px; font-family:inherit; font-size:13px}
+.fp-lockstate{font-size:12px; font-weight:700; color:var(--warn); border:1px solid rgba(251,191,36,.4); border-radius:99px; padding:4px 12px}
+.fp-lockstate[hidden]{display:none !important}
+/* tailles de texte (POINT 50) */
+html[data-text="s"] { font-size:14px; } html[data-text="m"] { font-size:16px; } html[data-text="l"] { font-size:18px; } html[data-text="xl"] { font-size:21px; }
+html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repeat(4,1fr); }
+/* ligne "maintenant" en vue jour (POINT 26) */
+.fp-nowline{position:absolute; left:0; right:0; height:2px; background:var(--danger); z-index:6; pointer-events:none}
+.fp-nowline::before{content:'●'; position:absolute; left:52px; top:-7px; color:var(--danger); font-size:10px}
+/* vue liste (POINT 16) */
+.fp-list{max-width:820px; margin:0 auto; padding:0 20px 30px; display:flex; flex-direction:column; gap:8px}
+.fp-list-day{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px 16px}
+.fp-list-day h4{margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted)}
+.fp-list-ev{display:flex; gap:12px; align-items:baseline; padding:6px 0; border-top:1px solid var(--border); font-size:14.5px}
+.fp-list-ev .t{color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums; min-width:110px}
+.fp-list-ev .n{font-weight:600}
+.fp-list-ev .c{margin-left:auto}
+
 /* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
 :root[data-theme="dark"] html { background: #0b0e14 !important; }
 :root[data-theme="dark"] body::before {
@@ -204,7 +223,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v5.0 — design system premium (dark + light)
+   FlowPlan v5.2 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -601,6 +620,10 @@ body {
           <button id="fp-demo" class="fp-menu-item">🎲 Remplir avec un exemple</button>
           <button id="fp-voice-welcome" class="fp-menu-item">🔊 Voix d'accueil</button>
           <button id="fp-voice-toggle" class="fp-menu-item">🔊 Voix : activée</button>
+          <button id="fp-read-day" class="fp-menu-item">📖 Lis-moi ma journée</button>
+          <button id="fp-export-json" class="fp-menu-item">🧾 Exporter (JSON)</button>
+          <button id="fp-textsize" class="fp-menu-item">🔤 Taille du texte : M</button>
+          <span id="fp-lockstate" class="fp-lockstate" hidden>🔒 verrouillé</span>
           <button id="fp-present" class="fp-menu-item">🎬 Mode présentation</button>
           <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
           <hr>
@@ -627,11 +650,13 @@ body {
   </section>
 
   <section class="fp-weekbar">
+    <input id="fp-minical" type="date" class="fp-minical" title="Aller à une date" aria-label="Aller à une date">
     <button id="fp-prev-week" class="fp-btn ghost" aria-label="Précédent">←</button>
     <span id="fp-week-label" class="fp-week-label"></span>
     <button id="fp-today-week" class="fp-btn ghost">Aujourd'hui</button>
     <button id="fp-next-week" class="fp-btn ghost" aria-label="Suivant">→</button>
     <span class="fp-view-switch">
+      <button id="fp-view-list" class="fp-btn ghost">Liste</button>
       <button id="fp-view-day" class="fp-btn ghost">Jour</button>
       <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
       <button id="fp-view-month" class="fp-btn ghost">Mois</button>
@@ -645,6 +670,7 @@ body {
   <main id="fp-week" class="fp-week" aria-label="Planning de la semaine"></main>
   <main id="fp-month" class="fp-month" style="display:none"></main>
   <main id="fp-day" class="fp-day-view" style="display:none"></main>
+  <main id="fp-list" class="fp-list" style="display:none"></main>
 
   <div id="fp-modal" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="fp-modal-h">
     <div class="fp-modal">
@@ -670,9 +696,19 @@ body {
           <option value="etudes">études</option>
         </select>
       </label>
+      <label>Rappel
+        <select id="fp-modal-reminder">
+          <option value="0">Aucun</option>
+          <option value="5">5 min avant</option>
+          <option value="15" selected>15 min avant</option>
+          <option value="60">1 h avant</option>
+          <option value="1440">La veille</option>
+        </select>
+      </label>
       <label>Notes <textarea id="fp-modal-notes" rows="2" maxlength="2000" placeholder="Détails éventuels…"></textarea></label>
       <div class="fp-modal-actions">
         <button id="fp-free-slots" class="fp-btn" title="Voir les créneaux libres de ce jour">🕳️ Créneaux libres</button>
+        <button id="fp-repeat-tomorrow" class="fp-btn" title="Dupliquer le lendemain">📅 Demain aussi</button>
         <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
         <span class="fp-spacer"></span>
         <button id="fp-modal-cancel" class="fp-btn">Annuler</button>
@@ -709,7 +745,7 @@ body {
 
   <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
 
-  <footer class="fp-footer">FlowPlan v5.0 — 100 % local, tes données restent sur cet appareil.</footer>
+  <footer class="fp-footer">FlowPlan v5.2 — 100 % local, tes données restent sur cet appareil.</footer>
 
   <script src="js/parser.js"></script>
   <script src="js/planner.js"></script>

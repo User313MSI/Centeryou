@@ -62,6 +62,7 @@
       cat: typeof e.cat === 'string' ? e.cat.slice(0, 30) : null,
       color: /^#[0-9a-fA-F]{6}$/.test(e.color || '') ? e.color : null,
       notes: typeof e.notes === 'string' ? e.notes.slice(0, 2000) : null,
+      reminder: Number.isFinite(+e.reminder) && +e.reminder >= 0 ? Math.min(+e.reminder, 10080) : 0,
       createdAt: typeof e.createdAt === 'string' ? e.createdAt.slice(0, 40) : new Date().toISOString(),
     };
     return out;

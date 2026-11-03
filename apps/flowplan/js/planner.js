@@ -118,6 +118,7 @@
         cat: ev.cat || null,
         color: ev.color || null,
         notes: typeof ev.notes === 'string' ? ev.notes.slice(0, 2000) : null,
+        reminder: Number.isFinite(+ev.reminder) && +ev.reminder >= 0 ? Math.min(+ev.reminder, 10080) : 0,
         createdAt: new Date().toISOString(),
       };
       events.push(clean);
@@ -146,6 +147,7 @@
       if (patch.cat !== undefined) ev.cat = patch.cat || null;
       if (patch.color !== undefined) ev.color = patch.color || null;
       if (patch.notes !== undefined) ev.notes = typeof patch.notes === 'string' ? patch.notes.slice(0, 2000) : null;
+      if (patch.reminder !== undefined) ev.reminder = Number.isFinite(+patch.reminder) && +patch.reminder >= 0 ? Math.min(+patch.reminder, 10080) : 0;
       pushHistory({ type: 'update', id: ev.id, before: before, after: snapshot(ev) });
       return ev;
     }
