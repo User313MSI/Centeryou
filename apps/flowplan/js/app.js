@@ -11,6 +11,7 @@
   const ICSImport = window.FlowPlanICSImport;
   const Vault = window.FlowPlanVault;
   const SecureStore = window.FlowPlanSecureStore;
+  const CSV = window.FlowPlanCSV;
 
   const planner = Planner.createPlanner();
   const secureStore = SecureStore.create(Store, Vault, localStorage);
@@ -644,6 +645,18 @@
       empty.textContent = 'Rien ce jour — glisse un événement ici ou ajoute-en un';
       els.day.appendChild(empty);
     }
+    // ligne "maintenant" si aujourd'hui (P26)
+    const oldNow = els.day.querySelector('.fp-nowline');
+    if (oldNow) oldNow.remove();
+    if (currentDay === Parser.todayISO(new Date())) {
+      const n = new Date();
+      const mins = n.getHours() * 60 + n.getMinutes();
+      const line = document.createElement('div');
+      line.className = 'fp-nowline';
+      line.style.top = (mins / 1440 * 100) + '%';
+      line.title = 'Maintenant : ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+      els.day.appendChild(line);
+    }
   }
   function pad2h(h) { return String(h).padStart(2, '0'); }
 
@@ -998,6 +1011,36 @@
   });
   $('fp-export').addEventListener('click', exportICS);
   $('fp-import').addEventListener('click', function () { els.menuPanel.hidden = true; importICS(); });
+  let csvInput = null;
+  const csvBtn = $('fp-import-csv');
+  if (csvBtn) csvBtn.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    if (!csvInput) {
+      csvInput = document.createElement('input');
+      csvInput.type = 'file'; csvInput.accept = '.csv,.tsv,.txt'; csvInput.style.display = 'none';
+      csvInput.addEventListener('change', function () {
+        const f = csvInput.files && csvInput.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          const evs = CSV.parse(String(reader.result || ''));
+          let added = 0;
+          for (const ev of evs) {
+            const cat = Categories.categorize(ev.title);
+            const before = planner.all().length;
+            planner.add({ title: ev.title, date: ev.date, start: ev.start, end: ev.end, allDay: ev.allDay, cat: cat.cat, color: cat.color });
+            if (planner.all().length > before) added++;
+          }
+          persist(); render();
+          toast('📊 ' + added + ' événement(s) importé(s) depuis ' + f.name, added > 0, added > 0);
+          csvInput.value = '';
+        };
+        reader.readAsText(f);
+      });
+      document.body.appendChild(csvInput);
+    }
+    csvInput.click();
+  });
   // double-clic sur un jour en vue mois/semaine -> vue jour de ce jour
   document.addEventListener('dblclick', function (e) {
     const cell = e.target && e.target.closest ? e.target.closest('[data-date]') : null;
