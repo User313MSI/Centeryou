@@ -203,6 +203,16 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 .fp-examples-body button{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);border-radius:99px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit}
 .fp-examples-body button:hover{color:var(--text);border-color:var(--accent)}
 
+/* panneau suggestions (brain) */
+.fp-brain{max-width:760px;margin:0 auto 16px;padding:0 22px}
+.fp-brain[hidden]{display:none !important}
+.fp-brain-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px 16px;font-size:13.5px}
+.fp-brain-card strong{color:#c9d4e8;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.fp-brain-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);color:var(--muted)}
+.fp-brain-item:first-of-type{border-top:none}
+.fp-brain-item .go{margin-left:auto;background:#fff;color:#111;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
+.fp-brain-item .go:hover{opacity:.85}
+
 /* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
 :root[data-theme="dark"] html { background: #191a1a !important; }
 :root[data-theme="dark"] body::before {
@@ -238,7 +248,7 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v6.2 — design system premium (dark + light)
+   FlowPlan v6.3 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -762,7 +772,7 @@ body {
 
  <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
 
- <footer class="fp-footer">FlowPlan v6.2 — 100 % local, tes données restent sur cet appareil.</footer>
+ <footer class="fp-footer">FlowPlan v6.3 — 100 % local, tes données restent sur cet appareil.</footer>
 
  <script src="js/parser.js"></script>
  <script src="js/planner.js"></script>
@@ -774,5 +784,6 @@ body {
  <script src="js/lock.js"></script>
  <script src="js/secure-store.js"></script>
  <script src="js/csv-import.js"></script>
+  <script src="js/brain.js"></script>
  <script src="js/app.js"></script>
  <script src="js/boot.js"></script></body></html>

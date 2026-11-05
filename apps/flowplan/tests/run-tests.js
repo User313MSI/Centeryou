@@ -8,6 +8,7 @@ const Categories = require(path.join(__dirname, '..', 'js', 'categories.js'));
 const ICS = require(path.join(__dirname, '..', 'js', 'ics.js'));
 const ICSImport = require(path.join(__dirname, '..', 'js', 'ics-import.js'));
 const Vault = require(path.join(__dirname, '..', 'js', 'lock.js'));
+const Brain = require(path.join(__dirname, '..', 'js', 'brain.js'));
 const SecureStore = require(path.join(__dirname, '..', 'js', 'secure-store.js'));
 
 const passes = [];
@@ -792,6 +793,54 @@ test('P12 : freeSlots renvoie les trous d une journée entre 8h et 20h', () => {
   assert(slots.some(s => s.start === '10:00'), 'créneau 10:00 présent');
   assert(slots.some(s => s.start === '15:00'), 'créneau 15:00 présent');
   assert(slots.every(s => s.start >= '08:00' && s.end <= '20:00'), 'borné 8h-20h');
+});
+
+// ---------- brain (moteur de suggestions) ----------
+test('Brain.detectRoutines : 3x "sport" le lundi -> routine détectée avec suggestion', () => {
+  const evs = [
+    { title: 'Sport', date: '2026-10-05', start: '18:00', end: '19:00' },
+    { title: 'Sport', date: '2026-10-12', start: '18:00', end: '19:00' },
+    { title: 'Sport', date: '2026-10-19', start: '18:00', end: '19:00' },
+    { title: 'Dentiste', date: '2026-10-07', start: '14:00', end: '15:00' },
+  ];
+  const r = Brain.detectRoutines(evs, NOW);
+  eq(r.length, 1);
+  assert(/Sport/.test(r[0].suggestion));
+  eq(r[0].count, 3);
+  eq(r[0].start, '18:00');
+});
+
+test('Brain.freeSlots : trous entre événements, borné 8h-20h', () => {
+  const slots = Brain.freeSlots([
+    { start: '09:00', end: '10:00' },
+    { start: '14:00', end: '15:00' },
+  ], 60);
+  eq(slots[0].start, '08:00');
+  assert(slots.some(s => s.start === '10:00'), '10:00 libre');
+  assert(slots.some(s => s.start === '15:00'), '15:00 libre');
+  assert(slots.every(s => s.end <= '20:00'), 'borné 20h');
+});
+
+test('Brain.suggestSlots : propose des créneaux dans la semaine', () => {
+  const evs = [{ id: 'x', title: 'A', date: '2026-11-02', start: '09:00', end: '18:00' }];
+  const slots = Brain.suggestSlots(evs, '2026-11-02', 'Réunion', 60);
+  assert(slots.length >= 1, 'au moins 1 créneau');
+  assert(slots.every(s => s.date !== '2026-11-02' || s.start === '08:00' || s.start >= '18:00'), 'pas en plein dans 09:00-18:00');
+});
+
+test('Brain.suggestReschedule : conflit -> déplace B après A', () => {
+  const a = { id: 'a', title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' };
+  const b = { id: 'b', title: 'B', date: '2026-11-04', start: '09:30', end: '10:30' };
+  const r = Brain.suggestReschedule(a, b);
+  assert(r && r.action === 'move', 'proposition de déplacement');
+  eq(r.to.start, '10:00');
+  eq(r.to.end, '11:00');
+});
+
+test('Brain.suggestReschedule : pas de conflit -> null', () => {
+  const a = { id: 'a', title: 'A', date: '2026-11-04', start: '09:00', end: '10:00' };
+  const b = { id: 'b', title: 'B', date: '2026-11-04', start: '10:00', end: '11:00' };
+  eq(Brain.suggestReschedule(a, b), null);
 });
 
 // ---------- Résumé ----------
