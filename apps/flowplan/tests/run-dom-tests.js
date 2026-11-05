@@ -439,16 +439,11 @@ test('DOM : speak() existe et retourne false proprement si speechSynthesis absen
 });
 
 // ---------- audit v4.3 ----------
-test('CSS : le bloc de secours sombre est scopé à data-theme=dark (le thème clair fonctionne)', () => {
+test('CSS v7 : plus aucun !important dans le CSS, thèmes dark+light définis proprement', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  // aucune règle !important non scopée qui écraserait le light
-  // on cherche une règle !important au sombre hors du scope dark (la ligne welcome a un fond sombre normal, c'est ok)
-  // on découpe en blocs de règles et on vérifie que chaque bloc contenant #0b0e14+!important commence par un sélecteur scopé dark
-  const blocks = html.split('}');
-  const bad = blocks.filter(b => b.includes('#0b0e14') && b.includes('!important') && !b.includes(':root[data-theme="dark"]'));
-  assert(bad.length === 0, 'blocs sombres !important non scopés: ' + bad.length);
-  assert(html.includes(':root[data-theme="dark"] body'), 'sécurité scopée dark présente');
-  assert(html.includes(':root[data-theme="light"]'), 'variables light présentes');
+  assert(!html.includes('!important'), 'plus de !important nul part');
+  assert(html.includes(':root[data-theme="dark"]') || html.includes(':root, :root[data-theme="dark"]'), 'dark défini');
+  assert(html.includes(':root[data-theme="light"]'), 'light défini');
 });
 
 test('DOM : horloge affichée au chargement', () => {

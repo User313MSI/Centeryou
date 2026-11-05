@@ -42,7 +42,7 @@
 
 /* 4) mode présentation : transition douce + contenu qui grandit */
 body.presenting .fp-top, body.presenting .fp-hero, body.presenting .fp-filters, body.presenting .fp-footer {
-  display: none !important;
+  display: none;
 }
 body.presenting .fp-week { animation: presentZoom .35s cubic-bezier(.2,.9,.3,1); }
 @keyframes presentZoom { from { opacity: 0; transform: scale(.96); } }
@@ -61,7 +61,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 .fp-modal { animation: pop .2s cubic-bezier(.2,.9,.3,1.15); }
 .fp-menu-panel { animation: pop .16s ease-out; }
 @media (prefers-reduced-motion: reduce) {
-  .fp-day, .fp-event, .fp-toast, .fp-modal, .fp-menu-panel, .fp-welcome-card, .fp-welcome-logo { animation: none !important; }
+  .fp-day, .fp-event, .fp-toast, .fp-modal, .fp-menu-panel, .fp-welcome-card, .fp-welcome-logo { animation: none; }
 }
 
 
@@ -137,7 +137,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 @keyframes shake { 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { animation-duration: .01ms; animation-iteration-count: 1; transition-duration: .01ms; }
 }
 
 /* autocomplétion */
@@ -145,7 +145,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
   position:absolute; z-index:60; background:var(--panel-solid); border:1px solid var(--border-strong);
   border-radius:12px; box-shadow:var(--shadow-lg); padding:6px; min-width:240px; max-height:220px; overflow:auto;
 }
-.fp-auto[hidden]{display:none !important}
+.fp-auto[hidden]{display:none}
 .fp-auto-item{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit}
 .fp-auto-item:hover, .fp-auto-item.active{background:var(--accent); color:#fff}
 /* bouton flottant + (mobile) */
@@ -163,7 +163,7 @@ body.presenting .fp-event { font-size: 15px; padding: 12px 14px; }
 /* minical + état verrou */
 .fp-minical{background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:7px 10px; font-family:inherit; font-size:13px}
 .fp-lockstate{font-size:12px; font-weight:700; color:var(--warn); border:1px solid rgba(251,191,36,.4); border-radius:99px; padding:4px 12px}
-.fp-lockstate[hidden]{display:none !important}
+.fp-lockstate[hidden]{display:none}
 /* tailles de texte (POINT 50) */
 html[data-text="s"] { font-size:14px; } html[data-text="m"] { font-size:16px; } html[data-text="l"] { font-size:18px; } html[data-text="xl"] { font-size:21px; }
 html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repeat(4,1fr); }
@@ -205,7 +205,7 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 
 /* panneau suggestions (brain) */
 .fp-brain{max-width:760px;margin:0 auto 16px;padding:0 22px}
-.fp-brain[hidden]{display:none !important}
+.fp-brain[hidden]{display:none}
 .fp-brain-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px 16px;font-size:13.5px}
 .fp-brain-card strong{color:#c9d4e8;font-size:12px;text-transform:uppercase;letter-spacing:1px}
 .fp-brain-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);color:var(--muted)}
@@ -213,42 +213,9 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 .fp-brain-item .go{margin-left:auto;background:#fff;color:#111;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
 .fp-brain-item .go:hover{opacity:.85}
 
-/* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
-:root[data-theme="dark"] html { background: #191a1a !important; }
-:root[data-theme="dark"] body::before {
-  content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(600px 400px at 20% 20%, rgba(91,140,255,.10), transparent 60%),
-    radial-gradient(500px 380px at 80% 15%, rgba(139,92,246,.09), transparent 60%),
-    radial-gradient(700px 500px at 50% 90%, rgba(91,140,255,.07), transparent 60%);
-  animation: bgDrift 24s ease-in-out infinite alternate;
-}
-@keyframes bgDrift {
-  0% { transform: translate(0,0) scale(1); }
-  50% { transform: translate(3%, -2%) scale(1.06); }
-  100% { transform: translate(-2%, 3%) scale(1.02); }
-}
-.fp-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: 14px; letter-spacing: 1px; }
-:root[data-theme="dark"] body {
-  background: #191a1a !important;
-  background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.45), transparent 65%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.40), transparent 60%) !important;
-  color: #eef2f8 !important;
-}
-:root[data-theme="dark"] .fp-top { background: #191a1a !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-:root[data-theme="dark"] .fp-brand{color:#e8e8e8 !important;background:none !important;-webkit-text-fill-color:#e8e8e8 !important;font-weight:700}
-:root[data-theme="dark"] .fp-hero h1{font-size:44px;font-weight:300;letter-spacing:-1px;color:#f3f3f3;margin:0 0 8px}
-:root[data-theme="dark"] .fp-day { background: rgba(255,255,255,.03) !important; border: 1px solid rgba(255,255,255,.07) !important; }
-:root[data-theme="dark"] .fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-:root[data-theme="dark"] .fp-empty { color: #97a3b6 !important; }
-:root[data-theme="dark"] .fp-btn { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
-:root[data-theme="dark"] .fp-input-row textarea { background: #141a24 !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.16) !important; }
-:root[data-theme="dark"] .fp-week-label { color: #eef2f8 !important; }
-:root[data-theme="dark"] .fp-stats span { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
-:root[data-theme="dark"] .fp-filter { background: rgba(255,255,255,.05) !important; color: #97a3b6 !important; border: 1px solid rgba(255,255,255,.1) !important; }
-:root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
-:root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
+/* (bloc de secours SÛR supprimé en v7 — design system propre) */
 /* ============================================================
-   FlowPlan v6.3 — design system premium (dark + light)
+   FlowPlan v7.0 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
@@ -362,7 +329,7 @@ body {
   animation: pop .14s ease-out;
 }
 @keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
-.fp-menu-panel[hidden] { display: none !important; }
+.fp-menu-panel[hidden] { display: none; }
 .fp-menu-panel hr { border: none; border-top: 1px solid var(--border); margin: 4px 6px; }
 .fp-menu-item {
   background: none; border: none; color: var(--text); text-align: left;
@@ -379,7 +346,7 @@ body {
 
 /* ---------- hero ---------- */
 .fp-hero { max-width: 780px; margin: 0 auto; padding: 44px 20px 10px; text-align: center; }
-:root[data-theme="dark"] .fp-hero h1{color:#f3f3f3 !important;background:none !important;-webkit-text-fill-color:#f3f3f3 !important}
+:root[data-theme="dark"] .fp-hero h1{color:#f3f3f3;background:none;-webkit-text-fill-color:#f3f3f3}
 .fp-input-row { display: flex; gap: 10px; align-items: stretch; }
 :root[data-theme="dark"] .fp-input-row textarea {
   flex: 1; background: var(--panel-solid); color: var(--text);
@@ -479,7 +446,7 @@ body {
 .fp-event:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
 .fp-event.dragging { opacity: .4; }
 .fp-event.allday { background: color-mix(in srgb, var(--accent-2) 18%, transparent); border-color: color-mix(in srgb, var(--accent-2) 50%, transparent); }
-.fp-event.conflicted { border-color: var(--warn) !important; box-shadow: 0 0 0 1px var(--warn), var(--shadow-sm); }
+.fp-event.conflicted { border-color: var(--warn); box-shadow: 0 0 0 1px var(--warn), var(--shadow-sm); }
 .fp-event-time { font-weight: 700; color: var(--accent); font-size: 11.5px; letter-spacing: 0.2px; }
 .fp-event.allday .fp-event-time { color: var(--accent-2); }
 .fp-event.conflicted .fp-event-time::after { content: ' '; }
@@ -530,7 +497,7 @@ body {
   display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px;
 }
 .fp-modal-backdrop.open { display: flex; }
-.fp-modal-backdrop[hidden] { display: none !important; }
+.fp-modal-backdrop[hidden] { display: none; }
 .fp-modal {
   background: var(--panel-solid); border: 1px solid var(--border-strong); border-radius: 20px;
   padding: 24px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 13px;
@@ -559,7 +526,7 @@ body {
 }
 .fp-modal-times { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
 .fp-modal-times label { flex: 1; min-width: 100px; }
-.fp-allday { flex-direction: row !important; align-items: center; gap: 7px !important; text-transform: none !important; }
+.fp-allday { flex-direction: row; align-items: center; gap: 7px; text-transform: none; }
 .fp-modal-actions { display: flex; gap: 10px; margin-top: 8px; }
 .fp-spacer { flex: 1; }
 .fp-muted { color: var(--muted); font-size: 14px; margin: 0; }
@@ -606,10 +573,10 @@ body {
 
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
-  .fp-top, .fp-hero, .fp-weekbar, .fp-modal-backdrop, .fp-footer, .fp-conflicts, .fp-filters, .fp-toasts { display: none !important; }
+  .fp-top, .fp-hero, .fp-weekbar, .fp-modal-backdrop, .fp-footer, .fp-conflicts, .fp-filters, .fp-toasts { display: none; }
   body { background: #fff; color: #000; }
-  .fp-week, .fp-month { grid-template-columns: repeat(7, 1fr); padding: 0; display: grid !important; }
-  .fp-day-view { display: block !important; height: auto !important; }
+  .fp-week, .fp-month { grid-template-columns: repeat(7, 1fr); padding: 0; display: grid; }
+  .fp-day-view { display: block; height: auto; }
   .fp-hour-row { display: none; }
   .fp-day, .fp-cell { border: 1px solid #999; background: #fff; backdrop-filter: none; }
   .fp-day-head, .fp-cell-num, .fp-empty { color: #000; }
@@ -772,7 +739,7 @@ body {
 
  <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
 
- <footer class="fp-footer">FlowPlan v6.3 — 100 % local, tes données restent sur cet appareil.</footer>
+ <footer class="fp-footer">FlowPlan v7.0 — 100 % local, tes données restent sur cet appareil.</footer>
 
  <script src="js/parser.js"></script>
  <script src="js/planner.js"></script>
