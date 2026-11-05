@@ -1,0 +1,10 @@
+FLOWPLAN — version portable
+===========================
+1) Double-clique sur FlowPlan.bat  -> l'app s'ouvre dans ton navigateur.
+2) Pour une VRAIE app installable (.exe) :
+   - ouvre PowerShell dans ce dossier
+   - tape :  npm install   puis   npm run dist:win
+   - l'installeur est dans le dossier "dist"
+3) Pour l'installer sur téléphone : ouvre index.html dans Chrome mobile
+   -> menu -> "Ajouter a l'ecran d'accueil".
+Tout est 100 % local : aucune donnee ne sort de ta machine.
