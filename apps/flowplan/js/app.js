@@ -313,6 +313,8 @@
  if (!text) { setStatus('Écris ou dicte ton planning d\'abord.', true); return; }
  const events = Parser.parse(text, new Date());
  if (!events.length) { setStatus('Je n\'ai rien compris — essaie par exemple : « Lundi 10h réunion équipe ; mercredi 14h30 dentiste »', true); return; }
+  // panneau "compris" : pour chaque evenement, ce que FlowPlan a compris + creneaux proposes
+  showUnderstood(events);
  // génération PROGRESSIVE : un événement toutes les 220ms, chacun animé (tac tac tac)
  els.input.value = '';
  els.btnGen.disabled = true;
@@ -1473,4 +1475,44 @@
  }
 
  boot();
-})();
+})();  // Panneau "FlowPlan a compris" : resume de la comprehension + creneaux proposes
+  function showUnderstood(events) {
+    if (!els.brain || !Brain) return;
+    els.brainItems.innerHTML = '';
+    let any = false;
+    for (const ev of events.slice(0, 4)) {
+      any = true;
+      const row = document.createElement('div');
+      row.className = 'fp-brain-item';
+      const parts = [];
+      parts.push('« ' + ev.title + ' »');
+      if (ev.date) parts.push('le ' + ev.date); else parts.push('(date ? — creneaux proposes)');
+      if (ev.start) parts.push(ev.start + (ev.end ? '–' + ev.end : ''));
+      if (ev.allDay) parts.push('toute la journee');
+      const cat = Categories.categorize(ev.title);
+      if (cat.cat && cat.cat !== 'autre') parts.push('categorie ' + cat.cat);
+      const txt = document.createElement('span');
+      txt.textContent = parts.join(' · ');
+      row.appendChild(txt);
+      if (!ev.date && Brain) {
+        const slots = Brain.suggestSlots(planner.all(), currentWeekStart, ev.title, 60).slice(0, 3);
+        for (const sl of slots) {
+          const go = document.createElement('button');
+          go.className = 'go';
+          go.textContent = sl.date.slice(8,10) + '/' + sl.date.slice(5,7) + ' ' + sl.start;
+          go.title = 'Placer le ' + sl.date + ' a ' + sl.start;
+          go.addEventListener('click', function () {
+            const cat2 = Categories.categorize(ev.title);
+            planner.add({ title: ev.title, date: sl.date, start: sl.start, end: sl.end, allDay: false, cat: cat2.cat, color: cat2.color });
+            persist(); render();
+            go.style.background = '#34d399'; go.textContent = '✓ place';
+          });
+          row.appendChild(go);
+        }
+      }
+      els.brainItems.appendChild(row);
+    }
+    els.brain.hidden = !any;
+  }
+
+
