@@ -5,11 +5,11 @@
  *      le cache ne sert que si le serveur local est éteint (vrai hors-ligne).
  * Stratégie "cache-first" pour les images/icônes (statiques, immuables).
  */
-const CACHE = 'flowplan-v4';
+const CACHE = 'flowplan-v7';
 const CODE_ASSETS = [
   './', './index.html', './css/app.css',
   './js/parser.js', './js/planner.js', './js/store.js', './js/voice.js',
-  './js/categories.js', './js/ics.js', './js/app.js', './js/boot.js', './manifest.webmanifest',
+  './js/categories.js', './js/ics.js', './js/ics-import.js', './js/csv-import.js', './js/brain.js', './js/lock.js', './js/secure-store.js', './js/app.js', './js/boot.js', './manifest.webmanifest',
 ];
 const STATIC_ASSETS = [
   './assets/icon.svg', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png',

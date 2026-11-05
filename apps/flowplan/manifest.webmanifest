@@ -6,12 +6,48 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#101418",
-  "theme_color": "#101418",
+  "background_color": "#191a1a",
+  "theme_color": "#191a1a",
   "icons": [
-    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Générer depuis la voix",
+      "short_name": "Voix",
+      "url": "./index.html?voice=1",
+      "description": "Ouvre et lance le micro"
+    },
+    {
+      "name": "Voir la semaine",
+      "short_name": "Semaine",
+      "url": "./index.html?view=week"
+    },
+    {
+      "name": "Mode présentation",
+      "short_name": "Présenter",
+      "url": "./index.html?present=1"
+    }
   ]
 }
