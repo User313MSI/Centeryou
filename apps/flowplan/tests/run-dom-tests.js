@@ -467,6 +467,27 @@ test('A11Y : modales ont role=dialog + aria-modal, bouton Générer a aria-label
   assert(html.includes('name="color-scheme"'), 'color-scheme dark light');
 });
 
+// ---------- design v6.1 (Perplexity-like) ----------
+test('DESIGN : aucun emoji dans index.html et app.js (UI sobre)', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const js = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+  const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F1E6}-\u{1F1FF}]/u;
+  assert(!emoji.test(html), 'emoji dans index.html');
+  assert(!emoji.test(js), 'emoji dans app.js');
+});
+
+test('DESIGN : fond sombre = #191a1a (gris Perplexity), plus de #0b0e14 noir pur', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert(!html.includes('#0b0e14'), 'encore du noir pur #0b0e14');
+  assert(html.includes('#191a1a'), 'fond #191a1a présent');
+});
+
+test('DESIGN : titre hero blanc uni, sans dégradé', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const m = html.match(/\.fp-hero h1\{[^}]*\}/);
+  assert(m && m[0].includes('color:#f3f3f3') && !m[0].includes('gradient'), 'h1 doit être blanc uni sans dégradé');
+});
+
 // ---------- résumé (async) ----------
 setTimeout(() => {
   console.log('');

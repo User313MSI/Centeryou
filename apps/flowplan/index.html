@@ -25,7 +25,7 @@
 .fp-welcome {
   position: fixed; inset: 0; z-index: 200; display: none;
   align-items: center; justify-content: center;
-  background: radial-gradient(800px 500px at 50% 20%, rgba(91,140,255,.25), transparent 60%), #0b0e14;
+  background: radial-gradient(800px 500px at 50% 20%, rgba(91,140,255,.25), transparent 60%), #191a1a;
 }
 .fp-welcome.open { display: flex; }
 .fp-welcome-card { text-align: center; animation: welcomeIn .5s cubic-bezier(.2,.9,.3,1.1); }
@@ -192,7 +192,7 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 .fp-ask-mic{border:none;background:transparent;font-size:18px;cursor:pointer;padding:8px;border-radius:10px}
 .fp-ask-mic.listening{background:var(--danger);animation:pulseMic 1s infinite}
 @keyframes pulseMic{50%{box-shadow:0 0 0 8px rgba(248,113,113,.2)}}
-.fp-ask-go{border:none;background:#fff;color:#0b0e14;font-weight:700;border-radius:11px;padding:10px 20px;cursor:pointer;font-family:inherit;font-size:14px;transition:transform .15s}
+.fp-ask-go{border:none;background:#fff;color:#191a1a;font-weight:700;border-radius:11px;padding:10px 20px;cursor:pointer;font-family:inherit;font-size:14px;transition:transform .15s}
 .fp-ask-go:hover{transform:scale(1.04)}
 .fp-ask-go:disabled{opacity:.5;cursor:wait;transform:none}
 .fp-ask-hint{color:#5b6b82;font-size:12.5px;margin-top:10px}
@@ -204,13 +204,13 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 .fp-examples-body button:hover{color:var(--text);border-color:var(--accent)}
 
 /* SÛR v4.2 : thème sombre en dur UNIQUEMENT en dark (sinon le thème clair est écrasé) */
-:root[data-theme="dark"] html { background: #0b0e14 !important; }
+:root[data-theme="dark"] html { background: #191a1a !important; }
 :root[data-theme="dark"] body::before {
   content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(600px 400px at 20% 20%, rgba(91,140,255,.20), transparent 60%),
-    radial-gradient(500px 380px at 80% 15%, rgba(139,92,246,.18), transparent 60%),
-    radial-gradient(700px 500px at 50% 90%, rgba(91,140,255,.10), transparent 60%);
+    radial-gradient(600px 400px at 20% 20%, rgba(91,140,255,.10), transparent 60%),
+    radial-gradient(500px 380px at 80% 15%, rgba(139,92,246,.09), transparent 60%),
+    radial-gradient(700px 500px at 50% 90%, rgba(91,140,255,.07), transparent 60%);
   animation: bgDrift 24s ease-in-out infinite alternate;
 }
 @keyframes bgDrift {
@@ -220,22 +220,13 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 }
 .fp-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: 14px; letter-spacing: 1px; }
 :root[data-theme="dark"] body {
-  background: #0b0e14 !important;
+  background: #191a1a !important;
   background-image: radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.45), transparent 65%), radial-gradient(800px 500px at 90% 0%, rgba(139,92,246,.40), transparent 60%) !important;
   color: #eef2f8 !important;
 }
 :root[data-theme="dark"] .fp-top { background: rgba(20,26,36,.85) !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
-:root[data-theme="dark"] .fp-brand {
-  background: linear-gradient(135deg, #5b8cff, #8b5cf6) !important;
-  -webkit-background-clip: text !important; background-clip: text !important;
-  -webkit-text-fill-color: transparent !important; color: transparent !important;
-}
-:root[data-theme="dark"] .fp-hero h1 {
-  color: #eef2f8 !important;
-  background: linear-gradient(120deg, #ffffff 20%, #5b8cff 60%, #8b5cf6 100%) !important;
-  -webkit-background-clip: text !important; background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-}
+:root[data-theme="dark"] .fp-brand{color:#e8e8e8 !important;background:none !important;-webkit-text-fill-color:#e8e8e8 !important;font-weight:700}
+:root[data-theme="dark"] .fp-hero h1{font-size:44px;font-weight:300;letter-spacing:-1px;color:#f3f3f3;margin:0 0 8px}
 :root[data-theme="dark"] .fp-day { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1) !important; }
 :root[data-theme="dark"] .fp-day-head { color: #97a3b6 !important; border-bottom: 1px solid rgba(255,255,255,.1) !important; }
 :root[data-theme="dark"] .fp-empty { color: #97a3b6 !important; }
@@ -247,13 +238,13 @@ html[data-text="l"], html[data-text="xl"] .fp-week { grid-template-columns:repea
 :root[data-theme="dark"] .fp-search { background: rgba(255,255,255,.07) !important; color: #eef2f8 !important; border: 1px solid rgba(255,255,255,.14) !important; }
 :root[data-theme="dark"] .fp-footer { color: #97a3b6 !important; border-top: 1px solid rgba(255,255,255,.1) !important; }
 /* ============================================================
-   FlowPlan v6.0 — design system premium (dark + light)
+   FlowPlan v6.1 — design system premium (dark + light)
    ============================================================ */
 :root, :root[data-theme="dark"] {
   --accent: #5b8cff;
   --accent-2: #8b5cf6;
   --accent-grad: linear-gradient(135deg, #5b8cff 0%, #8b5cf6 100%);
-  --bg: #0b0e14;
+  --bg: #191a1a;
   --bg-glow-1: rgba(91, 140, 255, 0.14);
   --bg-glow-2: rgba(139, 92, 246, 0.10);
   --panel: rgba(255, 255, 255, 0.045);
@@ -321,11 +312,7 @@ body {
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 40;
 }
-:root[data-theme="dark"] .fp-brand {
-  font-size: 21px; font-weight: 800; letter-spacing: -0.4px;
-  background: var(--accent-grad);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+:root[data-theme="dark"] .fp-brand{color:#e8e8e8;font-weight:700;font-size:19px}
 .fp-top-actions { display: flex; gap: 8px; align-items: center; }
 :root[data-theme="dark"] .fp-search {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
@@ -382,11 +369,7 @@ body {
 
 /* ---------- hero ---------- */
 .fp-hero { max-width: 780px; margin: 0 auto; padding: 44px 20px 10px; text-align: center; }
-:root[data-theme="dark"] .fp-hero h1 {
-  font-size: 40px; margin: 0 0 16px; letter-spacing: -1.2px; line-height: 1.12; font-weight: 800;
-  background: linear-gradient(120deg, var(--text) 30%, var(--accent) 70%, var(--accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+:root[data-theme="dark"] .fp-hero h1{color:#f3f3f3 !important;background:none !important;-webkit-text-fill-color:#f3f3f3 !important}
 .fp-input-row { display: flex; gap: 10px; align-items: stretch; }
 :root[data-theme="dark"] .fp-input-row textarea {
   flex: 1; background: var(--panel-solid); color: var(--text);
@@ -627,172 +610,169 @@ body {
 }
 
 </style>
-</head>
-<body>
-  <header class="fp-top">
-    <div class="fp-brand">🌊 FlowPlan</div>
-    <div id="fp-clock" class="fp-clock">--:--:--</div>
-    <div class="fp-top-actions">
-      <input id="fp-search" class="fp-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un événement">
-      <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
-      <div class="fp-menu">
-        <button id="fp-menu-btn" class="fp-btn" aria-label="Menu" aria-haspopup="true">⋯</button>
-        <div id="fp-menu-panel" class="fp-menu-panel" hidden>
-          <button id="fp-undo" class="fp-menu-item">↩️ Annuler (Ctrl+Z)</button>
-          <button id="fp-theme" class="fp-menu-item">☀️ Thème clair</button>
-          <button id="fp-export" class="fp-menu-item">📅 Exporter (.ics)</button>
-          <button id="fp-import" class="fp-menu-item">📥 Importer (.ics)</button>
-          <button id="fp-import-csv" class="fp-menu-item">📊 Importer (CSV/Excel)</button>
-          <button id="fp-reminders" class="fp-menu-item">🔕 Rappels : désactivés</button>
-          <button id="fp-vault" class="fp-menu-item">🔐 Verrouiller (code PIN)</button>
-          <button id="fp-demo" class="fp-menu-item">🎲 Remplir avec un exemple</button>
-          <button id="fp-voice-welcome" class="fp-menu-item">🔊 Voix d'accueil</button>
-          <button id="fp-voice-toggle" class="fp-menu-item">🔊 Voix : activée</button>
-          <button id="fp-read-day" class="fp-menu-item">📖 Lis-moi ma journée</button>
-          <button id="fp-export-json" class="fp-menu-item">🧾 Exporter (JSON)</button>
-          <button id="fp-textsize" class="fp-menu-item">🔤 Taille du texte : M</button>
-          <span id="fp-lockstate" class="fp-lockstate" hidden>🔒 verrouillé</span>
-          <button id="fp-present" class="fp-menu-item">🎬 Mode présentation</button>
-          <button id="fp-print" class="fp-menu-item">🖨️ Imprimer</button>
-          <hr>
-          <button id="fp-reset" class="fp-menu-item danger">🗑️ Réinitialiser mes données</button>
-        </div>
-      </div>
-    </div>
-  </header>
+</head><body>
+ <header class="fp-top">
+ <div class="fp-brand"> FlowPlan</div>
+ <div id="fp-clock" class="fp-clock">--:--:--</div>
+ <div class="fp-top-actions">
+ <input id="fp-search" class="fp-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un événement">
+ <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
+ <div class="fp-menu">
+ <button id="fp-menu-btn" class="fp-btn" aria-label="Menu" aria-haspopup="true">⋯</button>
+ <div id="fp-menu-panel" class="fp-menu-panel" hidden>
+ <button id="fp-undo" class="fp-menu-item"> Annuler (Ctrl+Z)</button>
+ <button id="fp-theme" class="fp-menu-item"> Thème clair</button>
+ <button id="fp-export" class="fp-menu-item"> Exporter (.ics)</button>
+ <button id="fp-import" class="fp-menu-item"> Importer (.ics)</button>
+ <button id="fp-import-csv" class="fp-menu-item"> Importer (CSV/Excel)</button>
+ <button id="fp-reminders" class="fp-menu-item"> Rappels: désactivés</button>
+ <button id="fp-vault" class="fp-menu-item"> Verrouiller (code PIN)</button>
+ <button id="fp-demo" class="fp-menu-item"> Remplir avec un exemple</button>
+ <button id="fp-voice-welcome" class="fp-menu-item"> Voix d'accueil</button>
+ <button id="fp-voice-toggle" class="fp-menu-item"> Voix: activée</button>
+ <button id="fp-read-day" class="fp-menu-item"> Lis-moi ma journée</button>
+ <button id="fp-export-json" class="fp-menu-item"> Exporter (JSON)</button>
+ <button id="fp-textsize" class="fp-menu-item"> Taille du texte: M</button>
+ <span id="fp-lockstate" class="fp-lockstate" hidden> verrouillé</span>
+ <button id="fp-present" class="fp-menu-item"> Mode présentation</button>
+ <button id="fp-print" class="fp-menu-item"> Imprimer</button>
+ <hr>
+ <button id="fp-reset" class="fp-menu-item danger"> Réinitialiser mes données</button>
+ </div>
+ </div>
+ </div>
+ </header>
 
-  <section class="fp-hero">
-    <h1>Dis ta semaine.</h1>
-    <p class="fp-hero-sub">FlowPlan fait le planning — texte ou voix, 100 % local.</p>
-    <div class="fp-ask">
-      <div class="fp-ask-bar">
-        <span class="fp-ask-ico">🌊</span>
-        <textarea id="fp-input" rows="2" maxlength="2000" placeholder="Exemples : « lundi 9h réunion équipe ; mardi 14h30 dentiste chez Martin ; tous les jeudis 18h sport »…"></textarea>
-        <button id="fp-voice" class="fp-ask-mic" title="Dicter (micro)" aria-label="Dicter au micro">🎙️</button>
-        <button id="fp-generate" class="fp-ask-go" aria-label="Générer le planning">✨ Générer</button>
-      </div>
-      <div class="fp-ask-hint">Entrée = générer · clic sur un événement = éditer · glisser = déplacer</div>
-    </div>
-    <details class="fp-examples">
-      <summary>Voir des exemples</summary>
-      <div class="fp-examples-body">
-        <button data-ex="lundi 9h réunion équipe ; mardi 14h30 dentiste">📅 Semaine type</button>
-        <button data-ex="tous les jours 8h30 café avec l'équipe ; vendredi 18h apéro">🔁 Routines</button>
-        <button data-ex="du 12 au 14 novembre 2026 voyage à Lyon">✈️ Du 12 au 14 nov à Lyon</button>
-        <button data-ex="lundi de 9h à 11h atelier design ; jeudi 16h visio client Durand">🎨 Projets</button>
-      </div>
-    </details>
-  </section>
+ <section class="fp-hero">
+ <h1>Dis ta semaine.</h1>
+ <p class="fp-hero-sub">FlowPlan fait le planning — texte ou voix, 100 % local.</p>
+ <div class="fp-ask">
+ <div class="fp-ask-bar">
+ <span class="fp-ask-ico"></span>
+ <textarea id="fp-input" rows="2" maxlength="2000" placeholder="Exemples: « lundi 9h réunion équipe ; mardi 14h30 dentiste chez Martin ; tous les jeudis 18h sport »…"></textarea>
+ <button id="fp-voice" class="fp-ask-mic" title="Dicter (micro)" aria-label="Dicter au micro"></button>
+ <button id="fp-generate" class="fp-ask-go" aria-label="Générer le planning"> Générer</button>
+ </div>
+ <div class="fp-ask-hint">Entrée = générer · clic sur un événement = éditer · glisser = déplacer</div>
+ </div>
+ <details class="fp-examples">
+ <summary>Voir des exemples</summary>
+ <div class="fp-examples-body">
+ <button data-ex="lundi 9h réunion équipe ; mardi 14h30 dentiste"> Semaine type</button>
+ <button data-ex="tous les jours 8h30 café avec l'équipe ; vendredi 18h apéro"> Routines</button>
+ <button data-ex="du 12 au 14 novembre 2026 voyage à Lyon"> Du 12 au 14 nov à Lyon</button>
+ <button data-ex="lundi de 9h à 11h atelier design ; jeudi 16h visio client Durand"> Projets</button>
+ </div>
+ </details>
+ </section>
 
-  <section class="fp-weekbar">
-    <input id="fp-minical" type="date" class="fp-minical" title="Aller à une date" aria-label="Aller à une date">
-    <button id="fp-prev-week" class="fp-btn ghost" aria-label="Précédent">←</button>
-    <span id="fp-week-label" class="fp-week-label"></span>
-    <button id="fp-today-week" class="fp-btn ghost">Aujourd'hui</button>
-    <button id="fp-next-week" class="fp-btn ghost" aria-label="Suivant">→</button>
-    <span class="fp-view-switch">
-      <button id="fp-view-list" class="fp-btn ghost">Liste</button>
-      <button id="fp-view-day" class="fp-btn ghost">Jour</button>
-      <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
-      <button id="fp-view-month" class="fp-btn ghost">Mois</button>
-    </span>
-  </section>
+ <section class="fp-weekbar">
+ <input id="fp-minical" type="date" class="fp-minical" title="Aller à une date" aria-label="Aller à une date">
+ <button id="fp-prev-week" class="fp-btn ghost" aria-label="Précédent"></button>
+ <span id="fp-week-label" class="fp-week-label"></span>
+ <button id="fp-today-week" class="fp-btn ghost">Aujourd'hui</button>
+ <button id="fp-next-week" class="fp-btn ghost" aria-label="Suivant"></button>
+ <span class="fp-view-switch">
+ <button id="fp-view-list" class="fp-btn ghost">Liste</button>
+ <button id="fp-view-day" class="fp-btn ghost">Jour</button>
+ <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
+ <button id="fp-view-month" class="fp-btn ghost">Mois</button>
+ </span>
+ </section>
 
-  <div id="fp-stats" class="fp-stats"></div>
-  <div id="fp-conflicts" class="fp-conflicts" hidden></div>
-  <div id="fp-filters" class="fp-filters"></div>
+ <div id="fp-stats" class="fp-stats"></div>
+ <div id="fp-conflicts" class="fp-conflicts" hidden></div>
+ <div id="fp-filters" class="fp-filters"></div>
 
-  <main id="fp-week" class="fp-week" aria-label="Planning de la semaine"></main>
-  <main id="fp-month" class="fp-month" style="display:none"></main>
-  <main id="fp-day" class="fp-day-view" style="display:none"></main>
-  <main id="fp-list" class="fp-list" style="display:none"></main>
+ <main id="fp-week" class="fp-week" aria-label="Planning de la semaine"></main>
+ <main id="fp-month" class="fp-month" style="display:none"></main>
+ <main id="fp-day" class="fp-day-view" style="display:none"></main>
+ <main id="fp-list" class="fp-list" style="display:none"></main>
 
-  <div id="fp-modal" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="fp-modal-h">
-    <div class="fp-modal">
-      <div class="fp-modal-head">
-        <h2 id="fp-modal-h">Événement</h2>
-        <button id="fp-modal-close" class="fp-modal-x" title="Fermer (Échap)" aria-label="Fermer">✕</button>
-      </div>
-      <label>Titre <input id="fp-modal-title" type="text" maxlength="120"></label>
-      <label>Date <input id="fp-modal-date" type="date"></label>
-      <div class="fp-modal-times">
-        <label>Début <input id="fp-modal-start" type="time"></label>
-        <label>Fin <input id="fp-modal-end" type="time"></label>
-        <label class="fp-allday"><input id="fp-modal-allday" type="checkbox"> Journée entière</label>
-      </div>
-      <label>Catégorie
-        <select id="fp-modal-cat">
-          <option value="autre">autre</option>
-          <option value="travail">travail</option>
-          <option value="sport">sport</option>
-          <option value="sante">santé</option>
-          <option value="perso">perso</option>
-          <option value="courses">courses</option>
-          <option value="etudes">études</option>
-        </select>
-      </label>
-      <label>Rappel
-        <select id="fp-modal-reminder">
-          <option value="0">Aucun</option>
-          <option value="5">5 min avant</option>
-          <option value="15" selected>15 min avant</option>
-          <option value="60">1 h avant</option>
-          <option value="1440">La veille</option>
-        </select>
-      </label>
-      <label>Notes <textarea id="fp-modal-notes" rows="2" maxlength="2000" placeholder="Détails éventuels…"></textarea></label>
-      <div class="fp-modal-actions">
-        <button id="fp-free-slots" class="fp-btn" title="Voir les créneaux libres de ce jour">🕳️ Créneaux libres</button>
-        <button id="fp-repeat-tomorrow" class="fp-btn" title="Dupliquer le lendemain">📅 Demain aussi</button>
-        <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
-        <span class="fp-spacer"></span>
-        <button id="fp-modal-cancel" class="fp-btn">Annuler</button>
-        <button id="fp-modal-save" class="fp-btn primary">Enregistrer</button>
-      </div>
-    </div>
-  </div>
+ <div id="fp-modal" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="fp-modal-h">
+ <div class="fp-modal">
+ <div class="fp-modal-head">
+ <h2 id="fp-modal-h">Événement</h2>
+ <button id="fp-modal-close" class="fp-modal-x" title="Fermer (Échap)" aria-label="Fermer"></button>
+ </div>
+ <label>Titre <input id="fp-modal-title" type="text" maxlength="120"></label>
+ <label>Date <input id="fp-modal-date" type="date"></label>
+ <div class="fp-modal-times">
+ <label>Début <input id="fp-modal-start" type="time"></label>
+ <label>Fin <input id="fp-modal-end" type="time"></label>
+ <label class="fp-allday"><input id="fp-modal-allday" type="checkbox"> Journée entière</label>
+ </div>
+ <label>Catégorie
+ <select id="fp-modal-cat">
+ <option value="autre">autre</option>
+ <option value="travail">travail</option>
+ <option value="sport">sport</option>
+ <option value="sante">santé</option>
+ <option value="perso">perso</option>
+ <option value="courses">courses</option>
+ <option value="etudes">études</option>
+ </select>
+ </label>
+ <label>Rappel
+ <select id="fp-modal-reminder">
+ <option value="0">Aucun</option>
+ <option value="5">5 min avant</option>
+ <option value="15" selected>15 min avant</option>
+ <option value="60">1 h avant</option>
+ <option value="1440">La veille</option>
+ </select>
+ </label>
+ <label>Notes <textarea id="fp-modal-notes" rows="2" maxlength="2000" placeholder="Détails éventuels…"></textarea></label>
+ <div class="fp-modal-actions">
+ <button id="fp-free-slots" class="fp-btn" title="Voir les créneaux libres de ce jour"> Créneaux libres</button>
+ <button id="fp-repeat-tomorrow" class="fp-btn" title="Dupliquer le lendemain"> Demain aussi</button>
+ <button id="fp-modal-delete" class="fp-btn danger">Supprimer</button>
+ <span class="fp-spacer"></span>
+ <button id="fp-modal-cancel" class="fp-btn">Annuler</button>
+ <button id="fp-modal-save" class="fp-btn primary">Enregistrer</button>
+ </div>
+ </div>
+ </div>
 
-  <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
+ <div id="fp-toasts" class="fp-toasts" aria-live="polite"></div>
 
-  <!-- Écran d'accueil animé (vu une seule fois) -->
-  <div id="fp-welcome" class="fp-welcome" hidden>
-    <div class="fp-welcome-card">
-      <div class="fp-welcome-logo">🌊</div>
-      <h1 class="fp-welcome-title">FlowPlan</h1>
-      <p class="fp-welcome-sub">Dis ta semaine. On fait le planning.</p>
-      <div class="fp-welcome-hint">✨ Texte &nbsp;·&nbsp; 🎙️ Voix &nbsp;·&nbsp; 📅 Export .ics</div>
-      <button id="fp-welcome-go" class="fp-btn primary">C'est parti →</button>
-    </div>
-  </div>
+ <!-- Écran d'accueil animé (vu une seule fois) -->
+ <div id="fp-welcome" class="fp-welcome" hidden>
+ <div class="fp-welcome-card">
+ <div class="fp-welcome-logo"></div>
+ <h1 class="fp-welcome-title">FlowPlan</h1>
+ <p class="fp-welcome-sub">Dis ta semaine. On fait le planning.</p>
+ <div class="fp-welcome-hint"> Texte &nbsp;·&nbsp; Voix &nbsp;·&nbsp; Export .ics</div>
+ <button id="fp-welcome-go" class="fp-btn primary">C'est parti </button>
+ </div>
+ </div>
 
-  <!-- Écran de verrouillage (vault) -->
-  <div id="fp-lock" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Verrouillage">
-    <div class="fp-modal fp-lock-modal">
-      <h2>🔒 FlowPlan est verrouillé</h2>
-      <p class="fp-muted">Entre ton code pour déchiffrer tes données (elles restent chiffrées sur cet appareil).</p>
-      <input id="fp-lock-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Code à 4+ chiffres" maxlength="64">
-      <div id="fp-lock-error" class="fp-status error"></div>
-      <div class="fp-modal-actions">
-        <button id="fp-lock-submit" class="fp-btn primary">Déverrouiller</button>
-      </div>
-    </div>
-  </div>
+ <!-- Écran de verrouillage (vault) -->
+ <div id="fp-lock" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-label="Verrouillage">
+ <div class="fp-modal fp-lock-modal">
+ <h2> FlowPlan est verrouillé</h2>
+ <p class="fp-muted">Entre ton code pour déchiffrer tes données (elles restent chiffrées sur cet appareil).</p>
+ <input id="fp-lock-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Code à 4+ chiffres" maxlength="64">
+ <div id="fp-lock-error" class="fp-status error"></div>
+ <div class="fp-modal-actions">
+ <button id="fp-lock-submit" class="fp-btn primary">Déverrouiller</button>
+ </div>
+ </div>
+ </div>
 
-  <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
+ <button id="fp-fab" class="fp-fab" title="Ajouter un événement">+</button>
 
-  <footer class="fp-footer">FlowPlan v6.0 — 100 % local, tes données restent sur cet appareil.</footer>
+ <footer class="fp-footer">FlowPlan v6.1 — 100 % local, tes données restent sur cet appareil.</footer>
 
-  <script src="js/parser.js"></script>
-  <script src="js/planner.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/voice.js"></script>
-  <script src="js/categories.js"></script>
-  <script src="js/ics.js"></script>
-  <script src="js/ics-import.js"></script>
-  <script src="js/lock.js"></script>
-  <script src="js/secure-store.js"></script>
-  <script src="js/csv-import.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/boot.js"></script>
-</body>
-</html>
+ <script src="js/parser.js"></script>
+ <script src="js/planner.js"></script>
+ <script src="js/store.js"></script>
+ <script src="js/voice.js"></script>
+ <script src="js/categories.js"></script>
+ <script src="js/ics.js"></script>
+ <script src="js/ics-import.js"></script>
+ <script src="js/lock.js"></script>
+ <script src="js/secure-store.js"></script>
+ <script src="js/csv-import.js"></script>
+ <script src="js/app.js"></script>
+ <script src="js/boot.js"></script></body></html>
