@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowPlan Parfait — Maquette ouvrable</title>
+<style>
+:root{
+  --bg:#07090f; --panel:rgba(255,255,255,.05); --panel-solid:#10141d; --text:#eef2f8; --muted:#97a3b6;
+  --border:rgba(255,255,255,.1); --accent:#5b8cff; --accent2:#8b5cf6; --ok:#34d399; --warn:#fbbf24; --danger:#f87171;
+  --grad:linear-gradient(135deg,#5b8cff,#8b5cf6);
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--text);font-family:Inter,'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(700px 450px at 15% -5%,rgba(91,140,255,.16),transparent 60%),
+             radial-gradient(650px 420px at 88% 0%,rgba(139,92,246,.14),transparent 55%);
+  animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{50%{transform:translate(2%,-2%) scale(1.05)}}
+
+/* barre du haut */
+.top{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border);background:rgba(16,20,29,.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+.brand{font-weight:800;font-size:19px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.clock{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);font-size:14px}
+.badge{font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px;background:rgba(52,211,153,.14);color:var(--ok);border:1px solid rgba(52,211,153,.4)}
+
+/* hero compact */
+.hero{padding:34px 22px 8px;max-width:1240px;margin:0 auto}
+.hero h1{font-size:34px;margin:0 0 4px;letter-spacing:-1px;background:linear-gradient(120deg,#fff 30%,#5b8cff 70%,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--muted);margin:0 0 18px;font-size:15px}
+
+/* barre de saisie vocale */
+.ask{max-width:1240px;margin:0 auto 18px;padding:0 22px}
+.ask-box{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px 14px}
+.ask-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15.5px;font-family:inherit}
+.ask-box input::placeholder{color:#5b6b82}
+.mic{width:40px;height:40px;border-radius:50%;border:none;background:var(--grad);color:#fff;font-size:17px;cursor:pointer;animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 9px rgba(91,140,255,.18)}}
+.gen{border:none;background:var(--grad);color:#fff;font-weight:700;border-radius:11px;padding:10px 18px;cursor:pointer;font-family:inherit;font-size:14px}
+
+/* semaine */
+.week{max-width:1240px;margin:0 auto;padding:0 22px 40px;display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.day{background:var(--panel);border:1px solid var(--border);border-radius:16px;min-height:300px;padding:10px;position:relative;animation:dayIn .5s cubic-bezier(.22,1.2,.36,1) backwards}
+.day:nth-child(1){animation-delay:0ms}.day:nth-child(2){animation-delay:50ms}.day:nth-child(3){animation-delay:100ms}.day:nth-child(4){animation-delay:150ms}.day:nth-child(5){animation-delay:200ms}.day:nth-child(6){animation-delay:250ms}.day:nth-child(7){animation-delay:300ms}
+@keyframes dayIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
+.day h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between}
+.day.today{border-color:rgba(91,140,255,.6)}
+.day.today h4 span{color:var(--accent);font-weight:800}
+.ev{border-radius:10px;padding:7px 10px;font-size:12.5px;margin-bottom:7px;border:1px solid;cursor:default;animation:evIn .4s cubic-bezier(.34,1.56,.64,1) backwards;transition:transform .15s}
+.ev:hover{transform:scale(1.03)}
+@keyframes evIn{from{opacity:0;transform:scale(.7)}}
+.ev .t{font-weight:700;font-variant-numeric:tabular-nums;margin-right:6px;opacity:.85}
+.ev.travail{background:rgba(91,140,255,.16);border-color:rgba(91,140,255,.5)}
+.ev.perso{background:rgba(139,92,246,.16);border-color:rgba(139,92,246,.5)}
+.ev.sante{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.45)}
+.ev.sport{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.45)}
+.ev .loc{opacity:.7;font-size:11px}
+.empty{color:#5b6b82;font-size:12px;font-style:italic}
+
+/* ligne maintenant */
+.nowline{position:absolute;left:8px;right:8px;height:2px;background:var(--danger);border-radius:2px;z-index:5}
+.nowline::before{content:'●';position:absolute;left:-2px;top:-8px;color:var(--danger);font-size:9px}
+
+/* panneau "l'app a compris" */
+.ai{max-width:1240px;margin:0 auto 30px;padding:0 22px}
+.ai-card{background:linear-gradient(135deg,rgba(91,140,255,.1),rgba(139,92,246,.1));border:1px solid rgba(91,140,255,.35);border-radius:16px;padding:16px 20px;font-size:14px}
+.ai-card b{color:var(--accent)}
+.ai-card .prop{display:inline-block;margin:6px 8px 0 0;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:99px;padding:5px 13px;font-size:12.5px;cursor:pointer;transition:.15s}
+.ai-card .prop:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* toast démo replanification */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--panel-solid);border:1px solid var(--border);border-radius:14px;padding:13px 18px;font-size:13.5px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:99;animation:toastIn .4s cubic-bezier(.22,1.2,.36,1);max-width:340px}
+@keyframes toastIn{from{opacity:0;transform:translateX(60px)}}
+.toast.warn{border-color:rgba(251,191,36,.5)}
+.toast b{color:var(--warn)}
+
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:26px;border-top:1px solid var(--border)}
+@media(max-width:900px){.week{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <span class="brand">🌊 FlowPlan</span>
+  <span class="badge">● 100 % local · chiffré</span>
+  <span id="clock" class="clock">--:--:--</span>
+</div>
+
+<div class="hero">
+  <h1>Ta semaine, déjà prête.</h1>
+  <p>Dis une phrase — l'app comprend, propose, planifie. (Maquette de la vision « FlowPlan Parfait ».)</p>
+</div>
+
+<div class="ask">
+  <div class="ask-box">
+    <button class="mic" id="mic" title="Parler">🎙️</button>
+    <input id="q" placeholder='Essaie : « dentiste jeudi 14h30 chez Dr Martin à Lyon » ou « sport tous les 2 lundis 18h »…'>
+    <button class="gen" id="gen">✨ Comprendre</button>
+  </div>
+</div>
+
+<div class="ai" id="ai" hidden>
+  <div class="ai-card">
+    <b>🧠 FlowPlan a compris :</b> <span id="ai-text"></span><br>
+    <span id="ai-props"></span>
+  </div>
+</div>
+
+<div class="week" id="week"></div>
+
+<div class="toast warn" id="toast" hidden></div>
+
+<footer>Maquette « FlowPlan Parfait » · 100 % local · aucune donnée envoyée — la vraie app est dans apps/flowplan</footer>
+
+<script>
+// horloge
+setInterval(() => {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+}, 1000);
+
+// semaine courante
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const now = new Date();
+const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay()+6)%7));
+const todayISO = now.toISOString().slice(0,10);
+
+// données de démo (la "vie" déjà comprise par l'app)
+const EVENTS = {
+  0: [{t:'09:00',n:'Stand-up équipe',c:'travail'},{t:'12:30',n:'Déj avec Sam',c:'perso'},{t:'18:30',n:'Sport — salle',c:'sport',loc:'à 20 min'}],
+  1: [{t:'10:00',n:'Visio client Durand',c:'travail'},{t:'19:00',n:'Cinéma',c:'perso'}],
+  2: [{t:'14:30',n:'Dentiste',c:'sante',loc:'chez Dr Martin, Lyon'}],
+  3: [{t:'09:00',n:'Envoi devis',c:'travail'}],
+  4: [{t:'18:00',n:'Apéro équipe',c:'travail'}],
+  5: [{t:'10:00',n:'Brunch',c:'perso'},{allDay:true,n:'Mariage de Julie',c:'perso'}],
+  6: [{t:'11:00',n:'Courses',c:'perso'}],
+};
+
+function render() {
+  const w = document.getElementById('week');
+  w.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const iso = d.toISOString().slice(0,10);
+    const day = document.createElement('div');
+    day.className = 'day' + (iso === todayISO ? ' today' : '');
+    day.innerHTML = `<h4>${DAYS[i]} <span>${d.getDate()}</span></h4>`;
+    if (iso === todayISO) {
+      const nl = document.createElement('div');
+      nl.className = 'nowline';
+      const mins = now.getHours()*60+now.getMinutes();
+      nl.style.top = (8 + mins/1440*(300-30)) + 'px';
+      nl.title = 'Maintenant';
+      day.appendChild(nl);
+    }
+    const evs = EVENTS[i] || [];
+    if (!evs.length) day.innerHTML += '<div class="empty">Rien — la journée respire</div>';
+    for (const ev of evs) {
+      const el = document.createElement('div');
+      el.className = 'ev ' + ev.c;
+      el.innerHTML = (ev.allDay ? 'Toute la journée' : `<span class="t">${ev.t}</span>`) + ev.n + (ev.loc ? ` <span class="loc">📍${ev.loc}</span>` : '');
+      el.style.animationDelay = (i*60 + evs.indexOf(ev)*90) + 'ms';
+      day.appendChild(el);
+    }
+    w.appendChild(day);
+  }
+}
+render();
+
+// démo "comprendre" : la barre de saisie fait semblant de comprendre
+function understand() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const ai = document.getElementById('ai');
+  if (!q) return;
+  let msg = 'J\'ai compris : ', props = [];
+  if (/dentiste|médecin|docteur/.test(q)) { msg += 'un <b>rendez-vous santé</b>'; props = ['Je préviens Dr Martin ?','Bloquer le trajet (20 min)','Rappel 1 h avant']; }
+  else if (/sport|gym/.test(q)) { msg += 'une <b>séance de sport récurrente</b>'; props = ['Tous les lundis 18h','Ajouter 30 min de trajet','Rappel « pars maintenant »']; }
+  else if (/réunion|call|visio/.test(q)) { msg += 'une <b>réunion</b>'; props = ['Proposer 3 créneaux libres','Inviter les participants','Prévoir 15 min de préparation']; }
+  else if (/déj|déjeuner|restaurant/.test(q)) { msg += 'un <b>repas</b>'; props = ['Vérifier les dispos de Sam','Réserver une table','Bloquer 1h30']; }
+  else { msg += 'un <b>nouvel événement</b>'; props = ['Proposer un créneau libre','Catégoriser automatiquement','Ajouter un rappel']; }
+  document.getElementById('ai-text').innerHTML = msg;
+  const box = document.getElementById('ai-props');
+  box.innerHTML = '';
+  props.forEach(p => {
+    const b = document.createElement('span');
+    b.className = 'prop'; b.textContent = p;
+    b.onclick = () => { b.style.background = 'var(--ok)'; b.style.borderColor = 'var(--ok)'; b.style.color = '#04140c'; b.textContent = '✓ ' + p; };
+    box.appendChild(b);
+  });
+  ai.hidden = false;
+  ai.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+document.getElementById('gen').onclick = understand;
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') understand(); });
+document.getElementById('mic').onclick = () => {
+  const t = document.getElementById('toast');
+  t.hidden = false;
+  t.innerHTML = '🎙️ <b>Je t\'écoute…</b> dis ta semaine, je fais le reste.';
+  setTimeout(() => { t.hidden = true; }, 3500);
+};
+
+// démo replanification auto (toutes les 14s)
+setInterval(() => {
+  const t = document.getElementById('toast');
+  t.hidden = false;
+  t.className = 'toast warn';
+  t.innerHTML = '⚠️ <b>Imprévu détecté :</b> ton train de 18h12 est supprimé. → Je décale « Apéro équipe » à 18h45 et je préviens les 6 participants. <b>OK ?</b>';
+  setTimeout(() => { t.hidden = true; }, 6000);
+}, 14000);
+</script>
+</body>
+</html>
