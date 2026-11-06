@@ -36,7 +36,8 @@
     p.then(done, done);
     return;
   }
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  // v8: plus de cache SW par défaut. On enregistre UNIQUEMENT si ?sw=1 (déploiement web seulement).
+  if (params.get('sw') === '1' && 'serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js');
   }
 })();

@@ -5,7 +5,7 @@
  *      le cache ne sert que si le serveur local est éteint (vrai hors-ligne).
  * Stratégie "cache-first" pour les images/icônes (statiques, immuables).
  */
-const CACHE = 'flowplan-v7';
+const CACHE = 'flowplan-v8-nocache';
 const CODE_ASSETS = [
   './', './index.html', './css/app.css',
   './js/parser.js', './js/planner.js', './js/store.js', './js/voice.js',
@@ -18,9 +18,9 @@ const ALL_ASSETS = CODE_ASSETS.concat(STATIC_ASSETS);
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE)
-      .then(function (cache) { return cache.addAll(ALL_ASSETS); })
-      .then(function () { return self.skipWaiting(); }) // prend le contrôle tout de suite
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    }).then(function () { return self.skipWaiting(); })
   );
 });
 
@@ -41,40 +41,14 @@ function isCode(url) {
 }
 
 self.addEventListener('fetch', function (event) {
-  if (event.request.method !== 'GET') return;
-  const url = event.request.url;
-  // aucune requête externe, jamais — le SW ne relaie que l'origine locale
-  if (!url.startsWith(self.location.origin)) { event.respondWith(Response.error()); return; }
-
-  if (isCode(url)) {
-    // network-first : le code frais prime toujours
+  // v8: AUCUN cache — toujours le réseau. Hors-ligne: page hors-ligne minimaliste.
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then(function (resp) {
-          if (resp && resp.ok) {
-            const copy = resp.clone();
-            caches.open(CACHE).then(function (cache) { cache.put(event.request, copy); });
-          }
-          return resp;
-        })
-        .catch(function () {
-          return caches.match(event.request).then(function (hit) {
-            return hit || caches.match('./index.html');
-          });
-        })
-    );
-  } else {
-    // cache-first pour les assets statiques
-    event.respondWith(
-      caches.match(event.request).then(function (hit) {
-        return hit || fetch(event.request).then(function (resp) {
-          if (resp && resp.ok) {
-            const copy = resp.clone();
-            caches.open(CACHE).then(function (cache) { cache.put(event.request, copy); });
-          }
-          return resp;
-        });
+      fetch(event.request).catch(function () {
+        return new Response('<!DOCTYPE html><meta charset="utf-8"><body style="font-family:sans-serif;background:#191a1a;color:#eee;display:grid;place-items:center;height:100vh"><div><h1>FlowPlan hors-ligne</h1><p>Reconnecte-toi ou relance en local (fichier index.html).</p></div></body>', { headers: { 'Content-Type': 'text/html' } });
       })
     );
+    return;
   }
+  event.respondWith(fetch(event.request));
 });
