@@ -13,9 +13,14 @@ const SecureStore = require(path.join(__dirname, '..', 'js', 'secure-store.js'))
 
 const passes = [];
 const failures = [];
+const pending = [];
 function test(name, fn) {
-  try { fn(); passes.push(name); }
-  catch (e) { failures.push({ name, error: e.message }); }
+  try {
+    const r = fn();
+    if (r && typeof r.then === 'function') {
+      pending.push(r.then(() => passes.push(name)).catch(e => failures.push({ name, error: e.message })));
+    } else passes.push(name);
+  } catch (e) { failures.push({ name, error: e.message }); }
 }
 function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
 function eq(a, b, msg) {
@@ -862,13 +867,13 @@ test('v8 weekCompare : deltas événements/heures', () => {
   assert(c.hoursDelta < 0);
 });
 test('v8 Store: audit loggé + schéma v2', () => {
-  Store.clear();
-  Store.audit('test', { x: 1 });
+  Store.audit('test-v8', { x: 1 });
   assert(Store.getAudit().length >= 1, 'audit ok');
   eq(Store.SCHEMA_VERSION, 2);
 });
 
 // ---------- Résumé ----------
+Promise.all(pending).then(() => {
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);
 if (failures.length) {
@@ -878,3 +883,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('\n' + passes.length + ' tests OK, 0 échec 🎉');
+});
