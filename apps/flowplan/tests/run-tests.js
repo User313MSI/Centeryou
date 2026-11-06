@@ -843,6 +843,30 @@ test('Brain.suggestReschedule : pas de conflit -> null', () => {
   eq(Brain.suggestReschedule(a, b), null);
 });
 
+// ---------- v8 : année / comparaison / audit ----------
+test('v8 yearGrid : 12 mois avec compteurs', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-03-10' });
+  p.add({ title: 'B', date: '2026-03-12' });
+  const y = p.yearGrid(2026);
+  eq(y.months.length, 12);
+  eq(y.months[2].count, 2);
+});
+test('v8 weekCompare : deltas événements/heures', () => {
+  const p = Planner.createPlanner();
+  p.add({ title: 'A', date: '2026-11-02', start: '09:00', end: '10:00' });
+  p.add({ title: 'B', date: '2026-10-26', start: '09:00', end: '11:00' });
+  const c = p.weekCompare('2026-11-02');
+  eq(c.eventsDelta, -1);
+  assert(c.hoursDelta < 0);
+});
+test('v8 Store: audit loggé + schéma v2', () => {
+  Store.clear();
+  Store.audit('test', { x: 1 });
+  assert(Store.getAudit().length >= 1, 'audit ok');
+  eq(Store.SCHEMA_VERSION, 2);
+});
+
 // ---------- Résumé ----------
 console.log('');
 for (const p of passes) console.log('  ✓ ' + p);

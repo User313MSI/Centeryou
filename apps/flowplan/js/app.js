@@ -719,7 +719,7 @@
  els.viewMonth.classList.toggle('active', isMonth);
  els.viewDay.classList.toggle('active', view === 'day');
  els.viewList.classList.toggle('active', isList);
- if (isWeek) renderWeek(); else if (isMonth) renderMonth(); else if (isList) renderList(); else renderDay();
+ if (isWeek) renderWeek(); else if (isMonth) renderMonth(); else if (isList) renderList(); else if (view === 'year') renderYear(); else renderDay();
  }
 
  function renderStats() {
@@ -1474,8 +1474,7 @@
  }
  }
 
- boot();
-})(); // Panneau "FlowPlan a compris" : resume de la comprehension + creneaux proposes
+// Panneau "FlowPlan a compris" : resume de la comprehension + creneaux proposes
  function showUnderstood(events) {
  if (!els.brain || !Brain) return;
  els.brainItems.innerHTML = '';
@@ -1516,3 +1515,157 @@
  }
 
 
+ function showUnderstood(events) {
+ if (!els.brain || !Brain) return;
+ els.brainItems.innerHTML = '';
+ let any = false;
+ for (const ev of events.slice(0, 4)) {
+ any = true;
+ const row = document.createElement('div');
+ row.className = 'fp-brain-item';
+ const parts = [];
+ parts.push('« ' + ev.title + ' »');
+ if (ev.date) parts.push('le ' + ev.date); else parts.push('(date ? — creneaux proposes)');
+ if (ev.start) parts.push(ev.start + (ev.end ? '–' + ev.end : ''));
+ if (ev.allDay) parts.push('toute la journee');
+ const cat = Categories.categorize(ev.title);
+ if (cat.cat && cat.cat !== 'autre') parts.push('categorie ' + cat.cat);
+ const txt = document.createElement('span');
+ txt.textContent = parts.join(' · ');
+ row.appendChild(txt);
+ if (!ev.date && Brain) {
+ const slots = Brain.suggestSlots(planner.all(), currentWeekStart, ev.title, 60).slice(0, 3);
+ for (const sl of slots) {
+ const go = document.createElement('button');
+ go.className = 'go';
+ go.textContent = sl.date.slice(8,10) + '/' + sl.date.slice(5,7) + ' ' + sl.start;
+ go.title = 'Placer le ' + sl.date + ' a ' + sl.start;
+ go.addEventListener('click', function () {
+ const cat2 = Categories.categorize(ev.title);
+ planner.add({ title: ev.title, date: sl.date, start: sl.start, end: sl.end, allDay: false, cat: cat2.cat, color: cat2.color });
+ persist(); render();
+ go.style.background = '#34d399'; go.textContent = ' place';
+ });
+ row.appendChild(go);
+ }
+ }
+ els.brainItems.appendChild(row);
+ }
+ els.brain.hidden = !any;
+ }
+
+
+  // ---- v8 : vue Année, comparaison, DND, focus2, saisons, papier, partage, backup, offline ----
+  function renderYear() {
+    const y = parseInt(currentWeekStart.slice(0, 4), 10);
+    const yg = planner.yearGrid(y);
+    const today = Parser.todayISO(new Date());
+    const MS = ['janv','fevr','mars','avr','mai','juin','juil','aout','sept','oct','nov','dec'];
+    if (els.weekLabel) els.weekLabel.textContent = 'Annee ' + y;
+    els.year.innerHTML = '';
+    for (const m of yg.months) {
+      const box = document.createElement('div');
+      box.className = 'fp-year-month';
+      const h = document.createElement('h4');
+      h.textContent = MS[parseInt(m.month.slice(5, 7), 10) - 1] + ' ';
+      const cnt = document.createElement('span');
+      cnt.className = 'ym-count'; cnt.textContent = m.count;
+      h.appendChild(cnt); box.appendChild(h);
+      const cells = document.createElement('div');
+      cells.className = 'fp-year-cells';
+      for (const wk of m.weeks) for (const d of wk) {
+        const c = document.createElement('div');
+        if (!d.inMonth) { c.className = 'fp-year-cell'; cells.appendChild(c); continue; }
+        c.className = 'fp-year-cell' + (d.events.length ? ' has' : '') + (d.date === today ? ' today' : '');
+        c.textContent = d.events.length ? String(d.events.length) : String(Number(d.date.slice(8, 10)));
+        if (d.events.length) c.addEventListener('click', function () { currentWeekStart = Planner.weekStartISO(d.date); currentDay = d.date; setView('month'); });
+        cells.appendChild(c);
+      }
+      box.appendChild(cells);
+      els.year.appendChild(box);
+    }
+  }
+  if (els.viewYear) els.viewYear.addEventListener('click', function () { setView('year'); });
+  if (els.compare) els.compare.addEventListener('click', function () {
+    const c = planner.weekCompare(currentWeekStart);
+    els.comparePanel.hidden = false;
+    let html = '<h4 style="margin:0 0 8px">Cette semaine vs semaine derniere</h4>';
+    html += '<div class="cmp-row"><span>Evenements</span><span class="delta ' + (c.eventsDelta >= 0 ? 'up' : 'down') + '">' + (c.eventsDelta >= 0 ? '+' : '') + c.eventsDelta + '</span></div>';
+    html += '<div class="cmp-row"><span>Heures planifiees</span><span class="delta ' + (c.hoursDelta >= 0 ? 'up' : 'down') + '">' + c.hoursDelta + ' h</span></div>';
+    for (const b of c.byCat) { if (!b.cur && !b.prev) continue; html += '<div class="cmp-row"><span>' + b.cat + '</span><span>' + b.prev + ' -> ' + b.cur + '</span></div>'; }
+    els.comparePanel.innerHTML = html;
+  });
+  function dndOn() { try { return localStorage.getItem('flowplan.dnd') === '1'; } catch (e) { return false; } }
+  function refreshDnd() { if (!els.dnd) return; els.dnd.classList.toggle('fp-dnd-active', dndOn()); els.dnd.textContent = dndOn() ? 'DND actif' : 'DND'; }
+  refreshDnd();
+  if (els.dnd) els.dnd.addEventListener('click', function () { try { localStorage.setItem('flowplan.dnd', dndOn() ? '0' : '1'); } catch (e) {} refreshDnd(); toast(dndOn() ? 'DND : rappels coupes' : 'Rappels actifs'); });
+  let focus2 = false;
+  if (els.focus2) els.focus2.addEventListener('click', function () {
+    focus2 = !focus2;
+    els.week.classList.toggle('focus2', focus2 && view === 'week');
+    els.week.querySelectorAll('.fp-day').forEach(function (d) {
+      if (!focus2 || view !== 'week') { d.style.display = ''; return; }
+      const today = Parser.todayISO(new Date());
+      const iso = d.getAttribute('data-date');
+      d.style.display = (iso === today || iso === Planner.addDaysISO(today, 1)) ? '' : 'none';
+    });
+  });
+  const SEASONS = ['winter','winter','spring','spring','spring','summer','summer','summer','autumn','autumn','autumn','winter'];
+  function applySeason() {
+    let sn = 'auto'; try { sn = localStorage.getItem('flowplan.season') || 'auto'; } catch (e) {}
+    document.documentElement.setAttribute('data-season', sn === 'auto' ? SEASONS[new Date().getMonth()] : sn);
+    if (els.season) els.season.textContent = 'Theme saison : ' + sn;
+  }
+  applySeason();
+  if (els.season) els.season.addEventListener('click', function () {
+    const order = ['auto','spring','summer','autumn','winter'];
+    let cur = 'auto'; try { cur = localStorage.getItem('flowplan.season') || 'auto'; } catch (e) {}
+    try { localStorage.setItem('flowplan.season', order[(order.indexOf(cur) + 1) % order.length]); } catch (e) {}
+    applySeason();
+  });
+  function applyPaper() {
+    let on = false; try { on = localStorage.getItem('flowplan.paper') === '1'; } catch (e) {}
+    document.documentElement.setAttribute('data-paper', on ? '1' : '0');
+    if (els.paper) els.paper.textContent = on ? 'Mode papier : actif' : 'Mode papier';
+  }
+  applyPaper();
+  if (els.paper) els.paper.addEventListener('click', function () { try { localStorage.setItem('flowplan.paper', (localStorage.getItem('flowplan.paper') === '1') ? '0' : '1'); } catch (e) {} applyPaper(); });
+  if (els.share) els.share.addEventListener('click', function () {
+    els.menuPanel.hidden = true;
+    const w = planner.week(currentWeekStart);
+    const evs = w.days.flatMap(function (d) { return d.events; });
+    const blob = new Blob([ICS.toICS(evs)], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'flowplan-semaine-' + currentWeekStart + '.ics';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+    toast('Semaine exportee en .ics (lecture seule)');
+  });
+  if (els.backup) els.backup.addEventListener('click', async function () {
+    els.menuPanel.hidden = true;
+    const data = JSON.stringify({ app: 'FlowPlan', version: 2, exportedAt: new Date().toISOString(), events: planner.all() });
+    let payload = data, encrypted = false;
+    if (typeof Vault !== 'undefined' && Vault.isEnabled(localStorage)) {
+      const pin = window.prompt('Code PIN pour chiffrer le backup :');
+      if (pin == null) return;
+      const r = await Vault.unlock(pin, localStorage);
+      if (!r.ok) { toast('Code incorrect', true); return; }
+      payload = await Vault.encrypt(data, r.key);
+      encrypted = true;
+    }
+    const blob = new Blob([payload], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'flowplan-backup-' + new Date().toISOString().slice(0, 10) + (encrypted ? '.flowpack' : '.json');
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+    toast(encrypted ? 'Backup CHIFFRE telecharge (.flowpack)' : 'Backup JSON telecharge');
+  });
+  function refreshOffline() { if (els.offlineBadge) els.offlineBadge.hidden = navigator.onLine; }
+  window.addEventListener('online', refreshOffline);
+  window.addEventListener('offline', refreshOffline);
+  refreshOffline();
+
+ boot();
+})();

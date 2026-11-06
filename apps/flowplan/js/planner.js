@@ -332,7 +332,33 @@
         s < minutesOf(o.end) && minutesOf(o.start) < e) || null;
     }
 
-    return { add, remove, update, duplicate, undo, canUndo, all, byDate, week, monthGrid, search, findDuplicate, freeSlots, wouldConflict, conflicts, conflictedIds, categories, stats, toJSON, load };
+    // vue Année: 12 mois avec compteurs
+    function yearGrid(year) {
+      const months = [];
+      for (let m = 0; m < 12; m++) {
+        const iso = year + '-' + String(m + 1).padStart(2, '0');
+        const g = monthGrid(iso);
+        const count = g.weeks.flat().filter(d => d.inMonth).reduce((a, d) => a + d.events.length, 0);
+        months.push({ month: iso, weeks: g.weeks, count: count });
+      }
+      return { year: year, months: months };
+    }
+    // comparaison semaine courante vs précédente
+    function weekCompare(weekStart) {
+      const cur = stats(weekStart);
+      const prevIso = addDaysISO(weekStart, -7);
+      const prev = stats(prevIso);
+      const byCatCur = {}, byCatPrev = {};
+      week(weekStart).days.forEach(d => d.events.forEach(e => { byCatCur[e.cat || 'autre'] = (byCatCur[e.cat || 'autre'] || 0) + 1; }));
+      week(prevIso).days.forEach(d => d.events.forEach(e => { byCatPrev[e.cat || 'autre'] = (byCatPrev[e.cat || 'autre'] || 0) + 1; }));
+      return {
+        eventsDelta: cur.totalEvents - prev.totalEvents,
+        hoursDelta: Math.round((cur.plannedMinutes - prev.plannedMinutes) / 60 * 10) / 10,
+        byCat: Object.keys(Object.assign({}, byCatCur, byCatPrev)).map(cat => ({ cat: cat, cur: byCatCur[cat] || 0, prev: byCatPrev[cat] || 0 })),
+      };
+    }
+
+    return { add, remove, update, duplicate, undo, canUndo, all, byDate, week, monthGrid, yearGrid, weekCompare, search, findDuplicate, freeSlots, wouldConflict, conflicts, conflictedIds, categories, stats, toJSON, load };
   }
 
   return { createPlanner, weekStartISO, addDaysISO, monthOfISO, overlaps, minutesOf };

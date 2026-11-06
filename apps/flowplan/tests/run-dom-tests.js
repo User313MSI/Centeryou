@@ -114,7 +114,7 @@ function loadApp() {
     __toastCount: 0,
     window: null,
   };
-  sandbox.window = sandbox;
+  sandbox.addEventListener = sandbox.addEventListener || (() => {}); sandbox.removeEventListener = () => {}; sandbox.window = sandbox;
   sandbox.self = sandbox;
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
@@ -234,7 +234,7 @@ test('boot : ?fresh=1 désinscrit les SW et purge les caches puis recharge', () 
     },
     window: {},
   };
-  sandbox.window = sandbox; sandbox.self = sandbox;
+  sandbox.addEventListener = sandbox.addEventListener || (() => {}); sandbox.removeEventListener = () => {}; sandbox.window = sandbox; sandbox.self = sandbox;
   vm.createContext(sandbox);
   const code = fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8');
   vm.runInContext(code, sandbox, { filename: 'boot.js' });
@@ -259,7 +259,7 @@ test('boot : sans paramètre, enregistre sw.js normalement', () => {
     navigator: { serviceWorker: { register: (f) => { registered.push(f); return Promise.resolve(); } } },
     window: {},
   };
-  sandbox.window = sandbox; sandbox.self = sandbox;
+  sandbox.addEventListener = sandbox.addEventListener || (() => {}); sandbox.removeEventListener = () => {}; sandbox.window = sandbox; sandbox.self = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8'), sandbox, { filename: 'boot.js' });
   eq(registered[0], 'sw.js');
@@ -281,7 +281,7 @@ test('boot : ?nosw=1 ne enregistre JAMAIS de SW (mode dev sans cache)', () => {
     caches: { keys: () => Promise.resolve([]), delete: () => Promise.resolve(true) },
     window: {},
   };
-  sandbox.window = sandbox; sandbox.self = sandbox;
+  sandbox.addEventListener = sandbox.addEventListener || (() => {}); sandbox.removeEventListener = () => {}; sandbox.window = sandbox; sandbox.self = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'boot.js'), 'utf8'), sandbox, { filename: 'boot.js' });
   return new Promise(resolve => setTimeout(() => {

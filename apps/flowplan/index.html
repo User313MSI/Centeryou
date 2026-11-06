@@ -591,6 +591,31 @@ body {
   .fp-stats b { color: #000; }
 }
 
+
+/* v8: année, comparaison, DND, focus2, saisons, papier, offline */
+.fp-year{max-width:1200px;margin:0 auto;padding:0 20px 30px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.fp-year-month{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px}
+.fp-year-month h4{margin:0 0 6px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+.fp-year-month .ym-count{font-weight:800;color:var(--accent)}
+.fp-year-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.fp-year-cell{min-height:14px;border-radius:3px;font-size:9px;line-height:14px;text-align:center;color:var(--muted)}
+.fp-year-cell.has{background:var(--accent);color:#fff;cursor:pointer}
+.fp-year-cell.today{outline:2px solid var(--danger)}
+.fp-compare{max-width:760px;margin:0 auto 14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 18px}
+.fp-compare[hidden]{display:none}
+.fp-compare .cmp-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;border-top:1px solid var(--border)}
+.fp-compare .delta.up{color:var(--ok)} .fp-compare .delta.down{color:var(--danger)}
+.fp-offline{position:fixed;left:18px;bottom:18px;z-index:90;background:var(--panel-solid);border:1px solid var(--warn);color:var(--warn);border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:700}
+.fp-offline[hidden]{display:none}
+.fp-week.focus2{grid-template-columns:repeat(2,1fr);max-width:1000px}
+.fp-dnd-active{background:var(--warn);color:#000}
+html[data-season="spring"]{--accent:#16a34a}
+html[data-season="summer"]{--accent:#f59e0b}
+html[data-season="autumn"]{--accent:#d97706}
+html[data-season="winter"]{--accent:#0ea5e9}
+html[data-paper="1"] body{background:#fdfdf8;color:#222}
+html[data-paper="1"] .fp-day{background:#fff;border:1px solid #bbb}
+
 </style>
 </head><body>
  <header class="fp-top">
@@ -598,7 +623,10 @@ body {
  <div id="fp-clock" class="fp-clock">--:--:--</div>
  <div class="fp-top-actions">
  <input id="fp-search" class="fp-search" type="search" placeholder="Rechercher…" aria-label="Rechercher un événement">
- <button id="fp-add" class="fp-btn primary">+ Ajouter</button>
+ <button id="fp-focus2" class="fp-btn ghost" title="Aujourd'hui + demain en grand">2 jours</button>
+<button id="fp-compare" class="fp-btn ghost" title="Comparer à la semaine dernière">vs sem. dernière</button>
+<button id="fp-dnd" class="fp-btn ghost" title="Ne pas déranger : coupe les rappels">DND</button>
+<button id="fp-add" class="fp-btn primary">+ Ajouter</button>
  <div class="fp-menu">
  <button id="fp-menu-btn" class="fp-btn" aria-label="Menu" aria-haspopup="true">⋯</button>
  <div id="fp-menu-panel" class="fp-menu-panel" hidden>
@@ -612,6 +640,10 @@ body {
  <button id="fp-demo" class="fp-menu-item"> Remplir avec un exemple</button>
  <button id="fp-voice-welcome" class="fp-menu-item"> Voix d'accueil</button>
  <button id="fp-voice-toggle" class="fp-menu-item"> Voix: activée</button>
+          <button id="fp-season" class="fp-menu-item">Thème saison : auto</button>
+          <button id="fp-paper" class="fp-menu-item">Mode papier</button>
+          <button id="fp-share" class="fp-menu-item">Partager la semaine (.ics)</button>
+          <button id="fp-backup" class="fp-menu-item">Backup chiffré (.flowpack)</button>
  <button id="fp-read-day" class="fp-menu-item"> Lis-moi ma journée</button>
  <button id="fp-export-json" class="fp-menu-item"> Exporter (JSON)</button>
  <button id="fp-textsize" class="fp-menu-item"> Taille du texte: M</button>
@@ -659,6 +691,7 @@ body {
  <button id="fp-view-day" class="fp-btn ghost">Jour</button>
  <button id="fp-view-week" class="fp-btn ghost active">Semaine</button>
  <button id="fp-view-month" class="fp-btn ghost">Mois</button>
+      <button id="fp-view-year" class="fp-btn ghost">Année</button>
  </span>
  </section>
 
@@ -669,6 +702,12 @@ body {
  <main id="fp-week" class="fp-week" aria-label="Planning de la semaine"></main>
  <main id="fp-month" class="fp-month" style="display:none"></main>
  <main id="fp-day" class="fp-day-view" style="display:none"></main>
+  <main id="fp-year" class="fp-year" style="display:none"></main>
+  <div id="fp-compare-panel" class="fp-compare" hidden></div>
+  <div id="fp-offline-badge" class="fp-offline" hidden>hors-ligne — tout est local</div>
+  <main id="fp-year" class="fp-year" style="display:none"></main>
+  <div id="fp-compare-panel" class="fp-compare" hidden></div>
+  <div id="fp-offline-badge" class="fp-offline" hidden>hors-ligne — tout est local</div>
  <main id="fp-list" class="fp-list" style="display:none"></main>
 
  <div id="fp-modal" class="fp-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="fp-modal-h">

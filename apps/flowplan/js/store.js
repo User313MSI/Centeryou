@@ -10,6 +10,9 @@
   'use strict';
 
   const KEY = 'flowplan.events.v1';
+  const SCHEMA_KEY = 'flowplan.schema.v';
+  const SCHEMA_VERSION = 2;
+  const AUDIT_KEY = 'flowplan.audit.v1';
   const mem = {};
 
   function get() {
@@ -21,7 +24,24 @@
     else mem[KEY] = v;
   }
 
+  function getK(k) { return storage ? storage.getItem(k) : (mem[k] || null); }
+  function setK(k, v) { if (storage) storage.setItem(k, v); else mem[k] = v; }
+  function migrateIfNeeded() {
+    let v = 0;
+    try { v = +(getK(SCHEMA_KEY) || 0); } catch (e) {}
+    if (v < SCHEMA_VERSION) { try { setK(SCHEMA_KEY, String(SCHEMA_VERSION)); } catch (e) {} audit('schema-migrate', { from: v, to: SCHEMA_VERSION }); }
+  }
+  function audit(action, detail) {
+    try {
+      const log = JSON.parse(getK(AUDIT_KEY) || '[]');
+      log.push({ t: new Date().toISOString(), action: action, detail: detail || null });
+      setK(AUDIT_KEY, JSON.stringify(log.slice(-500)));
+    } catch (e) {}
+  }
+  function getAudit() { try { return JSON.parse(getK(AUDIT_KEY) || '[]'); } catch (e) { return []; } }
+
   function save(events) {
+    migrateIfNeeded();
     const payload = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), events });
     try {
       set(payload);
@@ -94,5 +114,5 @@
     else delete mem[KEY];
   }
 
-  return { save, load, clear, sanitizeEvent, MAX_EVENTS, KEY };
+  return { save, load, clear, sanitizeEvent, MAX_EVENTS, KEY, SCHEMA_VERSION, audit, getAudit, migrateIfNeeded };
 });
