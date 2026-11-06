@@ -617,6 +617,11 @@ html[data-paper="1"] body{background:#fdfdf8;color:#222}
 html[data-paper="1"] .fp-day{background:#fff;border:1px solid #bbb}
 
 </style>
+<script>
+// v8.1: purge immédiate de tout service worker + caches (anti vieux cache)
+if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }); }
+if ('caches' in window) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); }
+</script>
 </head><body>
  <header class="fp-top">
  <div class="fp-brand"> FlowPlan</div>
