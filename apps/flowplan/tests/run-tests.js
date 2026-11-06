@@ -856,6 +856,7 @@ test('v8 weekCompare : deltas événements/heures', () => {
   const p = Planner.createPlanner();
   p.add({ title: 'A', date: '2026-11-02', start: '09:00', end: '10:00' });
   p.add({ title: 'B', date: '2026-10-26', start: '09:00', end: '11:00' });
+  p.add({ title: 'C', date: '2026-10-27', start: '14:00', end: '15:00' });
   const c = p.weekCompare('2026-11-02');
   eq(c.eventsDelta, -1);
   assert(c.hoursDelta < 0);
