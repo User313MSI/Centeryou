@@ -14,10 +14,6 @@ import { speak, stopSpeaking } from '../../lib/voice';
  * jamais lancé automatiquement — le son ne démarre que sur clic.
  */
 export function BriefCard() {
-  const settings = useStore((s) => s.settings);
-  const events = useStore((s) => s.events);
-  const tasks = useStore((s) => s.tasks);
-  const markBriefShown = useStore((s) => s.markBriefShown);
   const [offered, setOffered] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [briefText, setBriefText] = useState('');

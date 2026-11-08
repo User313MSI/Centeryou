@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, CardBody, CardHeader } from '../../components/ui/card';
+import { Card, CardBody } from '../../components/ui/card';
 import { EmptyState } from '../../components/ui/empty-state';
 import { Tabs, type TabOption } from '../../components/ui/tabs';
 import { QuickAdd } from '../../components/tasks/quick-add';

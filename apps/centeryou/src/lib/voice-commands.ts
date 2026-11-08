@@ -1,6 +1,6 @@
 'use client';
 
-import { addDaysISO, capitalize, formatDayLong, formatTimeFr, minutesOf, timeOf, todayISO } from './dates';
+import { addDaysISO, formatDayLong, formatTimeFr, minutesOf, timeOf, todayISO } from './dates';
 import { eventsOnDate, findConflict } from './events';
 import { parseInput } from './parser';
 import { useStore } from './store';
