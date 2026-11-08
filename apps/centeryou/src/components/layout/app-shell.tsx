@@ -7,6 +7,7 @@ import { useUiStore } from '../../lib/ui-store';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { Logo } from '../brand/logo';
+import { EventDialog } from '../events/event-dialog';
 import { Toasts } from '../ui/toast';
 import { BottomNav } from './bottom-nav';
 import { Sidebar } from './sidebar';
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       <BottomNav />
       <Toasts />
+      <EventDialog />
     </div>
   );
 }

@@ -34,6 +34,16 @@ export function addDaysISO(iso: string, n: number): string {
   return toISODate(d);
 }
 
+export function addMonthsISO(iso: string, n: number): string {
+  const d = parseISO(iso);
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const lastOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, lastOfMonth));
+  return toISODate(d);
+}
+
 /** 0 = lundi … 6 = dimanche */
 export function weekdayOf(iso: string): number {
   const js = parseISO(iso).getDay();
