@@ -12,6 +12,7 @@ import { Toasts } from '../ui/toast';
 import { BottomNav } from './bottom-nav';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+import { VoiceFab } from './voice-fab';
 
 function nextSlot(): string {
   const m = nowMinutes();
@@ -86,6 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <BottomNav />
       <Toasts />
       <EventDialog />
+      <VoiceFab />
     </div>
   );
 }

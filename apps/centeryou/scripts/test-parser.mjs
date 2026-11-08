@@ -10,7 +10,7 @@ import path from 'node:path';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(here, '..');
-const outDir = '/tmp/centeryou-parser-test';
+const outDir = path.join(appRoot, '.test-build');
 
 execFileSync(
   'npx',
@@ -20,6 +20,10 @@ execFileSync(
     'src/lib/utils.ts',
     'src/lib/parser.ts',
     'src/lib/events.ts',
+    'src/lib/store.ts',
+    'src/lib/ui-store.ts',
+    'src/lib/voice.ts',
+    'src/lib/voice-commands.ts',
     '--outDir', outDir,
     '--rootDir', '.',
     '--module', 'commonjs',
@@ -34,6 +38,9 @@ execFileSync(
 const require = createRequire(import.meta.url);
 const { parseInput } = require(path.join(outDir, 'src/lib/parser.js'));
 const { eventsOnDate, findConflict } = require(path.join(outDir, 'src/lib/events.js'));
+const { useStore } = require(path.join(outDir, 'src/lib/store.js'));
+const { handleVoiceCommand } = require(path.join(outDir, 'src/lib/voice-commands.js'));
+const { todayISO, addDaysISO } = require(path.join(outDir, 'src/lib/dates.js'));
 
 // lundi 6 janvier 2025
 const TODAY = '2025-01-06';
@@ -92,6 +99,31 @@ check('même heure, autre jour = pas de conflit', findConflict([base], { date: '
 check('répétition quotidienne couvre demain', eventsOnDate([{ ...base, repeat: 'jour' }], '2025-01-07').length, 1);
 check('répétition hebdomadaire même jour de semaine', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-13').length, 1);
 check('répétition hebdomadaire autre jour', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-08').length, 0);
+
+console.log('Commandes vocales (sans clé API, voix désactivée pour le test) :');
+useStore.setState({
+  events: [],
+  tasks: [],
+  settings: { ...useStore.getState().settings, voice: false, sounds: false },
+});
+const replyAdd = await handleVoiceCommand('ajoute sport demain 14h');
+const evAfter = useStore.getState().events.map((e) => ({ title: e.title, date: e.date, start: e.start, end: e.end }));
+check('« ajoute sport demain 14h » crée l’événement et confirme', { reply: replyAdd, ev: evAfter }, {
+  reply: `Ajouté : Sport, demain à 14h00.`,
+  ev: [{ title: 'Sport', date: addDaysISO(todayISO(), 1), start: '14:00', end: '15:00' }],
+});
+const replyToday = await handleVoiceCommand("que dois-je faire aujourd'hui ?");
+check('jour vide = message gentil', replyToday.includes('libre'), true);
+useStore.getState().addTask({ title: 'Sport', date: todayISO(), time: null, category: 'autre', priority: 'moyenne' });
+const replyDone = await handleVoiceCommand("c'est fait sport");
+check('« c’est fait sport » coche la tâche et répond Bravo', {
+  reply: replyDone,
+  done: useStore.getState().tasks[0].done,
+}, { reply: 'Bravo ! « Sport » est cochée.', done: true });
+const replyTomorrow = await handleVoiceCommand('quoi de prévu demain ?');
+check('« quoi de prévu demain ? » lit le programme de demain', replyTomorrow.includes('demain') && replyTomorrow.includes('Sport à 14h00'), true);
+const replyUnknown = await handleVoiceCommand('blabla incompris');
+check('commande inconnue = suggestion douce', replyUnknown.includes("Je n’ai pas compris"), true);
 
 if (failures > 0) {
   console.log(`\n${failures} test(s) en échec`);

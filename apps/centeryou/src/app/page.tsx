@@ -8,6 +8,7 @@ import { DayView } from '../components/events/day-view';
 import { useEventActions } from '../components/events/use-event-actions';
 import { QuickAdd } from '../components/tasks/quick-add';
 import { TaskItemRow } from '../components/tasks/task-item';
+import { BriefCard } from '../components/today/brief-card';
 import { ProgressBar } from '../components/today/progress-bar';
 import { capitalize, formatDayLong, greetingFor, todayISO } from '../lib/dates';
 import { eventsOnDate } from '../lib/events';
@@ -33,6 +34,8 @@ export default function AujourdhuiPage() {
         </h1>
         <p className="mt-1 text-sm font-semibold capitalize text-muted">{formatDayLong(today)}</p>
       </header>
+
+      <BriefCard />
 
       <Card>
         <CardHeader>
