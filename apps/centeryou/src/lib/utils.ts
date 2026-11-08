@@ -15,5 +15,9 @@ export function stripAccents(s: string): string {
 }
 
 export function normalizeText(s: string): string {
-  return stripAccents(s).toLowerCase().replace(/\s+/g, ' ').trim();
+  return stripAccents(s)
+    .toLowerCase()
+    .replace(/['’ʼ`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
