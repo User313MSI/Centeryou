@@ -10,7 +10,7 @@ import { QuickAdd } from '../components/tasks/quick-add';
 import { TaskItemRow } from '../components/tasks/task-item';
 import { BriefCard } from '../components/today/brief-card';
 import { ProgressBar } from '../components/today/progress-bar';
-import { capitalize, formatDayLong, greetingFor, todayISO } from '../lib/dates';
+import { formatDayLong, greetingFor, todayISO } from '../lib/dates';
 import { eventsOnDate } from '../lib/events';
 import { useStore } from '../lib/store';
 
@@ -61,14 +61,12 @@ export default function AujourdhuiPage() {
           </h2>
         </CardHeader>
         <CardBody>
-          {todayEvents.length === 0 ? (
-            <EmptyState
-              title="Journée libre côté agenda"
-              description="Aucun événement aujourd’hui : profite-en, ou clique sur un créneau ci-dessous pour en ajouter un."
-            />
-          ) : (
-            <DayView date={today} events={events} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onDropAt={onDropAt} />
+          {todayEvents.length === 0 && (
+            <p className="mb-3 text-sm text-muted">
+              Journée libre côté agenda — clique sur un créneau ci-dessous pour ajouter un événement.
+            </p>
           )}
+          <DayView date={today} events={events} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onDropAt={onDropAt} />
         </CardBody>
       </Card>
 

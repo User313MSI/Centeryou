@@ -1,0 +1,5 @@
+<!-- Généré par scripts/make-icons.mjs depuis design/tokens.ts — ne pas éditer à la main -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="240" fill="#7C5CFF"/>
+  <path d="M92 256 q41 -62 82 0 t82 0 t82 0 t82 0" fill="none" stroke="#2DD4BF" stroke-width="26" stroke-linecap="round"/>
+</svg>
