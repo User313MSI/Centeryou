@@ -151,6 +151,18 @@ button { font-family: inherit; cursor: pointer; }
   user-select: none;
 }
 .clip.selected { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; }
+.clip-handle {
+  position: absolute; top: 0; bottom: 0; width: 8px;
+  cursor: ew-resize; z-index: 2;
+}
+.clip-handle-l { left: 0; }
+.clip-handle-r { right: 0; }
+.clip.selected .clip-handle::after {
+  content: ''; position: absolute; top: 50%; left: 2px;
+  width: 3px; height: 14px; margin-top: -7px;
+  background: #fff; border-radius: 2px;
+}
+.clip.selected .clip-handle-r .clip-handle::after { left: auto; right: 2px; }
 .clip-video { background: linear-gradient(180deg, var(--clip-video), #1d3f5a); }
 .clip-audio { background: linear-gradient(180deg, var(--clip-audio), #1d5a3f); }
 .clip-image { background: linear-gradient(180deg, var(--clip-image), #5a4a1d); }

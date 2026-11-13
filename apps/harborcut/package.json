@@ -21,9 +21,19 @@
     "productName": "HarborCut",
     "directories": { "output": "release" },
     "files": ["main.js", "preload.js", "index.html", "css/**", "js/**", "assets/**"],
-    "win": { "target": ["nsis", "portable"] },
-    "mac": { "target": ["dmg"], "category": "public.app-category.video" },
-    "linux": { "target": ["AppImage", "deb"], "category": "Video" }
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "HarborCut"
+    },
+    "mac": { "target": ["dmg"], "category": "public.app-category.video", "icon": "assets/icon.png" },
+    "linux": { "target": ["AppImage", "deb"], "category": "Video", "icon": "assets/icon.png" }
   },
   "author": "NovaLoom",
   "license": "UNLICENSED",

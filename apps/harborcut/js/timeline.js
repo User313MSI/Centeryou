@@ -1,6 +1,7 @@
 const Timeline = (() => {
   const rulerEl = document.getElementById('ruler');
   const tracksEl = document.getElementById('tracks');
+  const HEADER_W = 110;
   let pxPerSec = 60;
   let selectedId = null;
   let snapping = true;
@@ -30,6 +31,10 @@ const Timeline = (() => {
     return best;
   }
 
+  function laneWidth() {
+    return timeToX(Math.max(60, HarborState.state.duration + 30));
+  }
+
   function renderRuler() {
     rulerEl.innerHTML = '';
     const total = Math.max(60, HarborState.state.duration + 30);
@@ -38,11 +43,11 @@ const Timeline = (() => {
     for (let t = 0; t <= total; t += step) {
       const tick = document.createElement('div');
       tick.className = 'ruler-tick';
-      tick.style.left = timeToX(t) + 'px';
+      tick.style.left = (HEADER_W + timeToX(t)) + 'px';
       rulerEl.appendChild(tick);
       const label = document.createElement('div');
       label.className = 'ruler-label';
-      label.style.left = timeToX(t) + 'px';
+      label.style.left = (HEADER_W + timeToX(t)) + 'px';
       label.textContent = fmt(t).slice(3, 8);
       rulerEl.appendChild(label);
     }
@@ -61,7 +66,7 @@ const Timeline = (() => {
       const lane = document.createElement('div');
       lane.className = 'track-lane';
       lane.dataset.trackId = track.id;
-      lane.style.width = timeToX(Math.max(60, HarborState.state.duration + 30)) + 'px';
+      lane.style.width = (HEADER_W + laneWidth()) + 'px';
 
       for (const clip of track.clips) {
         lane.appendChild(renderClip(clip, track));
@@ -91,6 +96,18 @@ const Timeline = (() => {
     label.textContent = clip.name || 'clip';
     el.appendChild(label);
 
+    // trim handles
+    const hL = document.createElement('div');
+    hL.className = 'clip-handle clip-handle-l';
+    hL.dataset.clipId = clip.id;
+    hL.dataset.handle = 'l';
+    el.appendChild(hL);
+    const hR = document.createElement('div');
+    hR.className = 'clip-handle clip-handle-r';
+    hR.dataset.clipId = clip.id;
+    hR.dataset.handle = 'r';
+    el.appendChild(hR);
+
     if (clip.fadeIn > 0) {
       const f = document.createElement('div');
       f.className = 'clip-fade';
@@ -114,7 +131,9 @@ const Timeline = (() => {
       ph.id = 'playhead';
       tracksEl.appendChild(ph);
     }
-    ph.style.left = timeToX(App.playhead) + 'px';
+    const x = HEADER_W + timeToX(Number.isFinite(App.playhead()) ? App.playhead() : 0);
+    ph.style.left = Math.max(HEADER_W, x) + 'px';
+    ph.style.height = tracksEl.scrollHeight + 'px';
   }
 
   function setZoom(v) {
@@ -130,7 +149,48 @@ const Timeline = (() => {
   function getSelected() { return selectedId; }
   function setSnapping(v) { snapping = v; }
 
+  document.addEventListener('dragover', (e) => {
+    if (e.dataTransfer.types.includes('application/x-harborcut-media')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  });
+
+  document.addEventListener('drop', (e) => {
+    const mediaId = e.dataTransfer.getData('application/x-harborcut-media');
+    if (!mediaId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const lane = e.target.closest('.track-lane');
+    const media = HarborState.state.media.find((m) => m.id === mediaId);
+    if (!lane || !media) return;
+    const track = HarborState.state.tracks.find((t) => t.id === lane.dataset.trackId);
+    if (!track) return;
+    const neededKind = media.type === 'audio' ? 'audio' : 'video';
+    if (track.kind !== neededKind) {
+      const alt = HarborState.state.tracks.find((t) => t.kind === neededKind);
+      if (!alt) return;
+      track = alt;
+    }
+    const rect = lane.getBoundingClientRect();
+    const start = snap(Math.max(0, xToTime(e.clientX - rect.left)), null);
+    const clip = Engine.addClip(track.id, media, start);
+    if (clip) {
+      select(clip.id);
+      App.renderInspector();
+      HarborState.notify();
+    }
+  });
+
   document.addEventListener('mousedown', (e) => {
+    const handle = e.target.closest('.clip-handle');
+    if (handle) {
+      e.preventDefault();
+      e.stopPropagation();
+      select(handle.dataset.clipId);
+      startTrim(handle, e);
+      return;
+    }
     const clipEl = e.target.closest('.clip');
     if (clipEl) {
       select(clipEl.dataset.clipId);
@@ -142,7 +202,8 @@ const Timeline = (() => {
     const lane = e.target.closest('.track-lane');
     if (lane) {
       const rect = lane.getBoundingClientRect();
-      App.setPlayhead(snap(xToTime(e.clientX - rect.left + lane.scrollLeft), null));
+      const t = xToTime(e.clientX - rect.left);
+      App.setPlayhead(snap(Math.max(0, t), null));
       select(null);
       App.renderInspector();
     }
@@ -167,6 +228,48 @@ const Timeline = (() => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       if (moved) HarborState.notify();
+      App.renderInspector();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function startTrim(handle, e) {
+    const clipId = handle.dataset.clipId;
+    const side = handle.dataset.handle;
+    const found = Engine.findClip(clipId);
+    if (!found) return;
+    const startX = e.clientX;
+    const orig = { start: found.clip.start, duration: found.clip.duration, offset: found.clip.offset };
+    const minDur = 3 / pxPerSec;
+
+    const onMove = (ev) => {
+      const dx = (ev.clientX - startX) / pxPerSec;
+      if (side === 'l') {
+        let newStart = snap(Math.max(0, orig.start + dx), clipId);
+        let newDur = orig.duration - (newStart - orig.start);
+        if (newDur < minDur) { newDur = minDur; newStart = orig.start + orig.duration - minDur; }
+        const deltaStart = newStart - orig.start;
+        Engine.updateClip(clipId, {
+          start: Math.max(0, newStart),
+          duration: newDur,
+          offset: Math.max(0, orig.offset + deltaStart * found.clip.speed),
+        });
+      } else {
+        let newEnd = snap(orig.start + orig.duration + dx, clipId);
+        let newDur = Math.max(minDur, newEnd - orig.start);
+        Engine.updateClip(clipId, { duration: newDur });
+      }
+      const el = document.querySelector(`.clip[data-clip-id="${clipId}"]`);
+      if (el) {
+        el.style.left = timeToX(found.clip.start) + 'px';
+        el.style.width = Math.max(4, timeToX(found.clip.duration)) + 'px';
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      HarborState.notify();
       App.renderInspector();
     };
     document.addEventListener('mousemove', onMove);
