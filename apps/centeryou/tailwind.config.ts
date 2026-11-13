@@ -52,9 +52,6 @@ const config: Config = {
       transitionTimingFunction: {
         out: motion.easing,
       },
-      maxWidth: {
-        shell: '1200px',
-      },
       zIndex: {
         fab: '40',
         nav: '40',

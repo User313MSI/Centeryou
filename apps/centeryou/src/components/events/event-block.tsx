@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState, type PointerEvent, type KeyboardEvent } from 'react';
-import type { EventItem } from '../../types';
-import type { EventInstance } from '../../lib/events';
+import { useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from 'react';
+import type { EventItem, TaskItem } from '../../types';
+import type { CalendarInstance } from '../../lib/events';
 import { categoryColor } from '../../lib/categories';
 import { formatTimeFr, minutesOf } from '../../lib/dates';
 import { cx } from '../../lib/utils';
@@ -12,15 +12,17 @@ export function EventBlock({
   pxPerMin,
   dayStartMin,
   onEventClick,
+  onTaskToggle,
   onDropAt,
 }: {
-  instance: EventInstance;
+  instance: CalendarInstance;
   pxPerMin: number;
   dayStartMin: number;
   onEventClick: (ev: EventItem) => void;
+  onTaskToggle: (task: TaskItem) => void;
   onDropAt: (eventId: string, x: number, y: number) => void;
 }) {
-  const { event } = instance;
+  const isTask = instance.kind === 'task';
   const startMin = minutesOf(instance.start);
   const endMin = minutesOf(instance.end);
   const top = Math.max(0, (startMin - dayStartMin) * pxPerMin);
@@ -31,6 +33,7 @@ export function EventBlock({
   const dragging = offset !== null;
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (isTask) return; // les tâches ne se déplacent pas dans le planning
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     drag.current = { sx: e.clientX, sy: e.clientY, moved: false };
     try {
@@ -52,41 +55,68 @@ export function EventBlock({
     drag.current = null;
     if (d?.moved) {
       setOffset(null);
-      onDropAt(event.id, e.clientX, e.clientY);
-    } else {
-      onEventClick(event);
+      onDropAt(instance.id, e.clientX, e.clientY);
+    } else if (instance.event) {
+      onEventClick(instance.event);
     }
   };
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onEventClick(event);
+      if (instance.event) onEventClick(instance.event);
+      else if (instance.task) onTaskToggle(instance.task);
     }
   };
+  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+    // clic simple sur une tâche = cocher / décocher
+    if (isTask && instance.task) {
+      e.stopPropagation();
+      onTaskToggle(instance.task);
+    }
+  };
+
+  const label = isTask
+    ? `Tâche ${instance.title}, ${formatTimeFr(instance.start)} à ${formatTimeFr(instance.end)}${instance.done ? ', faite' : ''}. Cliquer pour ${instance.done ? 'reprendre' : 'cocher'}.`
+    : `${instance.title}, de ${formatTimeFr(instance.start)} à ${formatTimeFr(instance.end)}. Activer pour modifier, glisser pour déplacer.`;
 
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${event.title}, de ${formatTimeFr(instance.start)} à ${formatTimeFr(instance.end)}. Activer pour modifier, glisser pour déplacer.`}
+      aria-label={label}
+      aria-pressed={isTask ? instance.done : undefined}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onKeyDown={onKeyDown}
+      onClick={onClick}
       className={cx(
-        'absolute left-1 right-1 z-10 cursor-grab select-none overflow-hidden rounded-lg border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out active:cursor-grabbing',
+        'absolute left-1 right-1 z-10 select-none overflow-hidden rounded-lg border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
+        isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
         dragging && 'z-50 opacity-95 shadow-hover',
+        instance.done && 'opacity-70',
       )}
       style={{
         top,
         height,
-        borderLeftColor: categoryColor(event.category),
+        borderLeftColor: categoryColor(instance.category),
         transform: dragging ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
-        touchAction: 'none',
+        touchAction: isTask ? undefined : 'none',
         pointerEvents: dragging ? 'none' : undefined,
       }}
     >
-      <p className="truncate text-[13px] font-semibold leading-tight text-ink">{event.title}</p>
+      <p className={cx('flex items-center gap-1 truncate text-[13px] font-semibold leading-tight text-ink', instance.done && 'line-through')}>
+        {isTask && (
+          <span
+            aria-hidden
+            className={cx(
+              'inline-block h-3 w-3 shrink-0 rounded-full border-2',
+              instance.done ? 'border-voice bg-voice' : 'border-muted bg-surface',
+            )}
+          />
+        )}
+        <span className="truncate">{instance.title}</span>
+      </p>
       {height >= 36 && (
         <p className="truncate text-xs leading-tight text-muted">
           {formatTimeFr(instance.start)} – {formatTimeFr(instance.end)}

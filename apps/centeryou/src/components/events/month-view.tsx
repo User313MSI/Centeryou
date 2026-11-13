@@ -2,20 +2,24 @@
 
 import { categoryColor } from '../../lib/categories';
 import { WEEKDAY_NAMES, formatDayLong, formatDayNumber, isSameMonth, isToday, monthMatrix } from '../../lib/dates';
-import { eventsOnDate } from '../../lib/events';
-import type { EventItem } from '../../types';
+import { calendarMonthOnDate } from '../../lib/events';
+import type { EventItem, TaskItem } from '../../types';
 import { cx } from '../../lib/utils';
 
 export function MonthView({
   cursor,
   events,
+  tasks,
   onDayClick,
   onEventClick,
+  onTaskToggle,
 }: {
   cursor: string;
   events: EventItem[];
+  tasks: TaskItem[];
   onDayClick: (date: string) => void;
   onEventClick: (ev: EventItem) => void;
+  onTaskToggle: (task: TaskItem) => void;
 }) {
   const weeks = monthMatrix(cursor);
   return (
@@ -30,7 +34,7 @@ export function MonthView({
         </div>
         <div className="grid grid-cols-7">
           {weeks.flat().map((iso) => {
-            const dayEvents = eventsOnDate(events, iso);
+            const dayEvents = calendarMonthOnDate(events, tasks, iso);
             const outOfMonth = !isSameMonth(iso, cursor);
             return (
               <div
@@ -50,17 +54,24 @@ export function MonthView({
                 <div className="mt-1 flex flex-col gap-0.5">
                   {dayEvents.slice(0, 3).map((inst) => (
                     <button
-                      key={inst.event.id}
-                      onClick={() => onEventClick(inst.event)}
-                      title={`${inst.event.title} — ${inst.start} à ${inst.end}`}
+                      key={`${inst.kind}-${inst.id}`}
+                      onClick={() => (inst.kind === 'event' && inst.event ? onEventClick(inst.event) : inst.task && onTaskToggle(inst.task))}
+                      title={inst.kind === 'event' ? `${inst.title} — ${inst.start} à ${inst.end}` : `Tâche : ${inst.title}${inst.start ? ` à ${inst.start}` : ''}${inst.done ? ' (faite)' : ''}`}
                       className="flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-left text-xs font-medium text-ink transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
-                      <span
-                        aria-hidden
-                        className="h-2 w-2 shrink-0 rounded-full"
-                        style={{ backgroundColor: categoryColor(inst.event.category) }}
-                      />
-                      <span className="truncate">{inst.event.title}</span>
+                      {inst.kind === 'task' ? (
+                        <span
+                          aria-hidden
+                          className={cx('h-2 w-2 shrink-0 rounded-full border', inst.done ? 'border-voice bg-voice' : 'border-muted bg-surface')}
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: categoryColor(inst.category) }}
+                        />
+                      )}
+                      <span className={cx('truncate', inst.done && 'line-through text-muted')}>{inst.title}</span>
                     </button>
                   ))}
                   {dayEvents.length > 3 && (
