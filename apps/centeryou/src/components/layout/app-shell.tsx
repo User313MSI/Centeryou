@@ -10,9 +10,7 @@ import { Logo } from '../brand/logo';
 import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
-import { BottomNav } from './bottom-nav';
-import { Sidebar } from './sidebar';
-import { Topbar } from './topbar';
+import { TopNav } from './top-nav';
 import { VoiceFab } from './voice-fab';
 
 function nextSlot(): string {
@@ -80,12 +78,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-bg">
-      <Sidebar />
-      <div className="md:pl-[248px]">
-        <Topbar />
-        <main className="mx-auto w-full max-w-shell px-4 pb-28 pt-6 md:px-8 md:pb-12">{children}</main>
-      </div>
-      <BottomNav />
+      <TopNav />
+      <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">{children}</main>
       <Toasts />
       <EventDialog />
       <HelpDialog />
