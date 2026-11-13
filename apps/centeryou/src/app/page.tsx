@@ -17,8 +17,7 @@ import { useStore } from '../lib/store';
 export default function AujourdhuiPage() {
   const today = todayISO();
   const settings = useStore((s) => s.settings);
-  const tasks = useStore((s) => s.tasks);
-  const { events, dayStart, onSlotClick, onEventClick, onDropAt } = useEventActions();
+  const { events, tasks, dayStart, onSlotClick, onEventClick, onTaskToggle, onDropAt } = useEventActions();
 
   const prenom = settings.prenom.trim();
   const todayTasks = useMemo(() => tasks.filter((t) => t.date === today), [tasks, today]);
@@ -66,7 +65,7 @@ export default function AujourdhuiPage() {
               Journée libre côté agenda — clique sur un créneau ci-dessous pour ajouter un événement.
             </p>
           )}
-          <DayView date={today} events={events} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onDropAt={onDropAt} />
+          <DayView date={today} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
         </CardBody>
       </Card>
 

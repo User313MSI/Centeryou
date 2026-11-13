@@ -4,13 +4,16 @@ import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { DAY_END, formatDayShort, formatTimeFr, minutesOf, timeOf } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
-import type { EventItem } from '../../types';
+import { playBlip } from '../../lib/voice';
+import type { EventItem, TaskItem } from '../../types';
 import { resolveDropZone } from './drop';
 
-/** Actions communes aux vues planning (création, édition, drag & drop). */
+/** Actions communes aux vues planning (création, édition, drag & drop, tâches). */
 export function useEventActions() {
   const events = useStore((s) => s.events);
+  const tasks = useStore((s) => s.tasks);
   const moveEvent = useStore((s) => s.moveEvent);
+  const toggleTask = useStore((s) => s.toggleTask);
   const dayStart = useStore((s) => s.settings.dayStart);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
   const pushToast = useUiStore((s) => s.pushToast);
@@ -20,6 +23,11 @@ export function useEventActions() {
   };
   const onEventClick = (ev: EventItem) => {
     openEventDialog({ eventId: ev.id });
+  };
+  const onTaskToggle = (task: TaskItem) => {
+    toggleTask(task.id);
+    if (useStore.getState().settings.sounds) playBlip(task.done ? 520 : 760);
+    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée ✅` });
   };
   const onDropAt = (eventId: string, x: number, y: number) => {
     const zone = resolveDropZone(x, y);
@@ -34,5 +42,5 @@ export function useEventActions() {
     pushToast({ message: `« ${ev.title} » déplacé au ${formatDayShort(zone.date)} à ${formatTimeFr(start)}` });
   };
 
-  return { events, dayStart, onSlotClick, onEventClick, onDropAt };
+  return { events, tasks, dayStart, onSlotClick, onEventClick, onTaskToggle, onDropAt };
 }

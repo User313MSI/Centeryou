@@ -2,25 +2,29 @@
 
 import { layout } from '../../../design/tokens';
 import { DAY_END, formatDayNumber, formatWeekdayShort, isToday, nowMinutes, pad2, startOfWeekISO, addDaysISO } from '../../lib/dates';
-import { eventsOnDate } from '../../lib/events';
-import type { EventItem } from '../../types';
+import { calendarOnDate } from '../../lib/events';
+import type { EventItem, TaskItem } from '../../types';
 import { cx } from '../../lib/utils';
 import { EventBlock } from './event-block';
 
 export function WeekView({
   cursor,
   events,
+  tasks,
   dayStart,
   onSlotClick,
   onEventClick,
+  onTaskToggle,
   onDropAt,
   onDayClick,
 }: {
   cursor: string;
   events: EventItem[];
+  tasks: TaskItem[];
   dayStart: number;
   onSlotClick: (date: string, minutes: number) => void;
   onEventClick: (ev: EventItem) => void;
+  onTaskToggle: (task: TaskItem) => void;
   onDropAt: (eventId: string, x: number, y: number) => void;
   onDayClick: (date: string) => void;
 }) {
@@ -69,7 +73,7 @@ export function WeekView({
             ))}
           </div>
           {days.map((iso) => {
-            const instances = eventsOnDate(events, iso);
+            const instances = calendarOnDate(events, tasks, iso);
             const showNow = isToday(iso);
             const nowTop = (nowMinutes() - dayStartMin) * pxPerMin;
             return (
@@ -88,11 +92,12 @@ export function WeekView({
                 ))}
                 {instances.map((inst) => (
                   <EventBlock
-                    key={inst.event.id}
+                    key={`${inst.kind}-${inst.id}`}
                     instance={inst}
                     pxPerMin={pxPerMin}
                     dayStartMin={dayStartMin}
                     onEventClick={onEventClick}
+                    onTaskToggle={onTaskToggle}
                     onDropAt={onDropAt}
                   />
                 ))}

@@ -37,7 +37,7 @@ execFileSync(
 
 const require = createRequire(import.meta.url);
 const { parseInput } = require(path.join(outDir, 'src/lib/parser.js'));
-const { eventsOnDate, findConflict } = require(path.join(outDir, 'src/lib/events.js'));
+const { eventsOnDate, findConflict, calendarOnDate, calendarMonthOnDate } = require(path.join(outDir, 'src/lib/events.js'));
 const { useStore } = require(path.join(outDir, 'src/lib/store.js'));
 const { handleVoiceCommand } = require(path.join(outDir, 'src/lib/voice-commands.js'));
 const { todayISO, addDaysISO } = require(path.join(outDir, 'src/lib/dates.js'));
@@ -99,6 +99,17 @@ check('même heure, autre jour = pas de conflit', findConflict([base], { date: '
 check('répétition quotidienne couvre demain', eventsOnDate([{ ...base, repeat: 'jour' }], '2025-01-07').length, 1);
 check('répétition hebdomadaire même jour de semaine', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-13').length, 1);
 check('répétition hebdomadaire autre jour', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-08').length, 0);
+
+console.log('Éléments calendrier (événements + tâches) :');
+const taskSport = { id: 't1', title: 'Sport', date: '2025-01-07', time: '14:00', category: 'perso', priority: 'moyenne', done: false, createdAt: 2 };
+const taskSansHeure = { id: 't2', title: 'Rapport', date: '2025-01-10', time: null, category: 'autre', priority: 'moyenne', done: false, createdAt: 3 };
+const allTasks = [taskSport, taskSansHeure];
+const base7 = { ...base, id: 'e7', date: '2025-01-07' };
+check('tâche avec heure positionnée en Jour/Semaine', calendarOnDate([base7], allTasks, '2025-01-07').map((i) => `${i.kind}:${i.title}@${i.start}`), ['event:Réunion@10:00', 'task:Sport@14:00']);
+check('tâche sans heure absente de la grille horaire', calendarOnDate([], allTasks, '2025-01-10').map((i) => i.title), []);
+check('mois : tâche sans heure visible à sa date', calendarMonthOnDate([], allTasks, '2025-01-10').map((i) => `${i.kind}:${i.title}`), ['task:Rapport']);
+check('mois : tâche avec heure aussi visible', calendarMonthOnDate([], allTasks, '2025-01-07').map((i) => `${i.kind}:${i.title}`), ['task:Sport']);
+check('aucun élément ailleurs', calendarOnDate([base7], allTasks, '2025-01-08').length, 0);
 
 console.log('Commandes vocales (sans clé API, voix désactivée pour le test) :');
 useStore.setState({

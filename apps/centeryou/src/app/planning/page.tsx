@@ -31,7 +31,7 @@ export default function PlanningPage() {
   const view = useUiStore((s) => s.planningView);
   const setView = useUiStore((s) => s.setPlanningView);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
-  const { events, dayStart, onSlotClick, onEventClick, onDropAt } = useEventActions();
+  const { events, tasks, dayStart, onSlotClick, onEventClick, onTaskToggle, onDropAt } = useEventActions();
 
   const goPrev = () =>
     setCursor((c) => (view === 'jour' ? addDaysISO(c, -1) : view === 'semaine' ? addDaysISO(c, -7) : addMonthsISO(c, -1)));
@@ -74,7 +74,7 @@ export default function PlanningPage() {
         </div>
       </div>
 
-      {events.length === 0 ? (
+      {events.length === 0 && tasks.length === 0 ? (
         <EmptyState
           title="Aucun événement pour l'instant"
           description="Clique sur un créneau horaire, ou appuie sur « Nouvel événement », pour planifier ta première activité."
@@ -84,12 +84,12 @@ export default function PlanningPage() {
         <Card>
           <CardBody className="p-2 md:p-4">
             {view === 'jour' && (
-              <DayView date={cursor} events={events} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onDropAt={onDropAt} />
+              <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
             )}
             {view === 'semaine' && (
-              <WeekView cursor={cursor} events={events} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onDropAt={onDropAt} onDayClick={onDayClick} />
+              <WeekView cursor={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} onDayClick={onDayClick} />
             )}
-            {view === 'mois' && <MonthView cursor={cursor} events={events} onDayClick={onDayClick} onEventClick={onEventClick} />}
+            {view === 'mois' && <MonthView cursor={cursor} events={events} tasks={tasks} onDayClick={onDayClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} />}
           </CardBody>
         </Card>
       )}
