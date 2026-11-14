@@ -4,17 +4,21 @@
  * Service vocal unique de Centeryou.
  *
  * Deux moteurs :
- *  1. Défaut, SANS CLÉ API : Web Speech API (speechSynthesis + webkitSpeechRecognition),
- *     voix française (fr-FR), débit 1.0, résultats intermédiaires.
- *  2. ElevenLabs, OPTIONNEL : uniquement si NEXT_PUBLIC_ELEVENLABS_API_KEY est définie.
- *     En cas de clé absente ou d'échec réseau/API, bascule automatique sur le moteur
- *     par défaut — jamais d'erreur bloquante.
+ *  1. Défaut, SANS CLÉ API côté client : Web Speech API (speechSynthesis +
+ *     webkitSpeechRecognition), voix française (fr-FR), débit 1.0.
+ *  2. Voix premium (ElevenLabs) servie par la route serveur /api/voice/speak :
+ *     la clé API reste côté serveur (quota serveur) et n'est jamais dans le
+ *     bundle navigateur. Offerte en illimité avec l'offre Premium ; en offre
+ *     Découverte, 3 essais gratuits par mois puis bascule sur la voix du
+ *     navigateur avec proposition de passer Premium.
+ * En cas d'indisponibilité du moteur premium, bascule automatique sur le
+ * moteur par défaut — jamais d'erreur bloquante.
  */
 
-const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY ?? '';
-const ELEVENLABS_VOICE_ID =
-  process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL';
-const ELEVENLABS_MODEL = 'eleven_multilingual_v2';
+import { FREE_PREMIUM_VOICE_LIMIT_PER_MONTH } from './plans';
+import { useStore } from './store';
+import { currentMonth, isPremiumActive, premiumVoiceRemaining } from './subscription';
+import { useUiStore } from './ui-store';
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -45,27 +49,16 @@ export function isRecognitionAvailable(): boolean {
   return getRecognitionCtor() !== null;
 }
 
-export function usesElevenLabs(): boolean {
-  return ELEVENLABS_API_KEY.length > 0;
-}
-
 let currentAudio: HTMLAudioElement | null = null;
 
-async function speakWithElevenLabs(text: string): Promise<void> {
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
+/** voix premium via le serveur (clé API côté serveur uniquement) */
+async function speakWithPremiumVoice(text: string): Promise<void> {
+  const res = await fetch('/api/voice/speak', {
     method: 'POST',
-    headers: {
-      'xi-api-key': ELEVENLABS_API_KEY,
-      'Content-Type': 'application/json',
-      Accept: 'audio/mpeg',
-    },
-    body: JSON.stringify({
-      text,
-      model_id: ELEVENLABS_MODEL,
-      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
   });
-  if (!res.ok) throw new Error(`ElevenLabs HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`Voix premium HTTP ${res.status}`);
   const buf = await res.arrayBuffer();
   const url = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
   await new Promise<void>((resolve, reject) => {
@@ -88,6 +81,22 @@ async function speakWithElevenLabs(text: string): Promise<void> {
       reject(err);
     });
   });
+}
+
+/** enregistre l'essai gratuit utilisé et avertit quand le quota est épuisé */
+function recordVoiceQuotaUsage(premium: boolean): void {
+  if (premium) return;
+  const used = useStore.getState().recordPremiumVoice();
+  if (used >= FREE_PREMIUM_VOICE_LIMIT_PER_MONTH) {
+    useUiStore.getState().pushToast({
+      message: `Voix premium : tes ${FREE_PREMIUM_VOICE_LIMIT_PER_MONTH} essais gratuits du mois sont utilisés. Passe Premium pour une voix premium illimitée.`,
+      actionLabel: 'Passer Premium',
+      onAction: () => {
+        window.location.href = '/reglages#abonnement';
+      },
+      duration: 9000,
+    });
+  }
 }
 
 function speakWithWebSpeech(text: string): Promise<void> {
@@ -115,9 +124,13 @@ function speakWithWebSpeech(text: string): Promise<void> {
 
 export async function speak(text: string): Promise<void> {
   if (!text.trim()) return;
-  if (ELEVENLABS_API_KEY) {
+  const state = useStore.getState();
+  const premium = isPremiumActive(state.subscription);
+  const remaining = premiumVoiceRemaining(state.voiceQuota, currentMonth());
+  if (premium || remaining > 0) {
     try {
-      await speakWithElevenLabs(text);
+      await speakWithPremiumVoice(text);
+      recordVoiceQuotaUsage(premium);
       return;
     } catch {
       // bascule automatique sur le moteur par défaut

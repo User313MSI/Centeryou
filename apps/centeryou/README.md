@@ -21,6 +21,18 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react. Au
 - Voix : `src/lib/voice.ts` — Web Speech API par défaut (sans clé), ElevenLabs **optionnel** via `NEXT_PUBLIC_ELEVENLABS_API_KEY` (voir `.env.local.example`), bascule automatique sans erreur.
 - Saisie intelligente : parseur français maison `src/lib/parser.ts` (« sport demain 14h », « !lundi réunion »…).
 
+## Paiement — offres Découverte / Premium (Stripe)
+
+- Offres (noms, prix, libellés) : **`src/lib/plans.ts`** (fichier de config unique).
+- Routes serveur (clés Stripe uniquement côté serveur, jamais dans le bundle) :
+  `POST /api/checkout` (Stripe Checkout FR), `POST /api/portal` (portail client),
+  `POST /api/subscription/status` (statut lu chez Stripe), `POST /api/stripe/webhook`
+  (signature vérifiée), `POST /api/voice/speak` (voix premium, quota serveur),
+  `GET|POST /api/sync` (synchro multi-appareils Premium).
+- Variables d'environnement : voir **`.env.local.example`** et le mode d'emploi
+  **[docs/paiement-stripe.md](docs/paiement-stripe.md)** (compte Stripe, variables Vercel,
+  webhook, passage en mode réel, parcours de test).
+
 ## Commandes utiles
 
 | Commande | Effet |

@@ -1,22 +1,40 @@
 import type { Config } from 'tailwindcss';
-import { categoryColors, colors, motion, radius, shadows, typography } from './design/tokens';
+import { categoryColors, motion, radius, shadows, typography } from './design/tokens';
+
+/**
+ * Les couleurs passent par des variables CSS (--c-*) définies dans globals.css
+ * (:root = thème clair = design validé, html.dark = mode sombre Premium), ce qui
+ * permet le <alpha-value> (ex. bg-surface/90) et le switch de thème sans toucher
+ * aux classes existantes.
+ */
+function hexToRgbTriplet(hex: string): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const n = parseInt(full, 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
+const cssVar = (name: string): string => `rgb(var(${name}) / <alpha-value>)`;
+const colorVars = (map: Record<string, string>): Record<string, string> =>
+  Object.fromEntries(Object.entries(map).map(([k, v]) => [k, cssVar(`--c-${k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}`)]));
 
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}', './design/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: colors.primary,
-        primarydark: colors.primaryDark,
-        voice: colors.voice,
-        warning: colors.warning,
-        danger: colors.danger,
-        bg: colors.bg,
-        surface: colors.surface,
-        ink: colors.ink,
-        muted: colors.textSecondary,
-        line: colors.border,
-        cat: { ...categoryColors },
+        primary: cssVar('--c-primary'),
+        primarydark: cssVar('--c-primary-dark'),
+        voice: cssVar('--c-voice'),
+        warning: cssVar('--c-warning'),
+        danger: cssVar('--c-danger'),
+        bg: cssVar('--c-bg'),
+        surface: cssVar('--c-surface'),
+        ink: cssVar('--c-ink'),
+        muted: cssVar('--c-text-secondary'),
+        line: cssVar('--c-border'),
+        cat: colorVars(categoryColors as unknown as Record<string, string>),
       },
       fontFamily: {
         sans: ['var(--font-inter)', ...typography.family.split(', ').slice(1)],

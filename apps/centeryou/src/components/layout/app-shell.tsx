@@ -3,7 +3,10 @@
 import { useEffect, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useHydrated } from '../../lib/useHydrated';
+import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
+import { initSync } from '../../lib/sync';
+import { isPremiumActive } from '../../lib/subscription';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { Logo } from '../brand/logo';
@@ -27,6 +30,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const setPlanningView = useUiStore((s) => s.setPlanningView);
   const setHelpOpen = useUiStore((s) => s.setHelpOpen);
   const toggleListening = useUiStore((s) => s.toggleListening);
+
+  // mode sombre : uniquement si Premium actif (sinon on reste sur le thème clair,
+  // y compris quand un Premium annulé retombe à Découverte en fin de période)
+  useEffect(() => {
+    if (!hydrated) return;
+    const applyTheme = () => {
+      const s = useStore.getState();
+      const dark = s.settings.darkMode && isPremiumActive(s.subscription);
+      document.documentElement.classList.toggle('dark', dark);
+    };
+    applyTheme();
+    initSync();
+    return useStore.subscribe(applyTheme);
+  }, [hydrated]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

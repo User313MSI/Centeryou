@@ -6,8 +6,11 @@ import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
+import { startCheckout } from '../../lib/billing';
 import { useStore } from '../../lib/store';
+import { isPremiumActive } from '../../lib/subscription';
 import { useUiStore } from '../../lib/ui-store';
+import { SubscriptionCard } from '../../components/settings/subscription-card';
 import type { WelcomeSequenceMode } from '../../types';
 
 const selectClass =
@@ -15,6 +18,8 @@ const selectClass =
 
 export default function ReglagesPage() {
   const settings = useStore((s) => s.settings);
+  const subscription = useStore((s) => s.subscription);
+  const premium = isPremiumActive(subscription);
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
   const pushToast = useUiStore((s) => s.pushToast);
@@ -43,6 +48,8 @@ export default function ReglagesPage() {
           </p>
         </CardBody>
       </Card>
+
+      <SubscriptionCard />
 
       <Card>
         <CardHeader>
@@ -116,13 +123,44 @@ export default function ReglagesPage() {
 
       <Card>
         <CardHeader>
+          <h2 className="text-base font-bold text-ink">Affichage</h2>
+        </CardHeader>
+        <CardBody>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">Mode sombre</p>
+              <p className="text-xs text-muted">
+                {premium
+                  ? 'Thème sombre de toute l’interface.'
+                  : 'Réservé à l’offre Premium — il se désactive automatiquement si ton Premium retombe à Découverte.'}
+              </p>
+            </div>
+            {premium ? (
+              <Toggle
+                checked={settings.darkMode}
+                onChange={(v) => updateSettings({ darkMode: v })}
+                label="Mode sombre"
+                id="toggle-dark"
+              />
+            ) : (
+              <Button size="sm" variant="secondary" onClick={() => void startCheckout()}>
+                Passer Premium
+              </Button>
+            )}
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
             <AlertTriangle size={18} aria-hidden className="text-danger" /> Données locales
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Toutes tes données restent dans ce navigateur (localStorage). Aucune donnée n’est envoyée ailleurs.
+            Toutes tes données restent dans ce navigateur (localStorage). Aucune donnée n’est envoyée ailleurs —
+            sauf la synchronisation multi-appareils si tu es Premium (voir Abonnement ci-dessus).
           </p>
           <div>
             <Button
