@@ -8,11 +8,11 @@ Ce fichier s'adresse à tous les agents travaillant sur ce dépôt. Lis-le en en
 
 ## Publication en temps réel
 - Pousse ta branche (`git push`) à chaque étape significative, même en cours de travail.
-- Ouvre ta pull request dès que possible (brouillon accepté), **base `main` obligatoire**.
+- Ouvre ta pull request dès que possible (brouillon accepté), en ciblant la **branche par défaut du dépôt : `vibe/novaloom-suite-fe60b6`**. ⚠️ N'utilise JAMAIS la branche `main` comme base (c'est une vieille branche gelée).
 - Mets à jour ton journal à chaque push, avec l'heure.
 
 ## Coordination entre camps
-- Avant de terminer : synchronise-toi avec `main` et résous tes propres conflits — jamais l'inverse.
+- Avant de terminer : synchronise-toi avec la branche par défaut (`vibe/novaloom-suite-fe60b6`) et résous tes propres conflits — jamais l'inverse.
 - Si ta mission chevauche celle d'un autre agent (regarde son journal), arrête-toi et signale-le dans ton rapport au lieu d'écraser son travail.
 
 ## Règles qualité bloquantes
