@@ -40,3 +40,27 @@ Objectif : un nouvel arrivant comprend le produit en moins de 60 s, sans aide.
 ### Vérification
 - `npm run build` : OK (8 routes statiques, aucune erreur).
 - `npm run test:parser` : OK.
+
+## Dario — 2026-11-14 21:59 UTC — Synchronisation avec la branche par défaut (conflit PR #11)
+
+La branche par défaut `vibe/novaloom-suite-fe60b6` a avancé (PR #8 audit Alpha : sanitation du
+localStorage dans `src/lib/store.ts` + `.catch()` sur `rehydrate`, PR #6 voix 100 % serveur
+`/api/voix`, `AGENTS.md`). Rebase de ma branche sur `71c64b7` ; un seul conflit, dans
+`src/lib/store.ts`, résolu en **gardant les deux travaux** :
+
+- **Sanitation d'Alpha conservée** : `isValidEvent` / `isValidTask` / `sanitizeSettings` et le
+  `merge` qui filtre les entrées persistées malformées (localStorage édité/corrompu → aucun crash).
+- **Mon mode sombre + onboarding conservés** : `version: 2`, `migrate` v1→v2 (`onboarded: true`
+  pour les utilisateurs existants), `theme`/`onboarded` dans `defaultSettings`, et
+  `sanitizeSettings` étendu pour borner `theme` (`'clair' | 'sombre'`) et `onboarded` (booléen)
+  même si le localStorage est modifié à la main.
+- Vérifié dans la source zustand 4.5.5 : le résultat de `migrate` passe bien dans `merge`.
+
+Autres fichiers : fusion auto propre (README : section sécurité voix d'Alpha + mes puces
+onboarding/thèmes ; `voix/page.tsx` : texte `/api/voix` + mon harmonisation de titres).
+
+**Vérification après rebase** : `npm run build` ✅ (9 routes + `/api/voix`, aucune erreur),
+`npm run test:parser` ✅.
+
+**PR** : https://github.com/User313MSI/Dev-Apps/pull/11 (branche
+`vibe/centeryou-onboarding-dark-cd5acb` → base `vibe/novaloom-suite-fe60b6`, passée en ready for review).
