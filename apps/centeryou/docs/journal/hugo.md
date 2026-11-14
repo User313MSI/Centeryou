@@ -52,3 +52,28 @@ Aucun. Aucun test n'a fait échouer une fonctionnalité existante : aucun compor
 - `npx tsc --noEmit` → ✅
 - `npm run build` → ✅ (8 pages statiques)
 - `npm run test:parser` → ✅
+
+## 2026-11-14 ~22:05 — synchronisation avec la branche par défaut (PR #14)
+
+La branche par défaut `vibe/novaloom-suite-fe60b6` a avancé (PR #6 voix 100 % serveur
+`/api/voix` + **quota 300 car/jour/profil**, PR #8 audit + sanitation localStorage,
+PR #12 mobile/PWA). Merge effectué dans ma branche, conflits résolus en gardant les deux
+côtés :
+
+- `store.ts` : mon stockage sûr (`safe-storage`) + `restoreBackup` + sanitation via
+  `sanitize.ts` conservés ; la sanitation upstream (validateurs + clamp `dayStart` 6–10)
+  est reprise dans `sanitize.ts` (clamp identique) ;
+- `app-shell.tsx` : nav mobile/PWA upstream + mon `ErrorBoundary` + toast de stockage ;
+- `welcome-sequence.tsx` / `README.md` : auto-fusionnés (les deux côtés présents).
+
+Tests adaptés à la nouvelle voix serveur (sans changer son comportement) :
+`tests/voice.test.ts` réécrit pour le client `/api/voix` (anonyme = pas d'appel premium,
+429 quota → toast + bascule Web Speech, réseau coupé → repli doux) et nouveau
+`tests/api-voix.test.ts` (13 tests) sur la route : 503 sans clé, 400/413/403,
+**quota 300 car/jour/profil (429 au-delà, cumul, par profil, insensible à la casse)**,
+502 si ElevenLabs tombe, en-têtes de sécurité, clé jamais renvoyée.
+
+- `npm test` → **139/139** ✅ (12 fichiers)
+- `npx tsc --noEmit` ✅ · `npm run build` ✅ (9 routes dont `/api/voix`) · `npm run test:parser` ✅
+
+**PR : https://github.com/User313MSI/Dev-Apps/pull/14** (base `vibe/novaloom-suite-fe60b6`, ready for review).

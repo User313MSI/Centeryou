@@ -10,7 +10,6 @@ vi.mock('../src/lib/voice', () => ({
   isSynthesisAvailable: () => false,
   isRecognitionAvailable: () => false,
   startListening: () => null,
-  usesElevenLabs: () => false,
 }));
 
 import { handleVoiceCommand, programSentence } from '../src/lib/voice-commands';
