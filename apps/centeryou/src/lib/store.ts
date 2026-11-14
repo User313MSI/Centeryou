@@ -108,9 +108,9 @@ export const useStore = create<CenteryouState>()(
       // quota plein -> message clair, aucune écriture ne plante l'app
       storage: createSafeStorage(),
       partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
-      // fusion douce : les nouveaux champs de réglages prennent leur valeur par défaut
-      // si l'état persisté (version antérieure) ne les contient pas, et les éléments
-      // mal formés sont écartés sans perdre les valides
+      // fusion douce + sanitation : les entrées persistées malformées (localStorage édité
+      // ou corrompu) sont écartées sans perdre les valides, pour éviter tout crash de
+      // rendu ; les nouveaux champs de réglages prennent leur valeur par défaut si absents
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CenteryouState>;
         return {

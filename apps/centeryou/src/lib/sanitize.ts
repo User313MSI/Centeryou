@@ -78,7 +78,7 @@ export function sanitizeSettings(input: unknown): Settings {
   const base = { ...defaultSettings };
   if (!isRecord(input)) return base;
   if (typeof input.prenom === 'string') base.prenom = input.prenom;
-  if (typeof input.dayStart === 'number' && input.dayStart >= 6 && input.dayStart <= 10) base.dayStart = input.dayStart;
+  if (typeof input.dayStart === 'number' && Number.isFinite(input.dayStart)) base.dayStart = Math.min(10, Math.max(6, input.dayStart));
   if (typeof input.sounds === 'boolean') base.sounds = input.sounds;
   if (typeof input.voice === 'boolean') base.voice = input.voice;
   if (typeof input.briefShownDate === 'string') base.briefShownDate = input.briefShownDate;

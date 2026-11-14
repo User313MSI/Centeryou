@@ -13,6 +13,7 @@ import { useEventActions } from '../../components/events/use-event-actions';
 import { DAY_END, DAY_START, addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, startOfWeekISO, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { useUiStore, type PlanningView } from '../../lib/ui-store';
+import { useHorizontalSwipe } from '../../lib/use-swipe';
 
 const VIEW_OPTIONS: TabOption[] = [
   { id: 'jour', label: 'Jour' },
@@ -37,6 +38,9 @@ export default function PlanningPage() {
     setCursor((c) => (view === 'jour' ? addDaysISO(c, -1) : view === 'semaine' ? addDaysISO(c, -7) : addMonthsISO(c, -1)));
   const goNext = () =>
     setCursor((c) => (view === 'jour' ? addDaysISO(c, 1) : view === 'semaine' ? addDaysISO(c, 7) : addMonthsISO(c, 1)));
+
+  // geste mobile : glisser horizontalement = jour / semaine / mois précédent(e) ou suivant(e)
+  const swipeRef = useHorizontalSwipe<HTMLDivElement>({ onSwipeLeft: goNext, onSwipeRight: goPrev });
 
   const title =
     view === 'jour'
@@ -85,7 +89,7 @@ export default function PlanningPage() {
       ) : (
         <Card>
           <CardBody className="p-2 md:p-4">
-            <div key={`${view}-${cursor}`} className="animate-view-in">
+            <div key={`${view}-${cursor}`} ref={swipeRef} className="animate-view-in touch-pan-y">
               {view === 'jour' && (
                 <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
               )}

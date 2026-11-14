@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Centeryou — planning, tâches & voix",
   "short_name": "Centeryou",
   "description": "Ton agenda, tes tâches et ton assistant vocal personnel, 100 % en français. Données locales uniquement.",
@@ -27,7 +28,13 @@
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
