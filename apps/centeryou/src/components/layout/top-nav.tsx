@@ -30,7 +30,7 @@ export function TopNav() {
     <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur">
       {/* Ligne principale */}
       <div className="mx-auto flex h-14 w-full max-w-[1100px] items-center justify-between gap-3 px-4 md:h-16 md:px-6">
-        <Link href="/" aria-label="Centeryou — accueil" className="flex shrink-0 items-center rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <Link href="/aujourdhui" aria-label="Centeryou — aujourd’hui" className="flex shrink-0 items-center rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
           <LogoWithName size={30} />
         </Link>
 

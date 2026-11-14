@@ -10,6 +10,8 @@ import { Logo } from '../brand/logo';
 import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
+import { isPublicRoute } from '../../lib/routes';
+import { PublicNav } from './public-nav';
 import { TopNav } from './top-nav';
 import { VoiceFab } from './voice-fab';
 
@@ -28,9 +30,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const setHelpOpen = useUiStore((s) => s.setHelpOpen);
   const toggleListening = useUiStore((s) => s.toggleListening);
 
+  const publicRoute = isPublicRoute(pathname);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isPublicRoute(pathname)) return;
       const el = e.target as HTMLElement | null;
       if (
         el &&
@@ -47,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         openEventDialog({ date: todayISO(), start: nextSlot() });
       } else if (k === 't') {
         e.preventDefault();
-        if (pathname !== '/') router.push('/');
+        if (pathname !== '/aujourdhui') router.push('/aujourdhui');
         window.setTimeout(() => document.getElementById('quick-add-input')?.focus(), 400);
       } else if (k === 'v') {
         e.preventDefault();
@@ -65,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [openEventDialog, setPlanningView, setHelpOpen, toggleListening, router, pathname]);
 
-  if (!hydrated) {
+  if (!publicRoute && !hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
         <div className="animate-fade-in flex flex-col items-center gap-3">
@@ -78,12 +83,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      {publicRoute ? <PublicNav /> : <TopNav />}
       <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">{children}</main>
       <Toasts />
-      <EventDialog />
-      <HelpDialog />
-      <VoiceFab />
+      {!publicRoute && (
+        <>
+          <EventDialog />
+          <HelpDialog />
+          <VoiceFab />
+        </>
+      )}
     </div>
   );
 }

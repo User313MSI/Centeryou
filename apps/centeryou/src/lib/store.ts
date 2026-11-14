@@ -12,6 +12,7 @@ export const defaultSettings: Settings = {
   sounds: true,
   voice: true,
   briefShownDate: '',
+  onboarded: false,
 };
 
 interface CenteryouState {

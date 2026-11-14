@@ -39,4 +39,6 @@ export interface Settings {
   voice: boolean;
   /** dernière date (YYYY-MM-DD) où le brief du matin a été proposé/écouté */
   briefShownDate: string;
+  /** true quand le visiteur a créé un profil local ou choisi « continuer sans compte » */
+  onboarded: boolean;
 }

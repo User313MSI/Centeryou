@@ -34,6 +34,22 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react. Au
 
 `N` nouvel événement · `T` saisie rapide de tâche · `V` assistant vocal · `1/2/3` vues Jour/Semaine/Mois · `?` aide.
 
+## Pages publiques & lancement
+
+| Route | Rôle |
+|---|---|
+| `/` | Accueil public (landing « Ton planning qui te parle ») — un profil existant sur l’appareil est redirigé vers `/aujourdhui` |
+| `/aujourdhui` | Vue « Aujourd’hui » (anciennement `/`) |
+| `/inscription` · `/onboarding` | Création du compte local (prénom, sans serveur) + prise en main en 3 étapes |
+| `/demo` | Semaine type de Sofia, graphiste indépendante — lecture seule, sans compte, aucune donnée réelle |
+| `/presse` | Fiche de presse : description, slogan, logo et visuels téléchargeables |
+| `/offres` | Offre gratuite et principes local-first |
+| `/legal` | Mentions légales, confidentialité (localStorage uniquement) et CGU |
+
+SEO : titres et descriptions en français, `robots: index, follow` explicite (aucun `noindex`), `/robots.txt`,
+`/sitemap.xml` (pages publiques), image Open Graph 1200×630 générée à la build (`/opengraph-image` : logo + slogan
+sur fond `#FAFAFC`). URL publique configurable via `NEXT_PUBLIC_SITE_URL` (défaut `https://centeryou.vercel.app`).
+
 ## PWA
 
 `public/manifest.webmanifest` + icônes 192/512 (générées) : installable, thème violet `#7C5CFF`.

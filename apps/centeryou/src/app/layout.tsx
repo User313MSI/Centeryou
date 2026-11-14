@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { colors } from '../../design/tokens';
 import { AppShell } from '../components/layout/app-shell';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SLOGAN } from '../lib/site';
 import './globals.css';
 
 const inter = Inter({
@@ -13,15 +14,70 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Centeryou — ton planning, ta voix',
-  description:
-    "Agenda, tâches et assistant vocal personnel, 100 % en français. Données locales uniquement.",
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  title: {
+    default: `${SITE_NAME} — ${SLOGAN}`,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    'planning',
+    'agenda',
+    'organisation',
+    'tâches',
+    'to-do',
+    'assistant vocal',
+    'français',
+    'voice assistant',
+    'local-first',
+    'vie privée',
+    'Centeryou',
+  ],
+  authors: [{ name: 'NovaLoom Studio' }],
+  creator: 'NovaLoom Studio',
+  category: 'productivity',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: '/manifest.webmanifest',
   icons: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Centeryou',
+    title: SITE_NAME,
+  },
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    url: '/',
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — ${SLOGAN}`,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — ${SLOGAN} (logo sur fond #FAFAFC)`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} — ${SLOGAN}`,
+    description: SITE_DESCRIPTION,
+    images: ['/opengraph-image'],
   },
 };
 
