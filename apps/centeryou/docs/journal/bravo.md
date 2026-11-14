@@ -39,3 +39,8 @@ Suivre `docs/INSTALL-SUPABASE.md` : créer le projet Supabase, exécuter `docs/s
 - Ajustement nécessaire lié à la CSP de Céleste (`connect-src 'self'`) : `next.config.mjs` autorise désormais l'origine de `NEXT_PUBLIC_SUPABASE_URL` dans `connect-src` quand la variable est définie (sinon la synchro Supabase serait bloquée par le navigateur). Aucun renommage de variable, aucune clé dans le code.
 - Zones des autres agents respectées : voix (Céleste), audit/sanitation (Alpha) non touchées.
 - Re-vérifications après merge : `npx tsc --noEmit` ✅, `npm run test:parser` ✅, `npm run build` ✅ (avec et sans variables Supabase).
+
+## 2026-11-14 22:05 UTC — 2e synchronisation (base déplacée : PR #7, #10, #12 fusionnées)
+
+- Nouvelle fusion de `origin/vibe/novaloom-suite-fe60b6` (tip `ed211b5`). Conflit résolu dans `app-shell.tsx` en gardant les deux côtés : bottom-nav/PWA de Farid (`BottomNav`, `InstallPrompt`, `PwaRegister`, `TaskActionsMenu`) + mon `<SyncProvider />`. `layout.tsx` et `top-nav.tsx` auto-fusionnées proprement (métadonnées mobile + mon `SyncIndicator` + ma description conservés). `.env.local.example` non retouché : les deux blocs (ElevenLabs serveur + Supabase) sont toujours là.
+- Re-vérifications : `npx tsc --noEmit` ✅, `npm run test:parser` ✅, `npm run build` ✅ avec et sans variables Supabase (8/8 pages).
