@@ -24,4 +24,4 @@
 - Rapport : `apps/centeryou/docs/AUDIT-2026-11.md`
 - PR : voir ci-dessous (branche `vibe/centeryou-audit-aa84b3`)
 
-PR : (à compléter après ouverture)
+PR : https://github.com/User313MSI/Dev-Apps/pull/8 (branche `vibe/centeryou-audit-aa84b3` → base `vibe/novaloom-suite-fe60b6`, brouillon)
