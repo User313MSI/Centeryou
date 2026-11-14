@@ -1,0 +1,45 @@
+name: Centeryou — tests & build
+
+on:
+  pull_request:
+    paths:
+      - 'apps/centeryou/**'
+      - '.github/workflows/centeryou-ci.yml'
+  push:
+    branches:
+      - 'vibe/novaloom-suite-fe60b6'
+      - 'main'
+    paths:
+      - 'apps/centeryou/**'
+      - '.github/workflows/centeryou-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  centeryou:
+    name: Tests Vitest + build Next.js (bloquants)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/centeryou
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/centeryou/package-lock.json
+
+      - name: Installation des dépendances (npm ci)
+        run: npm ci
+
+      - name: Tests automatisés Vitest + Testing Library
+        run: npm test
+
+      - name: Tests historiques du parseur (scripts/test-parser.mjs)
+        run: npm run test:parser
+
+      - name: Build de production Next.js
+        run: npm run build

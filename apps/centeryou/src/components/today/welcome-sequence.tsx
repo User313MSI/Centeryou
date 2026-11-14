@@ -24,6 +24,7 @@ import { calendarOnDate, type CalendarInstance } from '../../lib/events';
 import { useStore } from '../../lib/store';
 import { speak, stopSpeaking } from '../../lib/voice';
 import { cx } from '../../lib/utils';
+import { shouldShowWelcome } from '../../lib/welcome';
 
 /**
  * Séquence d'accueil animée (page Aujourd'hui) : plein écran temporaire qui résume
@@ -49,10 +50,9 @@ export function WelcomeSequence() {
   useEffect(() => {
     if (!hydrated) return;
     const s = useStore.getState();
-    const mode = s.settings.welcomeSequence ?? 'daily';
-    if (mode === 'off') return;
-    if (mode === 'daily' && s.settings.welcomeShownDate === todayISO()) return;
-    if (mode === 'daily') s.markWelcomeShown();
+    const today = todayISO();
+    if (!shouldShowWelcome(s.settings.welcomeSequence, s.settings.welcomeShownDate, today)) return;
+    if ((s.settings.welcomeSequence ?? 'daily') === 'daily') s.markWelcomeShown();
     setOpen(true);
   }, [hydrated]);
 

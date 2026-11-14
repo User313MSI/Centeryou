@@ -3,18 +3,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, WelcomeSequenceMode } from '../types';
+import type { BackupPayload } from './backup';
 import { minutesOf, timeOf, todayISO } from './dates';
+import { defaultSettings } from './defaults';
+import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
+import { createSafeStorage } from './safe-storage';
 import { uid } from './utils';
 
-export const defaultSettings: Settings = {
-  prenom: '',
-  dayStart: 8,
-  sounds: true,
-  voice: true,
-  briefShownDate: '',
-  welcomeSequence: 'daily',
-  welcomeShownDate: '',
-};
+export { defaultSettings };
 
 interface CenteryouState {
   events: EventItem[];
@@ -35,6 +31,8 @@ interface CenteryouState {
   markBriefShown: () => void;
   markWelcomeShown: () => void;
   resetAll: () => void;
+  /** applique une sauvegarde importée (déjà validée/sanitisée) */
+  restoreBackup: (payload: BackupPayload) => void;
   setHydrated: () => void;
 }
 
@@ -94,20 +92,34 @@ export const useStore = create<CenteryouState>()(
             welcomeShownDate: get().settings.welcomeShownDate,
           },
         }),
+      restoreBackup: (payload) =>
+        set({
+          events: sanitizeEvents(payload.events),
+          tasks: sanitizeTasks(payload.tasks),
+          settings: sanitizeSettings(payload.settings),
+        }),
       setHydrated: () => set({ hydrated: true }),
     }),
     {
       name: 'centeryou-v1',
       version: 1,
       skipHydration: true,
+      // stockage résilient : localStorage corrompu -> sauvegarde de côté + état neuf,
+      // quota plein -> message clair, aucune écriture ne plante l'app
+      storage: createSafeStorage(),
       partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
       // fusion douce : les nouveaux champs de réglages prennent leur valeur par défaut
-      // si l'état persisté (version antérieure) ne les contient pas
-      merge: (persisted, current) => ({
-        ...current,
-        ...(persisted as Partial<CenteryouState>),
-        settings: { ...defaultSettings, ...(persisted as { settings?: Partial<Settings> } | undefined)?.settings },
-      }),
+      // si l'état persisté (version antérieure) ne les contient pas, et les éléments
+      // mal formés sont écartés sans perdre les valides
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<CenteryouState>;
+        return {
+          ...current,
+          events: sanitizeEvents(p.events),
+          tasks: sanitizeTasks(p.tasks),
+          settings: sanitizeSettings(p.settings),
+        };
+      },
     },
   ),
 );

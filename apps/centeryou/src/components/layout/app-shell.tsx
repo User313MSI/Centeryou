@@ -5,8 +5,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useHydrated } from '../../lib/useHydrated';
 import { useUiStore } from '../../lib/ui-store';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
+import { getStorageReport } from '../../lib/safe-storage';
 import { clamp } from '../../lib/utils';
 import { Logo } from '../brand/logo';
+import { ErrorBoundary } from '../error/error-boundary';
 import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
@@ -27,6 +29,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const setPlanningView = useUiStore((s) => s.setPlanningView);
   const setHelpOpen = useUiStore((s) => s.setHelpOpen);
   const toggleListening = useUiStore((s) => s.toggleListening);
+  const pushToast = useUiStore((s) => s.pushToast);
+
+  // signale un stockage plein / corrompu (réparé) par un message clair, jamais bloquant
+  useEffect(() => {
+    if (!hydrated) return;
+    const r = getStorageReport();
+    if (r.status !== 'ok' && r.message) pushToast({ message: r.message, duration: 9000 });
+  }, [hydrated, pushToast]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -79,7 +89,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-bg">
       <TopNav />
-      <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">{children}</main>
+      <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
       <Toasts />
       <EventDialog />
       <HelpDialog />
