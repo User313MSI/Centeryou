@@ -45,6 +45,15 @@ interface UiState {
 
   helpOpen: boolean;
   setHelpOpen: (b: boolean) => void;
+
+  /** appui long sur une tâche (mobile) : id de la tâche dont le menu d'actions est ouvert */
+  taskMenuId: string | null;
+  openTaskMenu: (id: string) => void;
+  closeTaskMenu: () => void;
+
+  /** invite d'installation PWA refusée pour la session (non persistée) */
+  installDismissed: boolean;
+  dismissInstall: () => void;
 }
 
 export const useUiStore = create<UiState>()((set, get) => ({
@@ -78,4 +87,11 @@ export const useUiStore = create<UiState>()((set, get) => ({
 
   helpOpen: false,
   setHelpOpen: (b) => set({ helpOpen: b }),
+
+  taskMenuId: null,
+  openTaskMenu: (id) => set({ taskMenuId: id }),
+  closeTaskMenu: () => set({ taskMenuId: null }),
+
+  installDismissed: false,
+  dismissInstall: () => set({ installDismissed: true }),
 }));

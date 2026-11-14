@@ -6,6 +6,7 @@ import { categoryLabel, priorityLabel } from '../../lib/categories';
 import { formatDayShort, formatTimeFr } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
+import { useSwipeActions } from '../../lib/use-swipe';
 import type { TaskItem } from '../../types';
 import { cx } from '../../lib/utils';
 import { playBlip } from '../../lib/voice';
@@ -18,6 +19,7 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
   const addTask = useStore((s) => s.addTask);
   const sounds = useStore((s) => s.settings.sounds);
   const pushToast = useUiStore((s) => s.pushToast);
+  const openTaskMenu = useUiStore((s) => s.openTaskMenu);
 
   const onToggle = () => {
     toggleTask(task.id);
@@ -36,8 +38,21 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
     });
   };
 
+  // gestes tactiles mobile : glisser vers la droite = terminée, appui long = menu d'actions
+  const swipeRef = useSwipeActions<HTMLLIElement>({
+    onSwipeRight: () => {
+      if (!task.done) onToggle();
+    },
+    onLongPress: () => openTaskMenu(task.id),
+  });
+
   return (
-    <li className="flex items-center gap-3 rounded-card border border-line/70 bg-surface p-3 shadow-card transition-shadow duration-fast ease-out hover:shadow-hover">
+    <li
+      ref={swipeRef}
+      className="flex touch-pan-y select-none items-center gap-3 rounded-card border border-line/70 bg-surface p-3 shadow-card transition-shadow duration-fast ease-out hover:shadow-hover"
+      style={{ WebkitTouchCallout: 'none' }}
+      aria-label={`${task.done ? 'Tâche faite' : 'Tâche active'} : ${task.title}. Glisser vers la droite pour la terminer, appui long pour le menu.`}
+    >
       <button
         type="button"
         onClick={onToggle}

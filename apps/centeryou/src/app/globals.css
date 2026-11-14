@@ -6,8 +6,16 @@
   html {
     @apply bg-bg;
   }
+  html,
+  body {
+    /* aucun d\u00e9bordement horizontal de page, m\u00eame \u00e0 360 px */
+    overflow-x: clip;
+  }
   body {
     @apply bg-bg font-sans text-ink antialiased;
+    /* zones s\u00fbres lat\u00e9rales (paysage / \u00e9cran courbe) : 0 px sur ordinateur */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   ::selection {
     @apply bg-primary/25 text-ink;

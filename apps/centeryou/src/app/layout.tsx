@@ -17,10 +17,16 @@ export const metadata: Metadata = {
   description:
     "Agenda, tâches et assistant vocal personnel, 100 % en français. Données locales uniquement.",
   manifest: '/manifest.webmanifest',
-  icons: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
+  icons: {
+    icon: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icons/apple-touch-icon.png' }],
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Centeryou',
   },
 };
@@ -29,6 +35,10 @@ export const viewport: Viewport = {
   themeColor: colors.primary,
   width: 'device-width',
   initialScale: 1,
+  // encoche / barre système : le contenu s'étend sous la barre d'état (géré via env(safe-area-inset-*))
+  viewportFit: 'cover',
+  // clavier mobile : la fenêtre se redimensionne à l'ouverture du clavier, aucun champ n'est jamais masqué
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
