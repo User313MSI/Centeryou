@@ -53,7 +53,9 @@ export default function PlanningPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold capitalize text-ink">{title}</h1>
+        <h1 key={title} className="animate-fade-in text-2xl font-extrabold capitalize text-ink">
+          {title}
+        </h1>
         <Button onClick={() => openEventDialog({ date: cursor, start: nextSlot() })}>
           <Plus size={18} aria-hidden /> Nouvel événement
         </Button>
@@ -83,13 +85,15 @@ export default function PlanningPage() {
       ) : (
         <Card>
           <CardBody className="p-2 md:p-4">
-            {view === 'jour' && (
-              <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
-            )}
-            {view === 'semaine' && (
-              <WeekView cursor={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} onDayClick={onDayClick} />
-            )}
-            {view === 'mois' && <MonthView cursor={cursor} events={events} tasks={tasks} onDayClick={onDayClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} />}
+            <div key={`${view}-${cursor}`} className="animate-view-in">
+              {view === 'jour' && (
+                <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
+              )}
+              {view === 'semaine' && (
+                <WeekView cursor={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} onDayClick={onDayClick} />
+              )}
+              {view === 'mois' && <MonthView cursor={cursor} events={events} tasks={tasks} onDayClick={onDayClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} />}
+            </div>
           </CardBody>
         </Card>
       )}
