@@ -47,4 +47,14 @@ Configuration (voir `.env.local.example`) : `NEXT_ELEVENLABS_API_KEY` (et option
 
 ## PWA
 
-`public/manifest.webmanifest` + icônes 192/512 (générées) : installable, thème violet `#7C5CFF`.
+`public/manifest.webmanifest` + icônes 192/512/maskable (générées) : installable, thème violet `#7C5CFF`.
+Hors-ligne réel via `public/sw.js` (coquille précachée, assets et pages en cache), invite d'installation
+discrète (Android `beforeinstallprompt`, astuce iOS Partager → « Sur l'écran d'accueil »).
+
+## Mobile
+
+Barre d'onglets en bas (Aujourd'hui / Planning / Tâches / Voix), navigation haute réservée au desktop.
+Gestes tactiles : glisser horizontalement dans le planning = changer de jour/semaine/mois, glisser une
+tâche vers la droite = terminée, appui long sur une tâche = menu d'actions. Zones sûres (`env(safe-area-inset-*)`,
+`viewport-fit: cover`) et clavier (`interactive-widget: resizes-content`) pris en charge ; audit 360/390 px
+(sans débordement, texte ≥ 12 px, cibles ≥ 44 px).
