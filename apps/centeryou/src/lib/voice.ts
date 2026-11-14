@@ -13,7 +13,7 @@
 
 const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY ?? '';
 const ELEVENLABS_VOICE_ID =
-  process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'XB0fDUnXU5powFXDhCwa';
+  process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL';
 const ELEVENLABS_MODEL = 'eleven_multilingual_v2';
 
 type SpeechRecognitionLike = {

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Category, EventItem, Priority, Repeat, Settings, TaskItem } from '../types';
+import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, WelcomeSequenceMode } from '../types';
 import { minutesOf, timeOf, todayISO } from './dates';
 import { uid } from './utils';
 
@@ -12,6 +12,8 @@ export const defaultSettings: Settings = {
   sounds: true,
   voice: true,
   briefShownDate: '',
+  welcomeSequence: 'daily',
+  welcomeShownDate: '',
 };
 
 interface CenteryouState {
@@ -31,6 +33,7 @@ interface CenteryouState {
 
   updateSettings: (patch: Partial<Settings>) => void;
   markBriefShown: () => void;
+  markWelcomeShown: () => void;
   resetAll: () => void;
   setHydrated: () => void;
 }
@@ -79,8 +82,18 @@ export const useStore = create<CenteryouState>()(
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       markBriefShown: () =>
         set((s) => ({ settings: { ...s.settings, briefShownDate: todayISO() } })),
+      markWelcomeShown: () =>
+        set((s) => ({ settings: { ...s.settings, welcomeShownDate: todayISO() } })),
       resetAll: () =>
-        set({ events: [], tasks: [], settings: { ...defaultSettings, briefShownDate: get().settings.briefShownDate } }),
+        set({
+          events: [],
+          tasks: [],
+          settings: {
+            ...defaultSettings,
+            briefShownDate: get().settings.briefShownDate,
+            welcomeShownDate: get().settings.welcomeShownDate,
+          },
+        }),
       setHydrated: () => set({ hydrated: true }),
     }),
     {
@@ -88,8 +101,15 @@ export const useStore = create<CenteryouState>()(
       version: 1,
       skipHydration: true,
       partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
+      // fusion douce : les nouveaux champs de réglages prennent leur valeur par défaut
+      // si l'état persisté (version antérieure) ne les contient pas
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<CenteryouState>),
+        settings: { ...defaultSettings, ...(persisted as { settings?: Partial<Settings> } | undefined)?.settings },
+      }),
     },
   ),
 );
 
-export type { Category, Priority, Repeat };
+export type { Category, Priority, Repeat, WelcomeSequenceMode };

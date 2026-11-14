@@ -31,6 +31,10 @@ interface UiState {
   planningView: PlanningView;
   setPlanningView: (v: PlanningView) => void;
 
+  /** dernier événement déposé (drag & drop) : id + horodatage, pour le rebond de confirmation (non persisté) */
+  lastDrop: { id: string; at: number } | null;
+  setLastDrop: (id: string) => void;
+
   listening: boolean;
   setListening: (b: boolean) => void;
   toggleListening: () => void;
@@ -60,6 +64,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
 
   planningView: 'semaine',
   setPlanningView: (v) => set({ planningView: v }),
+
+  lastDrop: null,
+  setLastDrop: (id) => set({ lastDrop: { id, at: Date.now() } }),
 
   listening: false,
   setListening: (b) => set({ listening: b }),
