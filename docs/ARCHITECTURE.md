@@ -1,32 +1,25 @@
-# Architecture — NovaLoom Suite
+# Architecture — Centeryou
 
 ```
 Dev-Apps/
-├── brand.config.json        # Single source of truth for brand/names/colors
-├── README.md                # Overview & run instructions
-├── docs/                    # All documentation
+├── AGENTS.md                # Règles d'équipe (à lire avant d'agir)
+├── brand.config.json        # Marque, palette et crédits (source unique)
+├── README.md                # Présentation
+├── docs/                    # Documentation
 └── apps/
-    ├── harborcut/           # Desktop video editor (Electron)
-    ├── verdantfarm/          # Mobile farm game (React Native + Expo)
-    ├── aquapuzzle/           # Mobile match-3 + aquarium (React Native + Expo)
-    └── starfall/             # Animated series + AMV edits (web, Canvas + WebAudio)
+    └── centeryou/           # Planning interactif personnel (Next.js + PWA)
+        ├── design/tokens.ts # Design tokens (source de vérité unique)
+        ├── src/app/         # Pages (App Router) : accueil, planning, tâches, voix, réglages
+        ├── src/components/  # Composants d'interface
+        ├── src/lib/         # Store Zustand, parseur FR, voix, dates, catégories
+        └── public/          # Manifest + icônes PWA (générés depuis les tokens)
 ```
 
-## Shared principles
-- **No heavy frameworks where none is needed.** HarborCut and Starfall are vanilla JS; the games are React Native/Expo as required for mobile builds.
-- **Engines are UI-agnostic.** Each game's logic lives in `src/game.js` — pure functions/classes with no React imports — so it is fully unit-testable and reusable.
-- **Everything is tested.** Each app ships a test suite; CI should run them on every push (see PUBLISH.md).
-- **Security by default.** Electron runs with contextIsolation, sandbox, no node integration, and a strict CSP. All user-provided strings are HTML-escaped before insertion.
+## Principes
 
-## Test results (this branch)
-| App | Tests | Result |
-|---|---|---|
-| Verdant Farm | 21 (Jest) | ✅ all pass |
-| Aqua Puzzle | 10 (Jest) | ✅ all pass — includes a fix for an infinite-cascade engine bug found by the tests |
-| HarborCut | 12 (node) | ✅ all pass — state, undo/redo, engine ops |
-| Starfall | 7 (node) | ✅ all pass — episode timings, overlaps, coverage |
-
-## Known environment limits (honest notes)
-- Emulators cannot run in the build sandbox (no KVM). The games are tested at the logic level; run them on device/emulator with the instructions in each doc.
-- HarborCut's Electron window cannot render headless here (no display server). Engine + syntax fully validated; packaging config ready.
-- npm audit reports a critical `tar` advisory inside the Expo build toolchain (`xcode` package). It affects build tooling only, never ships in the app binaries. Fixing requires a breaking Expo downgrade — documented, accepted for now.
+- **Un seul produit, une stack légère.** Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react — aucun autre paquet.
+- **Design system centralisé.** Couleurs, ombres, rayons et typographie vivent uniquement dans `apps/centeryou/design/tokens.ts`, câblés dans `tailwind.config.ts` ; les icônes et le manifest sont générés depuis ces tokens (`npm run icons`).
+- **Local-first.** Persistance `localStorage` via le store Zustand (`src/lib/store.ts`, clé `centeryou-v1`) : aucun backend, aucune base de données.
+- **Voix.** Web Speech API par défaut, sans clé ; ElevenLabs optionnel via variable d'environnement (voir `.env.local.example`) — aucune clé en dur dans le code.
+- **Saisie intelligente.** Parseur de langage naturel en français (`src/lib/parser.ts`) : « sport demain 14h », « !lundi réunion »…
+- **Testé.** `npm run test:parser` (parseur, conflits, commandes vocales) et `npm run build` doivent passer avant toute PR (voir `docs/PUBLISH.md`).
