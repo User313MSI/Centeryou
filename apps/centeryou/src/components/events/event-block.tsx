@@ -110,7 +110,7 @@ export function EventBlock({
       onKeyDown={onKeyDown}
       onClick={onClick}
       className={cx(
-        'absolute left-1 right-1 z-10 select-none overflow-hidden rounded-lg border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
+        'absolute left-1 right-1 z-10 select-none overflow-hidden rounded-card border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
         isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
         dragging && 'z-50 opacity-95 shadow-hover',
         instance.done && 'opacity-70',

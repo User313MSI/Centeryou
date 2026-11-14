@@ -1,22 +1,16 @@
 import type { Config } from 'tailwindcss';
-import { categoryColors, colors, motion, radius, shadows, typography } from './design/tokens';
+import { categoryColors, colorVarNames, colors, motion, radius, typography } from './design/tokens';
+
+/** couleur adossée à une variable CSS (thème clair/sombre injecté dans layout.tsx) */
+const varColor = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}', './design/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: colors.primary,
-        primarydark: colors.primaryDark,
-        voice: colors.voice,
-        warning: colors.warning,
-        danger: colors.danger,
-        bg: colors.bg,
-        surface: colors.surface,
-        ink: colors.ink,
-        muted: colors.textSecondary,
-        line: colors.border,
-        cat: { ...categoryColors },
+        ...Object.fromEntries((Object.keys(colors) as (keyof typeof colors)[]).map((k) => [colorVarNames[k], varColor(colorVarNames[k])])),
+        cat: Object.fromEntries(Object.keys(categoryColors).map((k) => [k, varColor(`cat-${k}`)])),
       },
       fontFamily: {
         sans: ['var(--font-inter)', ...typography.family.split(', ').slice(1)],
@@ -42,8 +36,8 @@ const config: Config = {
         tile: `${radius.tile}px`,
       },
       boxShadow: {
-        card: shadows.rest,
-        hover: shadows.hover,
+        card: 'var(--shadow-rest)',
+        hover: 'var(--shadow-hover)',
       },
       transitionDuration: {
         fast: `${motion.fast}ms`,

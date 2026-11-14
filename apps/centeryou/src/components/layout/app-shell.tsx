@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useHydrated } from '../../lib/useHydrated';
+import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
@@ -27,10 +28,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hydrated = useHydrated();
   const router = useRouter();
   const pathname = usePathname();
+  const theme = useStore((s) => s.settings.theme);
+  const onboarded = useStore((s) => s.settings.onboarded);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
   const setPlanningView = useUiStore((s) => s.setPlanningView);
   const setHelpOpen = useUiStore((s) => s.setHelpOpen);
   const toggleListening = useUiStore((s) => s.toggleListening);
+
+  // thème sombre mémorisé : bascule la classe .dark sur <html> (variables CSS du thème)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'sombre');
+  }, [theme]);
+
+  // nouveaux arrivants : parcours d'accueil en 3 étapes avant toute navigation
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!onboarded && pathname !== '/bienvenue') router.replace('/bienvenue');
+    else if (onboarded && pathname === '/bienvenue') router.replace('/');
+  }, [hydrated, onboarded, pathname, router]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

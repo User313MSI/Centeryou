@@ -66,7 +66,7 @@ export function BriefCard() {
 
   return (
     <Card className="border-voice/40 bg-voice/5">
-      <CardBody className="flex flex-col gap-3 pt-4">
+      <CardBody className="flex flex-col gap-3 pt-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
             <Sun size={18} aria-hidden className="text-warning" /> Ton brief du matin
@@ -78,7 +78,7 @@ export function BriefCard() {
               </Button>
             )}
             <Button size="sm" onClick={listen} disabled={speaking} aria-label="Écouter mon brief du jour">
-              <Sun size={16} aria-hidden /> ☀️ Écouter mon brief du jour
+              <Sun size={16} aria-hidden /> Écouter mon brief du jour
             </Button>
           </div>
         </div>

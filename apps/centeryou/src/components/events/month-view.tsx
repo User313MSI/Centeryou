@@ -57,7 +57,7 @@ export function MonthView({
                       key={`${inst.kind}-${inst.id}`}
                       onClick={() => (inst.kind === 'event' && inst.event ? onEventClick(inst.event) : inst.task && onTaskToggle(inst.task))}
                       title={inst.kind === 'event' ? `${inst.title} — ${inst.start} à ${inst.end}` : `Tâche : ${inst.title}${inst.start ? ` à ${inst.start}` : ''}${inst.done ? ' (faite)' : ''}`}
-                      className="flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-left text-xs font-medium text-ink transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="flex max-w-full items-center gap-1 rounded-card px-1 py-0.5 text-left text-xs font-medium text-ink transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {inst.kind === 'task' ? (
                         <span

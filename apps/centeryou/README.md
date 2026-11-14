@@ -20,6 +20,9 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react. Au
 - Persistance : store Zustand `src/lib/store.ts` (`persist`, clé `centeryou-v1`).
 - Voix : `src/lib/voice.ts` — Web Speech API par défaut (gratuite, sans clé), voix premium ElevenLabs via la **route API serveur** `/api/voix` (voir ci-dessous), bascule automatique sans erreur.
 - Saisie intelligente : parseur français maison `src/lib/parser.ts` (« sport demain 14h », « !lundi réunion »…).
+- Parcours d'accueil des nouveaux arrivants : mini-assistant en 3 étapes sur `/bienvenue` (prénom → premier
+  événement en langage naturel → « C'est parti ! » vers Aujourd'hui et son résumé animé).
+- Thèmes clair/sombre : tokens dérivés dans `design/tokens.ts` (`darkColors`), bascule mémorisée dans Réglages.
 
 ## Sécurité de la voix (clé ElevenLabs)
 
