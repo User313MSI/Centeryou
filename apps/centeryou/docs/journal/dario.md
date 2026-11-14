@@ -64,3 +64,19 @@ onboarding/thèmes ; `voix/page.tsx` : texte `/api/voix` + mon harmonisation de 
 
 **PR** : https://github.com/User313MSI/Dev-Apps/pull/11 (branche
 `vibe/centeryou-onboarding-dark-cd5acb` → base `vibe/novaloom-suite-fe60b6`, passée en ready for review).
+
+## Dario — 2026-11-14 22:07 UTC — Deuxième synchro (PR #10/#12/#7 fusionnées entre-temps)
+
+La branche par défaut a encore avancé (`ed211b5` : PR #10 nettoyage Kilo, PR #7 desktop Gigi,
+PR #12 mobile Farid — bottom-nav, PWA hors-ligne, gestes, safe-area). Rebase sur `ed211b5` :
+un seul conflit (`welcome-sequence.tsx`, compteur de la semaine) résolu en gardant les deux —
+classe responsive mobile de Farid (`text-xs md:text-[10px]`) + retrait du glyphe ✦ (icônes
+lucide uniquement). Toutes les autres fusions auto sont propres et vérifiées à la main :
+mon thème sombre/onboarding + leurs bottom-nav, PWA, safe-area, `/api/voix`… ; `store.ts`
+n'a pas été touché par eux, ma résolution Alpha+Dario est donc intacte (sanitation + `version: 2`
++ `migrate` + `theme`/`onboarded` bornés dans `sanitizeSettings`).
+
+**Vérification** : `npm run build` ✅ (9 routes + `/api/voix`), `npm run test:parser` ✅.
+
+**PR** : https://github.com/User313MSI/Dev-Apps/pull/11 — ready for review, base
+`vibe/novaloom-suite-fe60b6`.
