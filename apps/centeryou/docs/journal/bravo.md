@@ -29,3 +29,13 @@ Ajouter des **comptes** (Supabase, gratuit) et une **sauvegarde en ligne** à Ce
 ## Reste à faire côté humain (hors code)
 
 Suivre `docs/INSTALL-SUPABASE.md` : créer le projet Supabase, exécuter `docs/supabase/schema.sql`, coller les 2 clés dans Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) puis redéployer.
+
+---
+
+## 2026-11-14 21:59 UTC — Synchronisation avec la branche par défaut
+
+- La branche par défaut du dépôt est désormais `vibe/novaloom-suite-fe60b6` (AGENTS.md ajouté par l'équipe ; `main` est gelée). **PR : https://github.com/User313MSI/Dev-Apps/pull/9** (base `vibe/novaloom-suite-fe60b6`).
+- Fusion de `origin/vibe/novaloom-suite-fe60b6` dans ma branche ; **conflit résolu dans `.env.local.example` en gardant les deux blocs** : variables voix ElevenLabs côté serveur de Céleste (`NEXT_ELEVENLABS_API_KEY`, `NEXT_ELEVENLABS_VOICE_ID`, inchangées) + mes variables Supabase (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+- Ajustement nécessaire lié à la CSP de Céleste (`connect-src 'self'`) : `next.config.mjs` autorise désormais l'origine de `NEXT_PUBLIC_SUPABASE_URL` dans `connect-src` quand la variable est définie (sinon la synchro Supabase serait bloquée par le navigateur). Aucun renommage de variable, aucune clé dans le code.
+- Zones des autres agents respectées : voix (Céleste), audit/sanitation (Alpha) non touchées.
+- Re-vérifications après merge : `npx tsc --noEmit` ✅, `npm run test:parser` ✅, `npm run build` ✅ (avec et sans variables Supabase).
