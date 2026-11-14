@@ -10,6 +10,7 @@ import { QuickAdd } from '../tasks/quick-add';
 import { TaskItemRow } from '../tasks/task-item';
 import { BriefCard } from './brief-card';
 import { ProgressBar } from './progress-bar';
+import { WelcomeSequence } from './welcome-sequence';
 import { formatDayLong, greetingFor, todayISO } from '../../lib/dates';
 import { calendarOnDate } from '../../lib/events';
 import { useStore } from '../../lib/store';
@@ -28,6 +29,7 @@ export function AujourdhuiView() {
 
   return (
     <div className="flex flex-col gap-5">
+      <WelcomeSequence />
       <header className="text-center">
         <h1 className="text-2xl font-extrabold text-ink md:text-4xl">
           {greetingFor()}

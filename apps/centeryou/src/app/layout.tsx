@@ -29,7 +29,6 @@ export const metadata: Metadata = {
     'to-do',
     'assistant vocal',
     'français',
-    'voice assistant',
     'local-first',
     'vie privée',
     'Centeryou',
@@ -48,10 +47,16 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/manifest.webmanifest',
-  icons: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
+  icons: {
+    icon: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icons/apple-touch-icon.png' }],
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: SITE_NAME,
   },
   alternates: {
@@ -85,6 +90,8 @@ export const viewport: Viewport = {
   themeColor: colors.primary,
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

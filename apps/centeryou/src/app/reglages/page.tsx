@@ -8,6 +8,7 @@ import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
+import type { WelcomeSequenceMode } from '../../types';
 
 const selectClass =
   'w-full min-h-11 rounded-card border border-line bg-surface px-4 text-base text-ink transition-colors duration-fast ease-out focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
@@ -62,6 +63,30 @@ export default function ReglagesPage() {
               ))}
             </select>
           </Field>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-base font-bold text-ink">Séquence d’accueil</h2>
+        </CardHeader>
+        <CardBody>
+          <Field label="Séquence d’accueil (page Aujourd’hui)" htmlFor="reglage-welcome">
+            <select
+              id="reglage-welcome"
+              value={settings.welcomeSequence ?? 'daily'}
+              onChange={(e) => updateSettings({ welcomeSequence: e.target.value as WelcomeSequenceMode })}
+              className={selectClass}
+            >
+              <option value="always">À chaque ouverture</option>
+              <option value="daily">Une fois par jour (défaut)</option>
+              <option value="off">Désactivée</option>
+            </select>
+          </Field>
+          <p className="mt-2 text-xs text-muted">
+            Plein écran animé qui résume ta journée à l’arrivée. La voix ne se lance jamais toute seule : bouton
+            « ▶ Écouter le résumé » uniquement.
+          </p>
         </CardBody>
       </Card>
 

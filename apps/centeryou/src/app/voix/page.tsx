@@ -42,8 +42,9 @@ export default function VoixPage() {
             ))}
           </ul>
           <p className="mt-3 text-xs text-muted">
-            Sans clé API, la voix utilise la synthèse vocale de ton navigateur (français). Une clé ElevenLabs optionnelle
-            (voir <code>.env.local.example</code>) améliore la voix ; sinon Centeryou bascule automatiquement, sans erreur.
+            Sans voix premium, la synthèse utilise la voix de ton navigateur (français, gratuite). La voix premium
+            (ElevenLabs, côté serveur via <code>/api/voix</code>) s’active pour un profil renseigné, avec un quota de
+            300 caractères/jour ; sinon Centeryou bascule automatiquement, sans erreur.
           </p>
         </CardBody>
       </Card>

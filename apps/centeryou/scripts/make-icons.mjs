@@ -71,20 +71,22 @@ function encodePNG(width, height, rgba) {
 }
 
 // ---------- rendu du logo (cercle violet + onde teal), supersampling 4x ----------
-function renderLogo(size, { opaqueBg = false } = {}) {
+// maskable = icône plein cadre pour Android (zone sûre maskable : contenu dans 80 % centraux)
+function renderLogo(size, { opaqueBg = false, maskable = false } = {}) {
   const S = 4;
   const w = size * S;
   const h = size * S;
   const [pr, pg, pb] = hexToRgb(PRIMARY);
   const [vr, vg, vb] = hexToRgb(VOICE);
-  const [br, bgl, bb] = hexToRgb(BG);
+  const [br, bgl, bb] = hexToRgb(maskable ? PRIMARY : BG);
   const cx = w / 2;
   const cy = h / 2;
   const R = w * 0.46;
-  const x0 = cx - R * 0.72;
-  const x1 = cx + R * 0.72;
-  const amp = R * 0.3;
-  const stroke = R * 0.1;
+  const Rw = maskable ? w * 0.4 : R; // onde contenue dans la zone sûre maskable
+  const x0 = cx - Rw * 0.72;
+  const x1 = cx + Rw * 0.72;
+  const amp = Rw * 0.3;
+  const stroke = Rw * 0.1;
   const px = new Uint8Array(w * h * 4);
 
   for (let y = 0; y < h; y += 1) {
@@ -93,21 +95,21 @@ function renderLogo(size, { opaqueBg = false } = {}) {
       let r = br;
       let g = bgl;
       let b = bb;
-      let a = opaqueBg ? 255 : 0;
+      let a = opaqueBg || maskable ? 255 : 0;
       const d = Math.hypot(x - cx, y - cy);
-      if (d <= R) {
+      if (!maskable && d <= R) {
         r = pr;
         g = pg;
         b = pb;
         a = 255;
-        if (x >= x0 && x <= x1) {
-          const phase = ((x - x0) / (x1 - x0)) * 2 * Math.PI;
-          const yc = cy + amp * Math.sin(phase);
-          if (Math.abs(y - yc) <= stroke / 2) {
-            r = vr;
-            g = vg;
-            b = vb;
-          }
+      }
+      if (x >= x0 && x <= x1) {
+        const phase = ((x - x0) / (x1 - x0)) * 2 * Math.PI;
+        const yc = cy + amp * Math.sin(phase);
+        if (Math.abs(y - yc) <= stroke / 2 && (maskable || d <= R)) {
+          r = vr;
+          g = vg;
+          b = vb;
         }
       }
       px[i] = r;
@@ -159,9 +161,11 @@ const svg = `<!-- Généré par scripts/make-icons.mjs depuis design/tokens.ts �
 writeFileSync(path.join(iconsDir, 'icon.svg'), svg);
 writeFileSync(path.join(iconsDir, 'icon-192.png'), encodePNG(192, 192, renderLogo(192)));
 writeFileSync(path.join(iconsDir, 'icon-512.png'), encodePNG(512, 512, renderLogo(512)));
+writeFileSync(path.join(iconsDir, 'icon-maskable-512.png'), encodePNG(512, 512, renderLogo(512, { maskable: true })));
 writeFileSync(path.join(iconsDir, 'apple-touch-icon.png'), encodePNG(180, 180, renderLogo(180, { opaqueBg: true })));
 
 const manifest = {
+  id: '/',
   name: 'Centeryou — planning, tâches & voix',
   short_name: 'Centeryou',
   description:
@@ -177,11 +181,12 @@ const manifest = {
   icons: [
     { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
     { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
   ],
 };
 writeFileSync(path.join(appRoot, 'public/manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 console.log('✅ Assets PWA générés depuis design/tokens.ts :');
-console.log('   public/icons/icon.svg, icon-192.png, icon-512.png, apple-touch-icon.png');
+console.log('   public/icons/icon.svg, icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png');
 console.log('   public/manifest.webmanifest');

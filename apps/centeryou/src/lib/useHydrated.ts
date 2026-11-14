@@ -11,9 +11,11 @@ export function useHydrated(): boolean {
   useEffect(() => {
     setMounted(true);
     if (!useStore.getState().hydrated) {
-      Promise.resolve(useStore.persist.rehydrate?.()).then(() => {
-        useStore.getState().setHydrated();
-      });
+      Promise.resolve(useStore.persist.rehydrate?.())
+        .catch(() => undefined)
+        .then(() => {
+          useStore.getState().setHydrated();
+        });
     }
   }, []);
 

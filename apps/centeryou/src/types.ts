@@ -3,6 +3,8 @@ import type { CategoryColor } from '../design/tokens';
 export type Category = CategoryColor;
 export type Priority = 'basse' | 'moyenne' | 'haute';
 export type Repeat = 'jamais' | 'jour' | 'semaine' | 'mois';
+/** Séquence d'accueil : à chaque ouverture, une fois par jour (défaut) ou désactivée */
+export type WelcomeSequenceMode = 'always' | 'daily' | 'off';
 
 export interface EventItem {
   id: string;
@@ -39,6 +41,10 @@ export interface Settings {
   voice: boolean;
   /** dernière date (YYYY-MM-DD) où le brief du matin a été proposé/écouté */
   briefShownDate: string;
+  /** fréquence d'affichage de la séquence d'accueil animée */
+  welcomeSequence: WelcomeSequenceMode;
+  /** dernière date (YYYY-MM-DD) où la séquence d'accueil a été affichée */
+  welcomeShownDate: string;
   /** true quand le visiteur a créé un profil local ou choisi « continuer sans compte » */
   onboarded: boolean;
 }

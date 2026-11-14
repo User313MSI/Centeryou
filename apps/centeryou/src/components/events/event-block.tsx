@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from 'react';
 import type { EventItem, TaskItem } from '../../types';
 import type { CalendarInstance } from '../../lib/events';
 import { categoryColor } from '../../lib/categories';
 import { formatTimeFr, minutesOf } from '../../lib/dates';
+import { useUiStore } from '../../lib/ui-store';
 import { cx } from '../../lib/utils';
 
 export function EventBlock({
@@ -31,6 +32,24 @@ export function EventBlock({
   const drag = useRef<{ sx: number; sy: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   const dragging = offset !== null;
+
+  // apparition douce : un événement créé à l'instant (montage initial du bloc) démarre avec un fondu + resserrement
+  const [fresh] = useState(
+    () => instance.kind === 'event' && !!instance.event && Date.now() - instance.event.createdAt < 2500,
+  );
+  // rebond de confirmation après un dépôt (drag & drop)
+  const lastDrop = useUiStore((s) => s.lastDrop);
+  const [bouncing, setBouncing] = useState(false);
+  const bounceTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!lastDrop || lastDrop.id !== instance.id) return;
+    setBouncing(true);
+    if (bounceTimer.current) window.clearTimeout(bounceTimer.current);
+    bounceTimer.current = window.setTimeout(() => setBouncing(false), 420);
+    return () => {
+      if (bounceTimer.current) window.clearTimeout(bounceTimer.current);
+    };
+  }, [lastDrop, instance.id]);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (isTask) return; // les tâches ne se déplacent pas dans le planning
@@ -95,6 +114,8 @@ export function EventBlock({
         isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
         dragging && 'z-50 opacity-95 shadow-hover',
         instance.done && 'opacity-70',
+        fresh && 'animate-event-in',
+        bouncing && 'animate-drop-settle',
       )}
       style={{
         top,

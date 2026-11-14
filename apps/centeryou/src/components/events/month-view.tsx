@@ -45,7 +45,7 @@ export function MonthView({
                   onClick={() => onDayClick(iso)}
                   aria-label={`Voir le ${formatDayLong(iso)}`}
                   className={cx(
-                    'flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                    'flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:h-7 md:w-7',
                     isToday(iso) ? 'bg-primary text-surface' : outOfMonth ? 'text-muted' : 'text-ink',
                   )}
                 >

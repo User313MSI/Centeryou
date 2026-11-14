@@ -13,6 +13,7 @@ import { useEventActions } from '../../components/events/use-event-actions';
 import { DAY_END, DAY_START, addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, startOfWeekISO, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { useUiStore, type PlanningView } from '../../lib/ui-store';
+import { useHorizontalSwipe } from '../../lib/use-swipe';
 
 const VIEW_OPTIONS: TabOption[] = [
   { id: 'jour', label: 'Jour' },
@@ -38,6 +39,9 @@ export default function PlanningPage() {
   const goNext = () =>
     setCursor((c) => (view === 'jour' ? addDaysISO(c, 1) : view === 'semaine' ? addDaysISO(c, 7) : addMonthsISO(c, 1)));
 
+  // geste mobile : glisser horizontalement = jour / semaine / mois précédent(e) ou suivant(e)
+  const swipeRef = useHorizontalSwipe<HTMLDivElement>({ onSwipeLeft: goNext, onSwipeRight: goPrev });
+
   const title =
     view === 'jour'
       ? formatDayLong(cursor)
@@ -53,7 +57,9 @@ export default function PlanningPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold capitalize text-ink">{title}</h1>
+        <h1 key={title} className="animate-fade-in text-2xl font-extrabold capitalize text-ink">
+          {title}
+        </h1>
         <Button onClick={() => openEventDialog({ date: cursor, start: nextSlot() })}>
           <Plus size={18} aria-hidden /> Nouvel événement
         </Button>
@@ -83,13 +89,15 @@ export default function PlanningPage() {
       ) : (
         <Card>
           <CardBody className="p-2 md:p-4">
-            {view === 'jour' && (
-              <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
-            )}
-            {view === 'semaine' && (
-              <WeekView cursor={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} onDayClick={onDayClick} />
-            )}
-            {view === 'mois' && <MonthView cursor={cursor} events={events} tasks={tasks} onDayClick={onDayClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} />}
+            <div key={`${view}-${cursor}`} ref={swipeRef} className="animate-view-in touch-pan-y">
+              {view === 'jour' && (
+                <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
+              )}
+              {view === 'semaine' && (
+                <WeekView cursor={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} onDayClick={onDayClick} />
+              )}
+              {view === 'mois' && <MonthView cursor={cursor} events={events} tasks={tasks} onDayClick={onDayClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} />}
+            </div>
           </CardBody>
         </Card>
       )}

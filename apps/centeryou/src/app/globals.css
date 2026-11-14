@@ -6,8 +6,16 @@
   html {
     @apply bg-bg;
   }
+  html,
+  body {
+    /* aucun d\u00e9bordement horizontal de page, m\u00eame \u00e0 360 px */
+    overflow-x: clip;
+  }
   body {
     @apply bg-bg font-sans text-ink antialiased;
+    /* zones s\u00fbres lat\u00e9rales (paysage / \u00e9cran courbe) : 0 px sur ordinateur */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   ::selection {
     @apply bg-primary/25 text-ink;
@@ -53,6 +61,43 @@
   }
 }
 
+@keyframes event-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes drop-settle {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.035);
+  }
+  70% {
+    transform: scale(0.985);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes wave-pulse {
   0% {
     transform: scale(0.55);
@@ -72,6 +117,15 @@
 }
 .animate-pop {
   animation: pop 220ms ease-out both;
+}
+.animate-event-in {
+  animation: event-in 260ms ease-out both;
+}
+.animate-drop-settle {
+  animation: drop-settle 320ms ease-out;
+}
+.animate-view-in {
+  animation: view-in 260ms ease-out both;
 }
 
 .waves > span:not(:last-child) {

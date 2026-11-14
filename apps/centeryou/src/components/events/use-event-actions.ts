@@ -17,6 +17,7 @@ export function useEventActions() {
   const dayStart = useStore((s) => s.settings.dayStart);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
   const pushToast = useUiStore((s) => s.pushToast);
+  const setLastDrop = useUiStore((s) => s.setLastDrop);
 
   const onSlotClick = (date: string, minutes: number) => {
     openEventDialog({ date, start: timeOf(minutes) });
@@ -39,6 +40,7 @@ export function useEventActions() {
     const start = timeOf(startMin);
     if (zone.date === ev.date && start === ev.start) return;
     moveEvent(eventId, zone.date, start);
+    setLastDrop(eventId);
     pushToast({ message: `« ${ev.title} » déplacé au ${formatDayShort(zone.date)} à ${formatTimeFr(start)}` });
   };
 

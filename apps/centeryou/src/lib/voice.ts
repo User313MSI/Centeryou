@@ -1,20 +1,22 @@
 'use client';
 
+import { useStore } from './store';
+import { useUiStore } from './ui-store';
+
 /**
  * Service vocal unique de Centeryou.
  *
  * Deux moteurs :
- *  1. Défaut, SANS CLÉ API : Web Speech API (speechSynthesis + webkitSpeechRecognition),
- *     voix française (fr-FR), débit 1.0, résultats intermédiaires.
- *  2. ElevenLabs, OPTIONNEL : uniquement si NEXT_PUBLIC_ELEVENLABS_API_KEY est définie.
- *     En cas de clé absente ou d'échec réseau/API, bascule automatique sur le moteur
- *     par défaut — jamais d'erreur bloquante.
+ *  1. Premium (côté serveur) : la route API /api/voix appelle ElevenLabs avec la clé
+ *     serveur ELEVENLABS_API_KEY, jamais exposée au navigateur. Réservée aux profils
+ *     renseignés (prénom dans les Réglages), quota de 300 caractères/jour.
+ *  2. Défaut, GRATUIT : Web Speech API (speechSynthesis + webkitSpeechRecognition),
+ *     voix française (fr-FR), débit 1.0, résultats intermédiaires. Utilisée par les
+ *     anonymes et en bascule douce (quota atteint, clé absente ou erreur) — jamais
+ *     d'erreur bloquante.
  */
 
-const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY ?? '';
-const ELEVENLABS_VOICE_ID =
-  process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || 'XB0fDUnXU5powFXDhCwa';
-const ELEVENLABS_MODEL = 'eleven_multilingual_v2';
+const PREMIUM_ENDPOINT = '/api/voix';
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -45,30 +47,11 @@ export function isRecognitionAvailable(): boolean {
   return getRecognitionCtor() !== null;
 }
 
-export function usesElevenLabs(): boolean {
-  return ELEVENLABS_API_KEY.length > 0;
-}
-
 let currentAudio: HTMLAudioElement | null = null;
 
-async function speakWithElevenLabs(text: string): Promise<void> {
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`, {
-    method: 'POST',
-    headers: {
-      'xi-api-key': ELEVENLABS_API_KEY,
-      'Content-Type': 'application/json',
-      Accept: 'audio/mpeg',
-    },
-    body: JSON.stringify({
-      text,
-      model_id: ELEVENLABS_MODEL,
-      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-    }),
-  });
-  if (!res.ok) throw new Error(`ElevenLabs HTTP ${res.status}`);
-  const buf = await res.arrayBuffer();
+function playAudioBuffer(buf: ArrayBuffer): Promise<void> {
   const url = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
-  await new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const audio = new Audio(url);
     currentAudio = audio;
     const cleanup = () => {
@@ -88,6 +71,33 @@ async function speakWithElevenLabs(text: string): Promise<void> {
       reject(err);
     });
   });
+}
+
+async function speakWithPremium(text: string): Promise<boolean> {
+  const prenom = useStore.getState().settings.prenom.trim();
+  if (!prenom) return false;
+  try {
+    const res = await fetch(PREMIUM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-centeryou-user': prenom },
+      body: JSON.stringify({ text }),
+    });
+    if (res.status === 429) {
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      useUiStore.getState().pushToast({
+        message:
+          data?.message ??
+          "Quota de voix premium atteint pour aujourd'hui — la voix de ton navigateur prend le relais.",
+        duration: 7000,
+      });
+      return false;
+    }
+    if (!res.ok) return false;
+    await playAudioBuffer(await res.arrayBuffer());
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function speakWithWebSpeech(text: string): Promise<void> {
@@ -115,14 +125,7 @@ function speakWithWebSpeech(text: string): Promise<void> {
 
 export async function speak(text: string): Promise<void> {
   if (!text.trim()) return;
-  if (ELEVENLABS_API_KEY) {
-    try {
-      await speakWithElevenLabs(text);
-      return;
-    } catch {
-      // bascule automatique sur le moteur par défaut
-    }
-  }
+  if (await speakWithPremium(text)) return;
   await speakWithWebSpeech(text);
 }
 

@@ -31,6 +31,10 @@ interface UiState {
   planningView: PlanningView;
   setPlanningView: (v: PlanningView) => void;
 
+  /** dernier événement déposé (drag & drop) : id + horodatage, pour le rebond de confirmation (non persisté) */
+  lastDrop: { id: string; at: number } | null;
+  setLastDrop: (id: string) => void;
+
   listening: boolean;
   setListening: (b: boolean) => void;
   toggleListening: () => void;
@@ -41,6 +45,15 @@ interface UiState {
 
   helpOpen: boolean;
   setHelpOpen: (b: boolean) => void;
+
+  /** appui long sur une tâche (mobile) : id de la tâche dont le menu d'actions est ouvert */
+  taskMenuId: string | null;
+  openTaskMenu: (id: string) => void;
+  closeTaskMenu: () => void;
+
+  /** invite d'installation PWA refusée pour la session (non persistée) */
+  installDismissed: boolean;
+  dismissInstall: () => void;
 }
 
 export const useUiStore = create<UiState>()((set, get) => ({
@@ -61,6 +74,9 @@ export const useUiStore = create<UiState>()((set, get) => ({
   planningView: 'semaine',
   setPlanningView: (v) => set({ planningView: v }),
 
+  lastDrop: null,
+  setLastDrop: (id) => set({ lastDrop: { id, at: Date.now() } }),
+
   listening: false,
   setListening: (b) => set({ listening: b }),
   toggleListening: () => set((s) => ({ listening: !s.listening })),
@@ -71,4 +87,11 @@ export const useUiStore = create<UiState>()((set, get) => ({
 
   helpOpen: false,
   setHelpOpen: (b) => set({ helpOpen: b }),
+
+  taskMenuId: null,
+  openTaskMenu: (id) => set({ taskMenuId: id }),
+  closeTaskMenu: () => set({ taskMenuId: null }),
+
+  installDismissed: false,
+  dismissInstall: () => set({ installDismissed: true }),
 }));

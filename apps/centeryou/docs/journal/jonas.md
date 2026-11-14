@@ -14,7 +14,7 @@ Branche de travail : `vibe/centeryou-launch-jonas-d7c8a1` (base du PR : `main`).
    `html lang="fr"` ; canonical ; Open Graph (`fr_FR`, image 1200×630 `/opengraph-image` : logo + slogan sur fond
    `#FAFAFC`, générée à la build via `next/og` sans dépendance) + Twitter card ; `/robots.txt` (allow all +
    sitemap) ; `/sitemap.xml` (7 pages publiques). URL publique : `NEXT_PUBLIC_SITE_URL` (défaut
-   `https://centeryou.vercel.app`, voir `.env.local.example`).
+   `https://dev-apps-centeryou.vercel.app` (URL Vercel de production, confirmée en ligne), voir `.env.local.example`).
 3. **Mode démo `/demo`** : lien partageable, lecture seule (aucun champ de saisie, pas de FAB voix, pas de
    raccourcis clavier sur les routes publiques ; la semaine affichée provient de `src/lib/demo-data.ts`, jamais du
    store). Semaine type de **Sofia, graphiste indépendante**, ancrée sur la semaine en cours. Aucune donnée réelle.
@@ -60,6 +60,33 @@ n'est pas touché par la démo), design 100 % dans les tokens (`design/tokens.ts
 ## Points d'attention
 
 - Renseigner `NEXT_PUBLIC_SITE_URL` sur Vercel avec le vrai domaine de production pour des URL OG/canonical exactes
-  (défaut : `https://centeryou.vercel.app`).
+  (défaut : `https://dev-apps-centeryou.vercel.app`, URL Vercel de production).
 - Les pages app (`/aujourdhui`, `/planning`…) restent volontairement non indexées en contenu (rendues côté client,
   données locales) ; elles ne figurent pas dans le sitemap mais ne sont bloquées nulle part.
+
+## Synchronisation avec la branche par défaut — 2026-11-14 22:08 UTC
+
+La PR #15 a été rebasée sur la branche par défaut `vibe/novaloom-suite-fe60b6` (qui a fusionné entre-temps :
+voix 100 % serveur `/api/voix` + en-têtes de sécurité, PWA hors-ligne `sw.js` + invite d'installation,
+barre d'onglets basse mobile + gestes tactiles, séquence d'accueil animée, audit + sanitation du localStorage,
+nettoyage du dépôt + `AGENTS.md`). Fusion `vibe/novaloom-suite-fe60b6` dans ma branche, conflits résolus en
+gardant **les deux côtés** :
+
+- `layout.tsx` : leurs champs PWA (icônes apple, `black-translucent`, `viewportFit`, `interactiveWidget`) + mon SEO
+  (metadataBase, template de titre, robots `index, follow`, Open Graph/Twitter, canonical).
+- `app-shell.tsx` : leur shell complet (TopNav desktop, BottomNav mobile, TaskActionsMenu, VoiceFab, InstallPrompt,
+  PwaRegister, padding zones sûres) + ma logique de routes publiques (PublicNav, pas de FAB/dialogues/raccourcis côté public).
+- `page.tsx` : gardé comme page publique (landing + gate) ; leur page Aujourd'hui (avec `WelcomeSequence`) déplacée
+  dans `/aujourdhui`.
+- `store.ts` / `types.ts` : leur sanitation + `welcomeSequence` + mon champ `onboarded` (préservé au reset).
+- `.env.local.example` / `README.md` : leurs deux blocs + le mien.
+- `public/sw.js` : `/aujourdhui` ajouté au précache (l'ancienne `/` n'est plus la page app) — le mode hors-ligne
+  continue de fonctionner.
+- `SITE_URL` par défaut corrigée : `https://dev-apps-centeryou.vercel.app` (URL Vercel de production, confirmée en ligne).
+
+Vérifications après fusion : `npm run build` ✓ (18 routes + `/api/voix`), `npm run test:parser` ✓, aucun
+`api.elevenlabs.io`/`xi-api-key` dans `.next/static` ✓, `next start` + HTTP sur 15 routes : 200 partout, aucun
+`noindex`, robots.txt/sitemap.xml/OG pointent sur `https://dev-apps-centeryou.vercel.app`, en-têtes CSP/X-Frame-Options
+présents, `/demo` toujours en lecture seule.
+
+PR : https://github.com/User313MSI/Dev-Apps/pull/15 (base `vibe/novaloom-suite-fe60b6`, head `vibe/centeryou-launch-jonas-d7c8a1`), passée en « Ready for review ».
