@@ -1,0 +1,77 @@
+{
+  "name": "centeryou-desktop",
+  "productName": "Centeryou",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Centeryou — application bureau Windows (Electron) chargeant la version en ligne sur Vercel, avec repli hors-ligne sur la PWA.",
+  "main": "main.js",
+  "author": "NovaLoom",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "icons": "node scripts/make-icons.mjs",
+    "check-build": "node scripts/check-build.mjs",
+    "dist": "npm run icons && npm run check-build && electron-builder --win --mac --linux",
+    "dist:win": "npm run icons && npm run check-build && electron-builder --win --x64",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.novaloom.centeryou",
+    "productName": "Centeryou",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "offline.html",
+      "assets/**",
+      "build-info.json",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Centeryou-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Centeryou",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "menuCategory": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility"
+    }
+  }
+}

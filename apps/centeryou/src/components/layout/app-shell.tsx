@@ -12,7 +12,11 @@ import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
 import { TopNav } from './top-nav';
+import { BottomNav } from './bottom-nav';
 import { VoiceFab } from './voice-fab';
+import { InstallPrompt } from './install-prompt';
+import { PwaRegister } from './pwa-register';
+import { TaskActionsMenu } from '../tasks/task-actions-menu';
 
 function nextSlot(): string {
   const m = nowMinutes();
@@ -80,11 +84,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-bg">
       <TopNav />
-      <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">{children}</main>
+      <main className="mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12">
+        {children}
+      </main>
+      <BottomNav />
       <Toasts />
       <EventDialog />
       <HelpDialog />
+      <TaskActionsMenu />
       <VoiceFab />
+      <InstallPrompt />
+      <PwaRegister />
       <SyncProvider />
     </div>
   );

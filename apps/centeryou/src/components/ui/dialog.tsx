@@ -31,6 +31,10 @@ export function Dialog({
         panel.querySelector<HTMLElement>('[data-autofocus]') ??
         panel.querySelector<HTMLElement>('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
       target?.focus();
+      // clavier mobile (tactile) : le champ focalisé reste visible, jamais masqué par le clavier
+      if (target && window.matchMedia('(pointer: coarse)').matches) {
+        window.setTimeout(() => target.scrollIntoView({ block: 'center' }), 60);
+      }
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
