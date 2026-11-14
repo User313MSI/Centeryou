@@ -18,7 +18,7 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react. Au
 
 - Design system : `design/tokens.ts` (source unique des couleurs/ombres/rayons/typo), câblé dans `tailwind.config.ts`.
 - Persistance : store Zustand `src/lib/store.ts` (`persist`, clé `centeryou-v1`).
-- Voix : `src/lib/voice.ts` — Web Speech API par défaut (sans clé), ElevenLabs **optionnel** via `NEXT_PUBLIC_ELEVENLABS_API_KEY` (voir `.env.local.example`), bascule automatique sans erreur.
+- Voix : `src/lib/voice.ts` — Web Speech API par défaut (sans clé), ElevenLabs **optionnel** via `NEXT_ELEVENLABS_API_KEY` (clé serveur, jamais exposée au navigateur : proxyée par la route `/api/tts`, voir `.env.local.example`), bascule automatique sans erreur.
 - Saisie intelligente : parseur français maison `src/lib/parser.ts` (« sport demain 14h », « !lundi réunion »…).
 
 ## Commandes utiles
