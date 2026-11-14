@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centeryou — hors ligne</title>
+  <style>
+    :root {
+      --primary: #7C5CFF;
+      --primary-dark: #5B3FE8;
+      --ink: #1A1B2E;
+      --text-secondary: #6E7191;
+      --border: #E7E7F0;
+      --bg: #FAFAFC;
+      --surface: #FFFFFF;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 48px;
+      max-width: 460px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(26, 27, 46, 0.08);
+    }
+    img { width: 72px; height: 72px; }
+    h1 { font-size: 24px; margin: 16px 0 8px; }
+    p { color: var(--text-secondary); line-height: 1.5; margin: 0 0 24px; font-size: 15px; }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: var(--primary-dark); }
+    #status { margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img src="assets/icon.svg" alt="Centeryou" />
+    <h1>Centeryou est hors ligne</h1>
+    <p>
+      Impossible de joindre la version en ligne pour le moment.
+      Tes données restent enregistrées localement sur cet ordinateur :
+      reconnecte-toi à Internet, puis réessaie — l'application se rouvrira
+      automatiquement dès que la connexion sera de retour.
+    </p>
+    <button id="retry" type="button">Réessayer</button>
+    <p id="status"></p>
+  </main>
+  <script>
+    const statusEl = document.getElementById('status');
+    const retryBtn = document.getElementById('retry');
+    async function retry() {
+      statusEl.textContent = 'Reconnexion en cours…';
+      await window.centeryouDesktop.retry();
+    }
+    retryBtn.addEventListener('click', retry);
+    window.centeryouDesktop.onStatus((status) => {
+      if (status === 'online') statusEl.textContent = 'Connexion rétablie.';
+    });
+    setInterval(async () => {
+      if (await window.centeryouDesktop.isOnline()) await retry();
+    }, 5000);
+    window.centeryouDesktop.version().then((v) => {
+      statusEl.textContent = 'Version de l'application : ' + v;
+    });
+  </script>
+</body>
+</html>

@@ -65,7 +65,7 @@ export function WeekView({
             {hours.map((h) => (
               <div
                 key={h}
-                className="pr-1 text-right text-[10px] leading-none text-muted"
+                className="pr-1 text-right text-xs leading-none text-muted md:text-[10px]"
                 style={{ height: layout.hourHeightWeek }}
               >
                 {pad2(h)}h

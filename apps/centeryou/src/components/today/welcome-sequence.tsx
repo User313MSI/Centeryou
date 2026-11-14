@@ -212,7 +212,7 @@ export function WelcomeSequence() {
           <div className="grid grid-cols-7 gap-1">
             {weekDays.map((d) => (
               <div key={d.iso} className="flex flex-col items-center gap-0.5 py-1.5" aria-label={`${formatDayLong(d.iso)} : ${d.count} élément${d.count > 1 ? 's' : ''}`}>
-                <span className="text-[10px] font-bold uppercase text-muted">{formatWeekdayShort(d.iso).slice(0, 3)}</span>
+                <span className="text-xs font-bold uppercase text-muted md:text-[10px]">{formatWeekdayShort(d.iso).slice(0, 3)}</span>
                 <span
                   className={cx(
                     'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
@@ -221,7 +221,7 @@ export function WelcomeSequence() {
                 >
                   {formatDayNumber(d.iso)}
                 </span>
-                <span className={cx('text-[10px] font-semibold', d.count > 0 ? 'text-voice' : 'text-muted')}>
+                <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voice' : 'text-muted')}>
                   {d.count > 0 ? `${d.count} ✦` : '—'}
                 </span>
               </div>
