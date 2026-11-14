@@ -15,7 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Centeryou — ton planning, ta voix',
   description:
-    "Agenda, tâches et assistant vocal personnel, 100 % en français. Données locales uniquement.",
+    "Agenda, tâches et assistant vocal personnel, 100 % en français. Données locales, sauvegarde en ligne optionnelle avec un compte.",
   manifest: '/manifest.webmanifest',
   icons: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
   appleWebApp: {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Settings } from 'lucide-react';
 import { LogoWithName } from '../brand/logo';
+import { SyncIndicator } from '../account/sync-indicator';
 import { NAV_ITEMS, isActive } from './nav-items';
 import { capitalize, formatDayLong, todayISO } from '../../lib/dates';
 import { cx } from '../../lib/utils';
@@ -63,6 +64,7 @@ export function TopNav() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          <SyncIndicator />
           {today && (
             <p className="hidden text-sm font-semibold capitalize text-muted lg:block" aria-live="polite">
               {capitalize(today)}
