@@ -27,11 +27,11 @@ localStorage, aucun backend). Mission : vendre l'offre **Premium** avec **Stripe
    Premium reste actif jusqu'à `current_period_end`, puis retour à Découverte
    **sans perdre les données** (rien n'est supprimé, le mode sombre se désactive).
 6. **Clés uniquement en variables d'environnement serveur** (`STRIPE_SECRET_KEY`,
-   `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PREMIUM?`, `APP_URL`, `ELEVENLABS_API_KEY`,
+   `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PREMIUM?`, `APP_URL`,
    `KV_REST_API_URL/TOKEN?`) — vérifié : aucune clé ni URL Stripe/ElevenLabs dans
-   `.next/static`. La voix premium passe désormais par `/api/voice/speak`
-   (clé serveur, « quota serveur ») ; l'ancienne clé `NEXT_PUBLIC_ELEVENLABS_API_KEY`
-   n'est plus injectée dans le bundle.
+   `.next/static`. La voix premium passe par la route serveur `/api/voix`
+   (clé serveur, « quota serveur » de 300 car/jour) ; l'ancienne clé
+   `NEXT_PUBLIC_ELEVENLABS_API_KEY` n'est plus injectée dans le bundle.
 
 ## Architecture retenue
 - **Zéro dépendance ajoutée** : appels REST Stripe en `fetch` côté serveur
@@ -62,3 +62,23 @@ localStorage, aucun backend). Mission : vendre l'offre **Premium** avec **Stripe
   pas d'auth) — un changement de navigateur = nouvel appareil.
 - Synchro multi-appareils : dernier écrivain gagne ; durable seulement avec Vercel KV
   (voir `docs/paiement-stripe.md`).
+
+## 2026-11-14 (plus tard) — Synchronisation avec la branche par défaut
+
+La branche par défaut `vibe/novaloom-suite-fe60b6` a avancé (PR #6 de Céleste :
+voix ElevenLabs 100 % serveur via `/api/voix` + quota 300 car/jour + en-têtes de
+sécurité ; PR #8 d'Alpha : audit + sanitation du localStorage). Conflits résolus en
+gardant les deux côtés :
+
+- `voice.ts` : endpoint `/api/voix` de Céleste conservé (clé serveur, quota, toast 429) ;
+  ma barrière Stripe ajoutée devant (`speak()` tente la voix premium si Premium actif
+  ou essai gratuit restant, puis bascule Web Speech). Ma route doublon
+  `/api/voice/speak` supprimée.
+- `store.ts` : sanitation des entrées persistées (Alpha/Céleste) conservée + mes champs
+  `deviceId` / `subscription` / `voiceQuota` / `syncUpdatedAt` (fusion douce avec défauts).
+- `next.config.mjs` : en-têtes de sécurité conservés, aucun `env:` (clés jamais inlinées).
+- `.env.local.example`, `README.md`, `voix/page.tsx` : doc fusionnée (voix serveur +
+  paiement Stripe).
+
+**PR : https://github.com/User313MSI/Dev-Apps/pull/16** (base : branche par défaut
+`vibe/novaloom-suite-fe60b6`, conformément à AGENTS.md — jamais `main`).

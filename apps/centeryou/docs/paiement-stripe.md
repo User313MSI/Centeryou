@@ -21,8 +21,8 @@ Production + Preview + Development), puis redéploie :
 | `STRIPE_WEBHOOK_SECRET` | voir étape 3 ci-dessous (`whsec_…`) | oui |
 | `STRIPE_PRICE_ID_PREMIUM` | Products → crée « Centeryou Premium », 4,99 €/mois récurrent → copie le `price_…` | non (sinon le prix est construit depuis `src/lib/plans.ts`) |
 | `APP_URL` | l'URL de prod, ex. `https://centeryou.vercel.app` | recommandé |
-| `ELEVENLABS_API_KEY` | [dashboard.elevenlabs.io](https://dashboard.elevenlabs.io) → API keys (voix premium, servie par le serveur) | non (sinon voix du navigateur) |
-| `ELEVENLABS_VOICE_ID` | ElevenLabs → voix choisie (défaut : voix FR féminine) | non |
+| `NEXT_ELEVENLABS_API_KEY` | [dashboard.elevenlabs.io](https://dashboard.elevenlabs.io) → API keys — variable **serveur déjà enregistrée sur Vercel**, lue uniquement par la route `/api/voix` (voix premium, quota serveur 300 car/jour) | non (sinon voix du navigateur) |
+| `NEXT_ELEVENLABS_VOICE_ID` | ElevenLabs → voix choisie, côté serveur (défaut : Sarah, voix FR féminine) | non |
 | `KV_REST_API_URL` + `KV_REST_API_TOKEN` | Vercel → Storage → KV → Connect (synchro multi-appareils durable) | non |
 
 En local : copie `.env.local.example` en `.env.local` et remplis les mêmes valeurs.

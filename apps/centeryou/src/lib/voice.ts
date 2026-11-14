@@ -1,24 +1,26 @@
 'use client';
 
-/**
- * Service vocal unique de Centeryou.
- *
- * Deux moteurs :
- *  1. Défaut, SANS CLÉ API côté client : Web Speech API (speechSynthesis +
- *     webkitSpeechRecognition), voix française (fr-FR), débit 1.0.
- *  2. Voix premium (ElevenLabs) servie par la route serveur /api/voice/speak :
- *     la clé API reste côté serveur (quota serveur) et n'est jamais dans le
- *     bundle navigateur. Offerte en illimité avec l'offre Premium ; en offre
- *     Découverte, 3 essais gratuits par mois puis bascule sur la voix du
- *     navigateur avec proposition de passer Premium.
- * En cas d'indisponibilité du moteur premium, bascule automatique sur le
- * moteur par défaut — jamais d'erreur bloquante.
- */
-
 import { FREE_PREMIUM_VOICE_LIMIT_PER_MONTH } from './plans';
 import { useStore } from './store';
 import { currentMonth, isPremiumActive, premiumVoiceRemaining } from './subscription';
 import { useUiStore } from './ui-store';
+
+/**
+ * Service vocal unique de Centeryou.
+ *
+ * Deux moteurs :
+ *  1. Premium (côté serveur) : la route API /api/voix appelle ElevenLabs avec la clé
+ *     serveur, jamais exposée au navigateur. Côté client, réservée à l'offre Premium
+ *     (illimitée) ou aux 3 essais gratuits/mois de l'offre Découverte ; le serveur
+ *     applique en plus son quota de protection (300 caractères/jour) et exige un
+ *     profil renseigné (prénom dans les Réglages).
+ *  2. Défaut, GRATUIT : Web Speech API (speechSynthesis + webkitSpeechRecognition),
+ *     voix française (fr-FR), débit 1.0, résultats intermédiaires. Utilisée par les
+ *     anonymes et en bascule douce (quota atteint, clé absente ou erreur) — jamais
+ *     d'erreur bloquante.
+ */
+
+const PREMIUM_ENDPOINT = '/api/voix';
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -51,17 +53,9 @@ export function isRecognitionAvailable(): boolean {
 
 let currentAudio: HTMLAudioElement | null = null;
 
-/** voix premium via le serveur (clé API côté serveur uniquement) */
-async function speakWithPremiumVoice(text: string): Promise<void> {
-  const res = await fetch('/api/voice/speak', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) throw new Error(`Voix premium HTTP ${res.status}`);
-  const buf = await res.arrayBuffer();
+function playAudioBuffer(buf: ArrayBuffer): Promise<void> {
   const url = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
-  await new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const audio = new Audio(url);
     currentAudio = audio;
     const cleanup = () => {
@@ -83,19 +77,30 @@ async function speakWithPremiumVoice(text: string): Promise<void> {
   });
 }
 
-/** enregistre l'essai gratuit utilisé et avertit quand le quota est épuisé */
-function recordVoiceQuotaUsage(premium: boolean): void {
-  if (premium) return;
-  const used = useStore.getState().recordPremiumVoice();
-  if (used >= FREE_PREMIUM_VOICE_LIMIT_PER_MONTH) {
-    useUiStore.getState().pushToast({
-      message: `Voix premium : tes ${FREE_PREMIUM_VOICE_LIMIT_PER_MONTH} essais gratuits du mois sont utilisés. Passe Premium pour une voix premium illimitée.`,
-      actionLabel: 'Passer Premium',
-      onAction: () => {
-        window.location.href = '/reglages#abonnement';
-      },
-      duration: 9000,
+async function speakWithPremium(text: string): Promise<boolean> {
+  const prenom = useStore.getState().settings.prenom.trim();
+  if (!prenom) return false;
+  try {
+    const res = await fetch(PREMIUM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-centeryou-user': prenom },
+      body: JSON.stringify({ text }),
     });
+    if (res.status === 429) {
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      useUiStore.getState().pushToast({
+        message:
+          data?.message ??
+          "Quota de voix premium atteint pour aujourd'hui — la voix de ton navigateur prend le relais.",
+        duration: 7000,
+      });
+      return false;
+    }
+    if (!res.ok) return false;
+    await playAudioBuffer(await res.arrayBuffer());
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -122,18 +127,31 @@ function speakWithWebSpeech(text: string): Promise<void> {
   });
 }
 
+/** enregistre l'essai gratuit utilisé et propose Premium quand le quota mensuel est épuisé */
+function recordVoiceQuotaUsage(premium: boolean): void {
+  if (premium) return;
+  const used = useStore.getState().recordPremiumVoice();
+  if (used >= FREE_PREMIUM_VOICE_LIMIT_PER_MONTH) {
+    useUiStore.getState().pushToast({
+      message: `Voix premium : tes ${FREE_PREMIUM_VOICE_LIMIT_PER_MONTH} essais gratuits du mois sont utilisés. Passe Premium pour une voix premium illimitée.`,
+      actionLabel: 'Passer Premium',
+      onAction: () => {
+        window.location.href = '/reglages#abonnement';
+      },
+      duration: 9000,
+    });
+  }
+}
+
 export async function speak(text: string): Promise<void> {
   if (!text.trim()) return;
   const state = useStore.getState();
   const premium = isPremiumActive(state.subscription);
   const remaining = premiumVoiceRemaining(state.voiceQuota, currentMonth());
   if (premium || remaining > 0) {
-    try {
-      await speakWithPremiumVoice(text);
+    if (await speakWithPremium(text)) {
       recordVoiceQuotaUsage(premium);
       return;
-    } catch {
-      // bascule automatique sur le moteur par défaut
     }
   }
   await speakWithWebSpeech(text);
