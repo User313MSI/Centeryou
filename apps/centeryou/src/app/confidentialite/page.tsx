@@ -31,7 +31,7 @@ export default function ConfidentialitePage() {
             `Ton prénom (réglages) : saisi par toi, stocké uniquement dans ton navigateur (stockage local).`,
             'Tes données de planning (événements, tâches, réglages) : stockées uniquement dans ton navigateur (stockage local). Aucune copie n\'est envoyée sur un serveur par l\'application à ce jour.',
             'Aucun compte, e-mail ou mot de passe n\'est demandé par l\'application pour l\'utiliser.',
-            'Synthèse vocale : si une clé ElevenLabs est configurée par l\'exploitant, le texte à prononcer est envoyé à l\'API d\'ElevenLabs. Sans clé, la voix est produite par ton navigateur et aucune donnée ne sort de ton appareil.',
+            'Voix premium (ElevenLabs) : le texte à prononcer et ton prénom (en-tête « x-centeryou-user », uniquement pour le quota journalier) sont envoyés à notre route serveur /api/voix hébergée par Vercel ; le prénom sert uniquement à un compteur en mémoire, jamais enregistré, et le texte est transmis à l\'API d\'ElevenLabs qui renvoie l\'audio. La clé API reste côté serveur et n\'est jamais exposée au navigateur. Sans voix premium (ou en bascule automatique), la voix est produite par ton navigateur (Web Speech API) et aucune donnée ne sort de ton appareil.',
             'Journaux d\'hébergement : comme tout site web, l\'hébergeur (Vercel) peut enregistrer des journaux techniques (adresse IP, date et heure, pages demandées) pour la sécurité et le fonctionnement du service.',
             `Correspondance : si tu nous écris par e-mail (${LEGAL.contactEmail}), ton adresse e-mail et ton message sont utilisés uniquement pour te répondre.`,
           ]}
@@ -63,7 +63,7 @@ export default function ConfidentialitePage() {
           items={[
             'Données de l\'application (prénom, planning) : conservées dans ton navigateur tant que tu ne les supprimes pas (Réglages → « Supprimer mon compte et mes données », ou effacement des données du site dans ton navigateur).',
             'Journaux d\'hébergement (Vercel) : conservés selon la durée propre à la politique de Vercel, limitée à ce qui est nécessaire à la sécurité.',
-            'Données envoyées à ElevenLabs pour la voix : conservées selon la politique d\'ElevenLabs, uniquement lorsque cette voix est activée.',
+            'Données de voix (texte prononcé, prénom pour le quota) : le compteur de quota est gardé en mémoire vive sur le serveur et remis à zéro chaque jour, il n\'est jamais enregistré ; le texte prononcé envoyé à ElevenLabs est conservé par ce service selon sa propre politique, uniquement lorsque la voix premium est utilisée.',
             'E-mails de correspondance : conservés le temps du traitement de ta demande, puis supprimés.',
           ]}
         />
@@ -73,7 +73,7 @@ export default function ConfidentialitePage() {
         <LegalList
           items={[
             'Vercel : hébergement de l\'application et de ses journaux techniques.',
-            'ElevenLabs : synthèse vocale, uniquement si la clé correspondante est configurée ; le texte prononcé est alors traité par ce service (États-Unis), dans le cadre de garanties appropriées (clauses contractuelles types de la Commission européenne).',
+            'ElevenLabs : synthèse vocale premium, appelée uniquement via notre route serveur /api/voix (la clé API n\'est jamais dans le navigateur) ; le texte prononcé lui est transmis lorsqu\'on utilise la voix premium, depuis les États-Unis, dans le cadre de garanties appropriées (clauses contractuelles types de la Commission européenne).',
             'Aucun paiement n\'est traité en ligne par l\'application à ce jour ; aucun autre sous-traitant n\'a accès à tes données.',
           ]}
         />

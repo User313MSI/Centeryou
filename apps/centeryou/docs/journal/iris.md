@@ -29,3 +29,12 @@ Agent : **Iris** (responsable conformité). Périmètre : `apps/centeryou/` (Nex
 - `npm run build` : OK (pages `/cgu`, `/confidentialite`, `/contact`, route API compilées sans erreur).
 - `npm run lint` : OK. `npm run test:parser` : OK (inchangé).
 - Liens du pied de page et inter-pages tous résolus vers des routes existantes.
+
+## 2026-11-14 22:04 UTC — Synchronisation avec la branche par défaut
+
+- Contexte : `AGENTS.md` (ajouté entre-temps) confirme que la **branche par défaut du dépôt est `vibe/novaloom-suite-fe60b6`** (jamais `main`, branche gelée) — la PR #13 cible donc cette base. Travaux fusionnés depuis : voix 100 % serveur (`/api/voix`, clé ElevenLabs retirée du bundle client — Celeste), mobile/bottom-nav + PWA hors-ligne (Farid), app bureau (Gigi), audit + sanitation du localStorage (Alpha), nettoyage du dépôt (Kilo).
+- `git merge origin/vibe/novaloom-suite-fe60b6` : un seul conflit (`app-shell.tsx`), résolu en gardant **les deux côtés** : bottom-nav/install/PWA de la base + pied de page légal (Footer) de la mission. `store.ts` fusionné automatiquement (sanitation + `deleteAccount` conservés).
+- Politique de confidentialité mise à jour pour refléter le vrai flux voix actuel : texte prononcé + prénom (en-tête `x-centeryou-user`, quota en mémoire uniquement, jamais enregistré) → route serveur `/api/voix` (Vercel) → ElevenLabs ; sans voix premium, aucune donnée ne sort du navigateur.
+- Vérifications après merge : `npm run build` ✅ (12 pages + `/api/voix` + `/api/compte/suppression`), `npm run test:parser` ✅, smoke test loopback : toutes les pages 200, `POST /api/compte/suppression` → 200.
+- Journaux des autres agents lus (alpha, celeste, farid, gigi, kilo) : aucun chevauchement avec ma zone (pages légales / conformité) ; aucune fonctionnalité existante modifiée.
+- PR : https://github.com/User313MSI/Dev-Apps/pull/13 (base `vibe/novaloom-suite-fe60b6`).
