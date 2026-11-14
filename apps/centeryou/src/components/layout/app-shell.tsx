@@ -10,6 +10,7 @@ import { Logo } from '../brand/logo';
 import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
+import { Footer } from './footer';
 import { TopNav } from './top-nav';
 import { VoiceFab } from './voice-fab';
 
@@ -80,6 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-bg">
       <TopNav />
       <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-12">{children}</main>
+      <Footer />
       <Toasts />
       <EventDialog />
       <HelpDialog />

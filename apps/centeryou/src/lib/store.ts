@@ -35,6 +35,7 @@ interface CenteryouState {
   markBriefShown: () => void;
   markWelcomeShown: () => void;
   resetAll: () => void;
+  deleteAccount: () => void;
   setHydrated: () => void;
 }
 
@@ -94,6 +95,14 @@ export const useStore = create<CenteryouState>()(
             welcomeShownDate: get().settings.welcomeShownDate,
           },
         }),
+      deleteAccount: () => {
+        set({ events: [], tasks: [], settings: { ...defaultSettings } });
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage)
+            .filter((k) => k.startsWith('centeryou'))
+            .forEach((k) => window.localStorage.removeItem(k));
+        }
+      },
       setHydrated: () => set({ hydrated: true }),
     }),
     {

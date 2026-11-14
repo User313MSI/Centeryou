@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
@@ -17,8 +19,34 @@ export default function ReglagesPage() {
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
+  const deleteAccount = useStore((s) => s.deleteAccount);
   const pushToast = useUiStore((s) => s.pushToast);
+  const router = useRouter();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const onDeleteAccount = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      window.setTimeout(() => setConfirmDelete(false), 8000);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await fetch('/api/compte/suppression', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+    } catch {
+      pushToast({ message: 'Suppression serveur indisponible, données locales supprimées' });
+    }
+    deleteAccount();
+    setConfirmDelete(false);
+    pushToast({ message: 'Ton compte et tes données ont été supprimés' });
+    router.push('/');
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -142,6 +170,45 @@ export default function ReglagesPage() {
               {confirmReset ? 'Cliquer encore pour confirmer la suppression' : 'Effacer toutes mes données'}
             </Button>
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Trash2 size={18} aria-hidden className="text-danger" /> Supprimer mon compte et mes données
+          </h2>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-3">
+          <p className="text-sm text-muted">
+            Suppression définitive et irréversible : ton prénom, tes événements et tes tâches sont effacés
+            de ce navigateur (stockage local), et une demande d’effacement est envoyée au serveur. Voir la{' '}
+            <Link href="/confidentialite" className="font-semibold text-primarydark underline decoration-primary/40 underline-offset-2 hover:decoration-primary">
+              politique de confidentialité
+            </Link>
+            .
+          </p>
+          {confirmDelete ? (
+            <div className="flex flex-col gap-2 rounded-card border border-danger/40 bg-danger/5 px-4 py-3">
+              <p className="text-sm font-semibold text-ink">
+                Es-tu sûr(e) ? Cette action est définitive et ne peut pas être annulée.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="danger" size="sm" onClick={onDeleteAccount} disabled={deleting}>
+                  {deleting ? 'Suppression en cours…' : 'Oui, supprimer définitivement'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Button variant="secondary" size="sm" onClick={onDeleteAccount} disabled={deleting}>
+                Supprimer mon compte et mes données
+              </Button>
+            </div>
+          )}
         </CardBody>
       </Card>
     </div>
