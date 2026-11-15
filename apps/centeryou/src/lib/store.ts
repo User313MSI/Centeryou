@@ -42,6 +42,8 @@ interface CenteryouState {
   resetAll: () => void;
   /** applique une sauvegarde importée (déjà validée/sanitisée) */
   restoreBackup: (payload: BackupPayload) => void;
+  /** efface toutes les données locales + les clés centeryou* du localStorage (suppression de compte) */
+  deleteAccount: () => void;
   setHydrated: () => void;
 
   setSubscription: (patch: Partial<SubscriptionState>) => void;
@@ -116,6 +118,14 @@ export const useStore = create<CenteryouState>()(
           tasks: sanitizeTasks(payload.tasks),
           settings: sanitizeSettings(payload.settings),
         }),
+      deleteAccount: () => {
+        set({ events: [], tasks: [], settings: { ...defaultSettings } });
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage)
+            .filter((k) => k.startsWith('centeryou'))
+            .forEach((k) => window.localStorage.removeItem(k));
+        }
+      },
       setHydrated: () => set({ hydrated: true }),
 
       setSubscription: (patch) =>

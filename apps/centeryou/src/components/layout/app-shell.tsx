@@ -15,6 +15,7 @@ import { ErrorBoundary } from '../error/error-boundary';
 import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
+import { Footer } from './footer';
 import { TopNav } from './top-nav';
 import { BottomNav } from './bottom-nav';
 import { VoiceFab } from './voice-fab';
@@ -120,6 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
       <BottomNav />
+      <Footer />
       <Toasts />
       <EventDialog />
       <HelpDialog />
