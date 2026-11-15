@@ -1,6 +1,8 @@
 'use client';
 
+import { FREE_PREMIUM_VOICE_LIMIT_PER_MONTH } from './plans';
 import { useStore } from './store';
+import { currentMonth, isPremiumActive, premiumVoiceRemaining } from './subscription';
 import { useUiStore } from './ui-store';
 
 /**
@@ -8,8 +10,10 @@ import { useUiStore } from './ui-store';
  *
  * Deux moteurs :
  *  1. Premium (côté serveur) : la route API /api/voix appelle ElevenLabs avec la clé
- *     serveur ELEVENLABS_API_KEY, jamais exposée au navigateur. Réservée aux profils
- *     renseignés (prénom dans les Réglages), quota de 300 caractères/jour.
+ *     serveur, jamais exposée au navigateur. Côté client, réservée à l'offre Premium
+ *     (illimitée) ou aux 3 essais gratuits/mois de l'offre Découverte ; le serveur
+ *     applique en plus son quota de protection (300 caractères/jour) et exige un
+ *     profil renseigné (prénom dans les Réglages).
  *  2. Défaut, GRATUIT : Web Speech API (speechSynthesis + webkitSpeechRecognition),
  *     voix française (fr-FR), débit 1.0, résultats intermédiaires. Utilisée par les
  *     anonymes et en bascule douce (quota atteint, clé absente ou erreur) — jamais
@@ -123,9 +127,33 @@ function speakWithWebSpeech(text: string): Promise<void> {
   });
 }
 
+/** enregistre l'essai gratuit utilisé et propose Premium quand le quota mensuel est épuisé */
+function recordVoiceQuotaUsage(premium: boolean): void {
+  if (premium) return;
+  const used = useStore.getState().recordPremiumVoice();
+  if (used >= FREE_PREMIUM_VOICE_LIMIT_PER_MONTH) {
+    useUiStore.getState().pushToast({
+      message: `Voix premium : tes ${FREE_PREMIUM_VOICE_LIMIT_PER_MONTH} essais gratuits du mois sont utilisés. Passe Premium pour une voix premium illimitée.`,
+      actionLabel: 'Passer Premium',
+      onAction: () => {
+        window.location.href = '/reglages#abonnement';
+      },
+      duration: 9000,
+    });
+  }
+}
+
 export async function speak(text: string): Promise<void> {
   if (!text.trim()) return;
-  if (await speakWithPremium(text)) return;
+  const state = useStore.getState();
+  const premium = isPremiumActive(state.subscription);
+  const remaining = premiumVoiceRemaining(state.voiceQuota, currentMonth());
+  if (premium || remaining > 0) {
+    if (await speakWithPremium(text)) {
+      recordVoiceQuotaUsage(premium);
+      return;
+    }
+  }
   await speakWithWebSpeech(text);
 }
 

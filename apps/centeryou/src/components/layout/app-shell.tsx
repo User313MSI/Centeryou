@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useHydrated } from '../../lib/useHydrated';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
+import { initSync } from '../../lib/sync';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { Logo } from '../brand/logo';
@@ -40,6 +41,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'sombre');
   }, [theme]);
+
+  // synchro multi-appareils Premium (Stripe) : pull initial + push différé sur chaque changement
+  useEffect(() => {
+    if (!hydrated) return;
+    initSync();
+  }, [hydrated]);
 
   // nouveaux arrivants : parcours d'accueil en 3 étapes avant toute navigation
   useEffect(() => {

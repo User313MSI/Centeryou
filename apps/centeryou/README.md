@@ -35,6 +35,18 @@ La clé `NEXT_ELEVENLABS_API_KEY` (déjà enregistrée sur Vercel) est une varia
 
 Configuration (voir `.env.local.example`) : `NEXT_ELEVENLABS_API_KEY` (et optionnellement `NEXT_ELEVENLABS_VOICE_ID`), variables serveur déjà présentes sur Vercel — ne jamais leur ajouter le préfixe `NEXT_PUBLIC_` côté client.
 
+## Paiement — offres Découverte / Premium (Stripe)
+
+- Offres (noms, prix, libellés) : **`src/lib/plans.ts`** (fichier de config unique).
+- Routes serveur (clés Stripe uniquement côté serveur, jamais dans le bundle) :
+  `POST /api/checkout` (Stripe Checkout FR), `POST /api/portal` (portail client),
+  `POST /api/subscription/status` (statut lu chez Stripe), `POST /api/stripe/webhook`
+  (signature vérifiée), `GET|POST /api/sync` (synchro multi-appareils Premium).
+- Page **Abonnement** dans Réglages (offre actuelle, statut, renouvellement, gérer/annuler).
+- Variables d'environnement : voir **`.env.local.example`** et le mode d'emploi
+  **[docs/paiement-stripe.md](docs/paiement-stripe.md)** (compte Stripe, variables Vercel,
+  webhook, passage en mode réel, parcours de test).
+
 ## Commandes utiles
 
 | Commande | Effet |

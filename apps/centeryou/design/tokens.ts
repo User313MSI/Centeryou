@@ -72,6 +72,33 @@ export function themeCssVars(c: Record<AppColor, string>, sh: { rest: string; ho
   return [...colorVars, `--shadow-rest: ${sh.rest};`, `--shadow-hover: ${sh.hover};`].join(' ');
 }
 
+/**
+ * Palette sombre alternative (offre Premium — mode sombre). Mêmes clés que `colors`.
+ * Le thème actif est porté par `darkColors` ci-dessus (injecté dans layout.tsx) ;
+ * cette palette est conservée comme référence.
+ */
+export const colorsDark = {
+  primary: '#7C5CFF',
+  primaryDark: '#9D86FF',
+  voice: '#2DD4BF',
+  warning: '#FFB020',
+  danger: '#FF6B6B',
+  bg: '#0F0F16',
+  surface: '#191926',
+  ink: '#ECECF4',
+  textSecondary: '#9B9DB8',
+  border: '#2A2B3D',
+} as const;
+
+/** catégories en thème sombre (légèrement éclaircies pour le contraste) */
+export const categoryColorsDark = {
+  travail: '#9D86FF',
+  perso: '#5CE8D8',
+  sante: '#FF8585',
+  focus: '#FFC24D',
+  autre: '#9B9DB8',
+} as const;
+
 /** Catégories d'événements / tâches */
 export const categoryColors = {
   travail: '#7C5CFF',

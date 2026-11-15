@@ -10,6 +10,7 @@ import { Toggle } from '../../components/ui/toggle';
 import { todayISO } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
+import { SubscriptionCard } from '../../components/settings/subscription-card';
 import type { WelcomeSequenceMode } from '../../types';
 
 const selectClass =
@@ -68,6 +69,8 @@ export default function ReglagesPage() {
       </Card>
 
       <AccountSection />
+
+      <SubscriptionCard />
 
       <Card>
         <CardHeader>
@@ -188,7 +191,8 @@ export default function ReglagesPage() {
         <CardBody className="flex flex-col gap-3">
           <p className="text-sm text-muted">
             Par défaut, toutes tes données restent dans ce navigateur (localStorage). Si tu crées un compte (carte
-            ci-dessus), une copie est enregistrée en ligne.
+            ci-dessus), une copie est enregistrée en ligne ; la synchronisation multi-appareils de l’offre Premium
+            (voir Abonnement ci-dessus) envoie aussi un snapshot vers le serveur.
           </p>
           <div>
             <Button

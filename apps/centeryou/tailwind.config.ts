@@ -1,11 +1,12 @@
 import type { Config } from 'tailwindcss';
 import { categoryColors, colorVarNames, colors, motion, radius, typography } from './design/tokens';
 
-/** couleur adossée à une variable CSS (thème clair/sombre injecté dans layout.tsx) */
+/** couleur adossée à une variable CSS (thème clair/sombre injecté dans layout.tsx depuis design/tokens.ts) */
 const varColor = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}', './design/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {

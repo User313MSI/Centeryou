@@ -37,6 +37,8 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Aucune clé secrète n'est inlinée ici : Stripe et ElevenLabs ne sont lus que
+  // côté serveur (routes /api/*) — jamais dans le bundle navigateur.
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
 import { minutesOf, parseISO, timeOf, todayISO } from './dates';
+import { currentMonth, defaultSubscription, defaultVoiceQuota, type SubscriptionState, type VoiceQuota } from './subscription';
 import { uid } from './utils';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -68,6 +69,7 @@ export const defaultSettings: Settings = {
   briefShownDate: '',
   welcomeSequence: 'daily',
   welcomeShownDate: '',
+  darkMode: false,
 };
 
 interface CenteryouState {
@@ -75,6 +77,14 @@ interface CenteryouState {
   tasks: TaskItem[];
   settings: Settings;
   hydrated: boolean;
+  /** identifiant d'appareil (local), transmis à Stripe comme client_reference_id */
+  deviceId: string;
+  /** statut d'abonnement Stripe (synchronisé depuis le serveur) */
+  subscription: SubscriptionState;
+  /** quota mensuel d'essais de voix premium (offre Découverte) */
+  voiceQuota: VoiceQuota;
+  /** horodatage du dernier snapshot de synchro appliqué/envoyé */
+  syncUpdatedAt: number;
 
   addEvent: (e: Omit<EventItem, 'id' | 'createdAt'>) => EventItem;
   updateEvent: (id: string, patch: Partial<Omit<EventItem, 'id' | 'createdAt'>>) => void;
@@ -90,6 +100,11 @@ interface CenteryouState {
   markWelcomeShown: () => void;
   resetAll: () => void;
   setHydrated: () => void;
+
+  setSubscription: (patch: Partial<SubscriptionState>) => void;
+  /** enregistre une utilisation de voix premium ; renvoie le total utilisé ce mois-ci */
+  recordPremiumVoice: () => number;
+  setSyncUpdatedAt: (n: number) => void;
 }
 
 export const useStore = create<CenteryouState>()(
@@ -99,6 +114,10 @@ export const useStore = create<CenteryouState>()(
       tasks: [],
       settings: defaultSettings,
       hydrated: false,
+      deviceId: '',
+      subscription: defaultSubscription,
+      voiceQuota: defaultVoiceQuota,
+      syncUpdatedAt: 0,
 
       addEvent: (e) => {
         const ev: EventItem = { ...e, id: uid(), createdAt: Date.now() };
@@ -149,12 +168,31 @@ export const useStore = create<CenteryouState>()(
           },
         }),
       setHydrated: () => set({ hydrated: true }),
+
+      setSubscription: (patch) =>
+        set((s) => ({ subscription: { ...s.subscription, ...patch, updatedAt: Date.now() } })),
+      recordPremiumVoice: () => {
+        const month = currentMonth();
+        const prev = get().voiceQuota;
+        const used = prev.month === month ? prev.used + 1 : 1;
+        set({ voiceQuota: { month, used } });
+        return used;
+      },
+      setSyncUpdatedAt: (n) => set({ syncUpdatedAt: n }),
     }),
     {
       name: 'centeryou-v1',
       version: 2,
       skipHydration: true,
-      partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
+      partialize: (s) => ({
+        events: s.events,
+        tasks: s.tasks,
+        settings: s.settings,
+        deviceId: s.deviceId,
+        subscription: s.subscription,
+        voiceQuota: s.voiceQuota,
+        syncUpdatedAt: s.syncUpdatedAt,
+      }),
       // v1 -> v2 (Dario) : ajout de theme + onboarded. Les utilisateurs existants (données
       // déjà présentes) sont considérés comme déjà onboardés ; seuls les nouveaux arrivants
       // voient le parcours d'accueil.
@@ -167,8 +205,8 @@ export const useStore = create<CenteryouState>()(
       },
       // fusion douce + sanitation (Alpha) : les entrées persistées malformées (localStorage
       // édité ou corrompu) sont ignorées pour éviter tout crash de rendu ; les nouveaux
-      // champs de réglages (theme, onboarded) prennent une valeur sûre par défaut si
-      // absents ou invalides dans l'état persisté
+      // champs (réglages theme/onboarded, compte/paiement deviceId/subscription/voiceQuota/
+      // syncUpdatedAt) prennent une valeur sûre par défaut si absents ou invalides
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CenteryouState>;
         return {
@@ -176,6 +214,10 @@ export const useStore = create<CenteryouState>()(
           events: Array.isArray(p.events) ? p.events.filter(isValidEvent) : [],
           tasks: Array.isArray(p.tasks) ? p.tasks.filter(isValidTask) : [],
           settings: sanitizeSettings(p.settings),
+          deviceId: typeof p.deviceId === 'string' ? p.deviceId : '',
+          subscription: { ...defaultSubscription, ...p.subscription },
+          voiceQuota: { ...defaultVoiceQuota, ...p.voiceQuota },
+          syncUpdatedAt: typeof p.syncUpdatedAt === 'number' ? p.syncUpdatedAt : 0,
         };
       },
     },
