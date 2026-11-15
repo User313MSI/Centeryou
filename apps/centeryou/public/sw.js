@@ -9,6 +9,7 @@ const CACHE = 'centeryou-v1';
 
 const SHELL = [
   '/',
+  '/aujourdhui',
   '/planning',
   '/taches',
   '/voix',

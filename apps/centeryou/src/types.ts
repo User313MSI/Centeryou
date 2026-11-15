@@ -5,6 +5,8 @@ export type Priority = 'basse' | 'moyenne' | 'haute';
 export type Repeat = 'jamais' | 'jour' | 'semaine' | 'mois';
 /** Séquence d'accueil : à chaque ouverture, une fois par jour (défaut) ou désactivée */
 export type WelcomeSequenceMode = 'always' | 'daily' | 'off';
+/** Thème d'apparence : clair (défaut) ou sombre, mémorisé */
+export type Theme = 'clair' | 'sombre';
 
 export interface EventItem {
   id: string;
@@ -39,10 +41,16 @@ export interface Settings {
   dayStart: number;
   sounds: boolean;
   voice: boolean;
+  /** thème d'apparence (bascule dans Réglages, mémorisé) */
+  theme: Theme;
+  /** parcours d'accueil des nouveaux arrivants terminé ? */
+  onboarded: boolean;
   /** dernière date (YYYY-MM-DD) où le brief du matin a été proposé/écouté */
   briefShownDate: string;
   /** fréquence d'affichage de la séquence d'accueil animée */
   welcomeSequence: WelcomeSequenceMode;
   /** dernière date (YYYY-MM-DD) où la séquence d'accueil a été affichée */
   welcomeShownDate: string;
+  /** mode sombre (champ historique, le thème actif est piloté par `theme`) */
+  darkMode: boolean;
 }

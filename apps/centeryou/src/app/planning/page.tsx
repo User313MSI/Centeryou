@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { CalendarRange, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody } from '../../components/ui/card';
 import { EmptyState } from '../../components/ui/empty-state';
@@ -57,7 +57,7 @@ export default function PlanningPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 key={title} className="animate-fade-in text-2xl font-extrabold capitalize text-ink">
+        <h1 key={title} className="animate-fade-in text-2xl font-extrabold capitalize text-ink md:text-4xl">
           {title}
         </h1>
         <Button onClick={() => openEventDialog({ date: cursor, start: nextSlot() })}>
@@ -82,8 +82,10 @@ export default function PlanningPage() {
 
       {events.length === 0 && tasks.length === 0 ? (
         <EmptyState
-          title="Aucun événement pour l'instant"
-          description="Clique sur un créneau horaire, ou appuie sur « Nouvel événement », pour planifier ta première activité."
+          icon={CalendarRange}
+          title="Ton planning est encore vide"
+          description="C’est ici que toute ta semaine prend forme. Commence par une seule activité — clique sur un créneau horaire ou appuie sur « Nouvel événement »."
+          example="sport demain 14h"
           action={{ label: 'Créer un événement', onClick: () => openEventDialog({ date: cursor, start: nextSlot() }) }}
         />
       ) : (

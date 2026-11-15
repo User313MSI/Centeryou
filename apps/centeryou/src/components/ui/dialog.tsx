@@ -72,7 +72,7 @@ export function Dialog({
 
   return (
     <div
-      className="fixed inset-0 z-dialog flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-dialog flex items-center justify-center bg-veil/40 p-4 backdrop-blur-sm animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

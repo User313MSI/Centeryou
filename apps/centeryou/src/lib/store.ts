@@ -2,74 +2,30 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, WelcomeSequenceMode } from '../types';
-import { minutesOf, parseISO, timeOf, todayISO } from './dates';
+import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
+import type { BackupPayload } from './backup';
+import { minutesOf, timeOf, todayISO } from './dates';
+import { defaultSettings } from './defaults';
+import { currentMonth, defaultSubscription, defaultVoiceQuota, type SubscriptionState, type VoiceQuota } from './subscription';
+import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
+import { createSafeStorage } from './safe-storage';
 import { uid } from './utils';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
-const CATEGORIES: readonly Category[] = ['travail', 'perso', 'sante', 'focus', 'autre'];
-const REPEATS: readonly Repeat[] = ['jamais', 'jour', 'semaine', 'mois'];
-const PRIORITIES: readonly Priority[] = ['basse', 'moyenne', 'haute'];
-
-function isValidDate(iso: unknown): iso is string {
-  return typeof iso === 'string' && ISO_DATE.test(iso) && !Number.isNaN(parseISO(iso).getTime());
-}
-
-function isValidEvent(e: unknown): e is EventItem {
-  const v = e as Partial<EventItem> | null;
-  return (
-    !!v &&
-    typeof v.id === 'string' &&
-    typeof v.title === 'string' &&
-    isValidDate(v.date) &&
-    typeof v.start === 'string' && HH_MM.test(v.start) &&
-    typeof v.end === 'string' && HH_MM.test(v.end) &&
-    CATEGORIES.includes(v.category as Category) &&
-    REPEATS.includes(v.repeat as Repeat) &&
-    typeof v.createdAt === 'number'
-  );
-}
-
-function isValidTask(t: unknown): t is TaskItem {
-  const v = t as Partial<TaskItem> | null;
-  return (
-    !!v &&
-    typeof v.id === 'string' &&
-    typeof v.title === 'string' &&
-    isValidDate(v.date) &&
-    (v.time === null || (typeof v.time === 'string' && HH_MM.test(v.time))) &&
-    CATEGORIES.includes(v.category as Category) &&
-    PRIORITIES.includes(v.priority as Priority) &&
-    typeof v.done === 'boolean' &&
-    typeof v.createdAt === 'number'
-  );
-}
-
-function sanitizeSettings(s: Partial<Settings> | undefined): Settings {
-  const dayStart = Number(s?.dayStart);
-  return {
-    ...defaultSettings,
-    ...(s ?? {}),
-    dayStart: Number.isFinite(dayStart) ? Math.min(10, Math.max(6, dayStart)) : defaultSettings.dayStart,
-  };
-}
-
-export const defaultSettings: Settings = {
-  prenom: '',
-  dayStart: 8,
-  sounds: true,
-  voice: true,
-  briefShownDate: '',
-  welcomeSequence: 'daily',
-  welcomeShownDate: '',
-};
+export { defaultSettings };
 
 interface CenteryouState {
   events: EventItem[];
   tasks: TaskItem[];
   settings: Settings;
   hydrated: boolean;
+  /** identifiant d'appareil (local), transmis à Stripe comme client_reference_id */
+  deviceId: string;
+  /** statut d'abonnement Stripe (synchronisé depuis le serveur) */
+  subscription: SubscriptionState;
+  /** quota mensuel d'essais de voix premium (offre Découverte) */
+  voiceQuota: VoiceQuota;
+  /** horodatage du dernier snapshot de synchro appliqué/envoyé */
+  syncUpdatedAt: number;
 
   addEvent: (e: Omit<EventItem, 'id' | 'createdAt'>) => EventItem;
   updateEvent: (id: string, patch: Partial<Omit<EventItem, 'id' | 'createdAt'>>) => void;
@@ -84,7 +40,16 @@ interface CenteryouState {
   markBriefShown: () => void;
   markWelcomeShown: () => void;
   resetAll: () => void;
+  /** applique une sauvegarde importée (déjà validée/sanitisée) */
+  restoreBackup: (payload: BackupPayload) => void;
+  /** efface toutes les données locales + les clés centeryou* du localStorage (suppression de compte) */
+  deleteAccount: () => void;
   setHydrated: () => void;
+
+  setSubscription: (patch: Partial<SubscriptionState>) => void;
+  /** enregistre une utilisation de voix premium ; renvoie le total utilisé ce mois-ci */
+  recordPremiumVoice: () => number;
+  setSyncUpdatedAt: (n: number) => void;
 }
 
 export const useStore = create<CenteryouState>()(
@@ -94,6 +59,10 @@ export const useStore = create<CenteryouState>()(
       tasks: [],
       settings: defaultSettings,
       hydrated: false,
+      deviceId: '',
+      subscription: defaultSubscription,
+      voiceQuota: defaultVoiceQuota,
+      syncUpdatedAt: 0,
 
       addEvent: (e) => {
         const ev: EventItem = { ...e, id: uid(), createdAt: Date.now() };
@@ -141,29 +110,81 @@ export const useStore = create<CenteryouState>()(
             ...defaultSettings,
             briefShownDate: get().settings.briefShownDate,
             welcomeShownDate: get().settings.welcomeShownDate,
+            onboarded: get().settings.onboarded,
           },
         }),
+      restoreBackup: (payload) =>
+        set({
+          events: sanitizeEvents(payload.events),
+          tasks: sanitizeTasks(payload.tasks),
+          settings: sanitizeSettings(payload.settings),
+        }),
+      deleteAccount: () => {
+        set({ events: [], tasks: [], settings: { ...defaultSettings } });
+        if (typeof window !== 'undefined') {
+          Object.keys(window.localStorage)
+            .filter((k) => k.startsWith('centeryou'))
+            .forEach((k) => window.localStorage.removeItem(k));
+        }
+      },
       setHydrated: () => set({ hydrated: true }),
+
+      setSubscription: (patch) =>
+        set((s) => ({ subscription: { ...s.subscription, ...patch, updatedAt: Date.now() } })),
+      recordPremiumVoice: () => {
+        const month = currentMonth();
+        const prev = get().voiceQuota;
+        const used = prev.month === month ? prev.used + 1 : 1;
+        set({ voiceQuota: { month, used } });
+        return used;
+      },
+      setSyncUpdatedAt: (n) => set({ syncUpdatedAt: n }),
     }),
     {
       name: 'centeryou-v1',
-      version: 1,
+      version: 2,
       skipHydration: true,
-      partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
-      // fusion douce + sanitation : les entrées persistées malformées (localStorage édité
-      // ou corrompu) sont ignorées pour éviter tout crash de rendu ; les nouveaux champs
-      // de réglages prennent leur valeur par défaut si absents de l'état persisté
+      // stockage résilient (Hugo) : localStorage corrompu -> copie de côté + état neuf,
+      // quota plein -> message clair en français, aucune écriture ne plante l'app
+      storage: createSafeStorage(),
+      partialize: (s) => ({
+        events: s.events,
+        tasks: s.tasks,
+        settings: s.settings,
+        deviceId: s.deviceId,
+        subscription: s.subscription,
+        voiceQuota: s.voiceQuota,
+        syncUpdatedAt: s.syncUpdatedAt,
+      }),
+      // v1 -> v2 (Dario) : ajout de theme + onboarded. Les utilisateurs existants (données
+      // déjà présentes) sont considérés comme déjà onboardés ; seuls les nouveaux arrivants
+      // voient le parcours d'accueil.
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<CenteryouState>;
+        if (version < 2) {
+          return { ...p, settings: { ...sanitizeSettings(p.settings), onboarded: true } } as CenteryouState;
+        }
+        return persisted as CenteryouState;
+      },
+      // fusion douce + sanitation (Alpha/Hugo) : les entrées persistées malformées (localStorage
+      // édité ou corrompu) sont écartées sans perdre les valides, pour éviter tout crash de
+      // rendu ; les nouveaux champs (réglages theme/onboarded/darkMode, compte/paiement
+      // deviceId/subscription/voiceQuota/syncUpdatedAt) prennent une valeur sûre par défaut
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CenteryouState>;
         return {
           ...current,
-          events: Array.isArray(p.events) ? p.events.filter(isValidEvent) : [],
-          tasks: Array.isArray(p.tasks) ? p.tasks.filter(isValidTask) : [],
+          events: sanitizeEvents(p.events),
+          tasks: sanitizeTasks(p.tasks),
           settings: sanitizeSettings(p.settings),
+          deviceId: typeof p.deviceId === 'string' ? p.deviceId : '',
+          subscription: { ...defaultSubscription, ...p.subscription },
+          voiceQuota: { ...defaultVoiceQuota, ...p.voiceQuota },
+          syncUpdatedAt: typeof p.syncUpdatedAt === 'number' ? p.syncUpdatedAt : 0,
         };
       },
     },
   ),
 );
 
-export type { Category, Priority, Repeat, WelcomeSequenceMode };
+export type { Category, Priority, Repeat, Theme, WelcomeSequenceMode };

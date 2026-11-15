@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChartLine, ListChecks, Play, SkipForward, Square } from 'lucide-react';
+import { CalendarDays, ChartLine, Hand, ListChecks, Play, SkipForward, Sparkles, Square } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Waves } from '../brand/waves';
 import { categoryColor } from '../../lib/categories';
@@ -24,6 +24,7 @@ import { calendarOnDate, type CalendarInstance } from '../../lib/events';
 import { useStore } from '../../lib/store';
 import { speak, stopSpeaking } from '../../lib/voice';
 import { cx } from '../../lib/utils';
+import { shouldShowWelcome } from '../../lib/welcome';
 
 /**
  * Séquence d'accueil animée (page Aujourd'hui) : plein écran temporaire qui résume
@@ -49,10 +50,9 @@ export function WelcomeSequence() {
   useEffect(() => {
     if (!hydrated) return;
     const s = useStore.getState();
-    const mode = s.settings.welcomeSequence ?? 'daily';
-    if (mode === 'off') return;
-    if (mode === 'daily' && s.settings.welcomeShownDate === todayISO()) return;
-    if (mode === 'daily') s.markWelcomeShown();
+    const today = todayISO();
+    if (!shouldShowWelcome(s.settings.welcomeSequence, s.settings.welcomeShownDate, today)) return;
+    if ((s.settings.welcomeSequence ?? 'daily') === 'daily') s.markWelcomeShown();
     setOpen(true);
   }, [hydrated]);
 
@@ -166,11 +166,13 @@ export function WelcomeSequence() {
       onKeyDown={(e) => {
         if (e.key === 'Escape') close();
       }}
-      className="animate-fade-in fixed inset-0 z-dialog flex items-center justify-center bg-ink/45 p-4"
+      className="animate-fade-in fixed inset-0 z-dialog flex items-center justify-center bg-veil/45 p-4 backdrop-blur-sm"
     >
       <div className="animate-slide-up flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-tile bg-surface p-6 shadow-hover md:p-8">
         <section className={sectionClass(0)} style={{ animationDelay: '120ms' }}>
-          <h2 className="text-2xl font-extrabold text-ink md:text-3xl">{greeting} 👋</h2>
+          <h2 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-ink md:text-3xl">
+            {greeting} <Hand size={26} aria-hidden className="shrink-0 text-warning" />
+          </h2>
           <p className="mt-1 text-sm font-semibold capitalize text-muted">{dateFr}</p>
         </section>
 
@@ -191,7 +193,9 @@ export function WelcomeSequence() {
             <ListChecks size={16} aria-hidden className="text-primary" /> Prochains rendez-vous
           </h3>
           {nextItems.length === 0 ? (
-            <p className="text-sm text-muted">Rien de plus de prévu pour le reste de la journée. ✨</p>
+            <p className="flex items-center gap-1.5 text-sm text-muted">
+              Rien de plus de prévu pour le reste de la journée. <Sparkles size={14} aria-hidden className="text-warning" />
+            </p>
           ) : (
             <ul className="flex flex-col gap-1.5">
               {nextItems.map((n) => (
@@ -222,7 +226,7 @@ export function WelcomeSequence() {
                   {formatDayNumber(d.iso)}
                 </span>
                 <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voice' : 'text-muted')}>
-                  {d.count > 0 ? `${d.count} ✦` : '—'}
+                  {d.count > 0 ? `${d.count} él.` : '—'}
                 </span>
               </div>
             ))}

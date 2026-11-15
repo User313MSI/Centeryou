@@ -20,6 +20,9 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand + lucide-react. Au
 - Persistance : store Zustand `src/lib/store.ts` (`persist`, clé `centeryou-v1`).
 - Voix : `src/lib/voice.ts` — Web Speech API par défaut (gratuite, sans clé), voix premium ElevenLabs via la **route API serveur** `/api/voix` (voir ci-dessous), bascule automatique sans erreur.
 - Saisie intelligente : parseur français maison `src/lib/parser.ts` (« sport demain 14h », « !lundi réunion »…).
+- Parcours d'accueil des nouveaux arrivants : mini-assistant en 3 étapes sur `/bienvenue` (prénom → premier
+  événement en langage naturel → « C'est parti ! » vers Aujourd'hui et son résumé animé).
+- Thèmes clair/sombre : tokens dérivés dans `design/tokens.ts` (`darkColors`), bascule mémorisée dans Réglages.
 
 ## Sécurité de la voix (clé ElevenLabs)
 
@@ -32,18 +35,47 @@ La clé `NEXT_ELEVENLABS_API_KEY` (déjà enregistrée sur Vercel) est une varia
 
 Configuration (voir `.env.local.example`) : `NEXT_ELEVENLABS_API_KEY` (et optionnellement `NEXT_ELEVENLABS_VOICE_ID`), variables serveur déjà présentes sur Vercel — ne jamais leur ajouter le préfixe `NEXT_PUBLIC_` côté client.
 
+## Paiement — offres Découverte / Premium (Stripe)
+
+- Offres (noms, prix, libellés) : **`src/lib/plans.ts`** (fichier de config unique).
+- Routes serveur (clés Stripe uniquement côté serveur, jamais dans le bundle) :
+  `POST /api/checkout` (Stripe Checkout FR), `POST /api/portal` (portail client),
+  `POST /api/subscription/status` (statut lu chez Stripe), `POST /api/stripe/webhook`
+  (signature vérifiée), `GET|POST /api/sync` (synchro multi-appareils Premium).
+- Page **Abonnement** dans Réglages (offre actuelle, statut, renouvellement, gérer/annuler).
+- Variables d'environnement : voir **`.env.local.example`** et le mode d'emploi
+  **[docs/paiement-stripe.md](docs/paiement-stripe.md)** (compte Stripe, variables Vercel,
+  webhook, passage en mode réel, parcours de test).
+
 ## Commandes utiles
 
 | Commande | Effet |
 |---|---|
 | `npm run dev` | serveur de développement |
 | `npm run build` | build de production |
+| `npm test` | suite Vitest + Testing Library (parseur, store, voix, sauvegarde, résilience localStorage, écran d’erreur) — aussi lancée en CI |
 | `npm run test:parser` | tests du parseur FR + conflits + commandes vocales (sans navigateur) |
 | `npm run icons` | régénère les icônes PWA + le manifest depuis `design/tokens.ts` |
 
 ## Raccourcis
 
 `N` nouvel événement · `T` saisie rapide de tâche · `V` assistant vocal · `1/2/3` vues Jour/Semaine/Mois · `?` aide.
+
+## Pages publiques & lancement
+
+| Route | Rôle |
+|---|---|
+| `/` | Accueil public (landing « Ton planning qui te parle ») — un profil existant sur l’appareil est redirigé vers `/aujourdhui` |
+| `/aujourdhui` | Vue « Aujourd’hui » (anciennement `/`) |
+| `/inscription` · `/onboarding` | Création du compte local (prénom, sans serveur) + prise en main en 3 étapes |
+| `/demo` | Semaine type de Sofia, graphiste indépendante — lecture seule, sans compte, aucune donnée réelle |
+| `/presse` | Fiche de presse : description, slogan, logo et visuels téléchargeables |
+| `/offres` | Offre gratuite et principes local-first |
+| `/legal` | Mentions légales, confidentialité (localStorage uniquement) et CGU |
+
+SEO : titres et descriptions en français, `robots: index, follow` explicite (aucun `noindex`), `/robots.txt`,
+`/sitemap.xml` (pages publiques), image Open Graph 1200×630 générée à la build (`/opengraph-image` : logo + slogan
+sur fond `#FAFAFC`). URL publique configurable via `NEXT_PUBLIC_SITE_URL` (défaut `https://dev-apps-centeryou.vercel.app`, l'URL Vercel de production).
 
 ## PWA
 

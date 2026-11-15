@@ -1,39 +1,28 @@
-import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Button } from './button';
 import { cx } from '../../lib/utils';
 
-/** Ondes concentriques de marque (réservées aux éléments vocaux selon le design system,
- *  utilisées ici en illustration douce d'état vide) */
-export function WavesArt({ size = 96 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 120 120"
-      fill="none"
-      aria-hidden
-      className="text-primary"
-    >
-      <circle cx="60" cy="60" r="14" stroke="currentColor" strokeWidth="3" className="text-voice" />
-      <circle cx="60" cy="60" r="28" stroke="currentColor" strokeWidth="2.5" opacity="0.65" />
-      <circle cx="60" cy="60" r="42" stroke="currentColor" strokeWidth="2" opacity="0.4" />
-      <circle cx="60" cy="60" r="55" stroke="currentColor" strokeWidth="1.5" opacity="0.2" />
-    </svg>
-  );
-}
-
+/**
+ * État vide chaleureux : icône lucide dans une tuile douce (les ondes
+ * concentriques restent réservées aux éléments vocaux), une action claire
+ * et un exemple concret — jamais un simple « rien ».
+ */
 export function EmptyState({
+  icon: Icon = Sparkles,
   title,
   description,
+  example,
   action,
   className,
-  art,
 }: {
+  icon?: LucideIcon;
   title: string;
   description: string;
+  /** exemple concret affiché en pastille, ex. « sport demain 14h » */
+  example?: string;
   action?: { label: string; onClick: () => void };
   className?: string;
-  art?: ReactNode;
 }) {
   return (
     <div
@@ -42,11 +31,18 @@ export function EmptyState({
         className,
       )}
     >
-      {art ?? <WavesArt />}
+      <span className="flex h-14 w-14 items-center justify-center rounded-tile bg-primary/10 text-primary">
+        <Icon size={26} aria-hidden />
+      </span>
       <p className="text-base font-bold text-ink">{title}</p>
       <p className="max-w-sm text-sm text-muted">{description}</p>
+      {example && (
+        <code className="rounded-pill border border-line/70 bg-bg px-3.5 py-1.5 text-sm font-semibold text-primarydark">
+          « {example} »
+        </code>
+      )}
       {action && (
-        <Button size="sm" onClick={action.onClick} className="mt-2">
+        <Button size="sm" onClick={action.onClick} className="mt-1">
           {action.label}
         </Button>
       )}

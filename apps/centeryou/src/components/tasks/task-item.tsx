@@ -24,7 +24,7 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
   const onToggle = () => {
     toggleTask(task.id);
     if (sounds) playBlip(task.done ? 520 : 760);
-    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée ✅` });
+    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée.` });
   };
 
   const onDelete = () => {
@@ -63,7 +63,7 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
         <span
           aria-hidden
           className={cx(
-            'flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all duration-fast ease-out',
+            'flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-fast ease-out',
             task.done ? 'border-voice bg-voice' : 'border-line bg-surface hover:border-voice',
           )}
         >
