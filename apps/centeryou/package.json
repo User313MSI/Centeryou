@@ -12,6 +12,7 @@
     "test:parser": "node scripts/test-parser.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "lucide-react": "^0.454.0",
     "next": "14.2.35",
     "react": "^18.3.1",

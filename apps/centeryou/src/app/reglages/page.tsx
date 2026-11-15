@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Download } from 'lucide-react';
+import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
+import { todayISO } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import type { WelcomeSequenceMode } from '../../types';
@@ -15,10 +17,31 @@ const selectClass =
 
 export default function ReglagesPage() {
   const settings = useStore((s) => s.settings);
+  const events = useStore((s) => s.events);
+  const tasks = useStore((s) => s.tasks);
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
   const pushToast = useUiStore((s) => s.pushToast);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  const exportJson = () => {
+    const data = {
+      app: 'centeryou',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      events,
+      tasks,
+      settings,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `centeryou-export-${todayISO()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    pushToast({ message: 'Export JSON téléchargé ✓' });
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -43,6 +66,8 @@ export default function ReglagesPage() {
           </p>
         </CardBody>
       </Card>
+
+      <AccountSection />
 
       <Card>
         <CardHeader>
@@ -116,13 +141,30 @@ export default function ReglagesPage() {
 
       <Card>
         <CardHeader>
+          <h2 className="text-base font-bold text-ink">Export des données</h2>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-3">
+          <p className="text-sm text-muted">
+            Télécharge toutes tes données (événements, tâches, réglages) dans un fichier JSON.
+          </p>
+          <div>
+            <Button variant="secondary" size="sm" onClick={exportJson}>
+              <Download size={15} aria-hidden /> Télécharger mes données (JSON)
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
             <AlertTriangle size={18} aria-hidden className="text-danger" /> Données locales
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Toutes tes données restent dans ce navigateur (localStorage). Aucune donnée n’est envoyée ailleurs.
+            Par défaut, toutes tes données restent dans ce navigateur (localStorage). Si tu crées un compte (carte
+            ci-dessus), une copie est enregistrée en ligne.
           </p>
           <div>
             <Button
