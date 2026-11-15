@@ -3,74 +3,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
-import { minutesOf, parseISO, timeOf, todayISO } from './dates';
+import type { BackupPayload } from './backup';
+import { minutesOf, timeOf, todayISO } from './dates';
+import { defaultSettings } from './defaults';
 import { currentMonth, defaultSubscription, defaultVoiceQuota, type SubscriptionState, type VoiceQuota } from './subscription';
+import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
+import { createSafeStorage } from './safe-storage';
 import { uid } from './utils';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
-const CATEGORIES: readonly Category[] = ['travail', 'perso', 'sante', 'focus', 'autre'];
-const REPEATS: readonly Repeat[] = ['jamais', 'jour', 'semaine', 'mois'];
-const PRIORITIES: readonly Priority[] = ['basse', 'moyenne', 'haute'];
-
-function isValidDate(iso: unknown): iso is string {
-  return typeof iso === 'string' && ISO_DATE.test(iso) && !Number.isNaN(parseISO(iso).getTime());
-}
-
-function isValidEvent(e: unknown): e is EventItem {
-  const v = e as Partial<EventItem> | null;
-  return (
-    !!v &&
-    typeof v.id === 'string' &&
-    typeof v.title === 'string' &&
-    isValidDate(v.date) &&
-    typeof v.start === 'string' && HH_MM.test(v.start) &&
-    typeof v.end === 'string' && HH_MM.test(v.end) &&
-    CATEGORIES.includes(v.category as Category) &&
-    REPEATS.includes(v.repeat as Repeat) &&
-    typeof v.createdAt === 'number'
-  );
-}
-
-function isValidTask(t: unknown): t is TaskItem {
-  const v = t as Partial<TaskItem> | null;
-  return (
-    !!v &&
-    typeof v.id === 'string' &&
-    typeof v.title === 'string' &&
-    isValidDate(v.date) &&
-    (v.time === null || (typeof v.time === 'string' && HH_MM.test(v.time))) &&
-    CATEGORIES.includes(v.category as Category) &&
-    PRIORITIES.includes(v.priority as Priority) &&
-    typeof v.done === 'boolean' &&
-    typeof v.createdAt === 'number'
-  );
-}
-
-function sanitizeSettings(s: Partial<Settings> | undefined): Settings {
-  const dayStart = Number(s?.dayStart);
-  return {
-    ...defaultSettings,
-    ...(s ?? {}),
-    dayStart: Number.isFinite(dayStart) ? Math.min(10, Math.max(6, dayStart)) : defaultSettings.dayStart,
-    // nouveaux champs (Dario) : valeurs sûres garanties même si le localStorage est édité à la main
-    theme: s?.theme === 'sombre' ? 'sombre' : 'clair',
-    onboarded: typeof s?.onboarded === 'boolean' ? s.onboarded : defaultSettings.onboarded,
-  };
-}
-
-export const defaultSettings: Settings = {
-  prenom: '',
-  dayStart: 8,
-  sounds: true,
-  voice: true,
-  theme: 'clair',
-  onboarded: false,
-  briefShownDate: '',
-  welcomeSequence: 'daily',
-  welcomeShownDate: '',
-  darkMode: false,
-};
+export { defaultSettings };
 
 interface CenteryouState {
   events: EventItem[];
@@ -99,6 +40,8 @@ interface CenteryouState {
   markBriefShown: () => void;
   markWelcomeShown: () => void;
   resetAll: () => void;
+  /** applique une sauvegarde importée (déjà validée/sanitisée) */
+  restoreBackup: (payload: BackupPayload) => void;
   setHydrated: () => void;
 
   setSubscription: (patch: Partial<SubscriptionState>) => void;
@@ -167,6 +110,12 @@ export const useStore = create<CenteryouState>()(
             welcomeShownDate: get().settings.welcomeShownDate,
           },
         }),
+      restoreBackup: (payload) =>
+        set({
+          events: sanitizeEvents(payload.events),
+          tasks: sanitizeTasks(payload.tasks),
+          settings: sanitizeSettings(payload.settings),
+        }),
       setHydrated: () => set({ hydrated: true }),
 
       setSubscription: (patch) =>
@@ -184,6 +133,9 @@ export const useStore = create<CenteryouState>()(
       name: 'centeryou-v1',
       version: 2,
       skipHydration: true,
+      // stockage résilient (Hugo) : localStorage corrompu -> copie de côté + état neuf,
+      // quota plein -> message clair en français, aucune écriture ne plante l'app
+      storage: createSafeStorage(),
       partialize: (s) => ({
         events: s.events,
         tasks: s.tasks,
@@ -203,16 +155,16 @@ export const useStore = create<CenteryouState>()(
         }
         return persisted as CenteryouState;
       },
-      // fusion douce + sanitation (Alpha) : les entrées persistées malformées (localStorage
-      // édité ou corrompu) sont ignorées pour éviter tout crash de rendu ; les nouveaux
-      // champs (réglages theme/onboarded, compte/paiement deviceId/subscription/voiceQuota/
-      // syncUpdatedAt) prennent une valeur sûre par défaut si absents ou invalides
+      // fusion douce + sanitation (Alpha/Hugo) : les entrées persistées malformées (localStorage
+      // édité ou corrompu) sont écartées sans perdre les valides, pour éviter tout crash de
+      // rendu ; les nouveaux champs (réglages theme/onboarded/darkMode, compte/paiement
+      // deviceId/subscription/voiceQuota/syncUpdatedAt) prennent une valeur sûre par défaut
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CenteryouState>;
         return {
           ...current,
-          events: Array.isArray(p.events) ? p.events.filter(isValidEvent) : [],
-          tasks: Array.isArray(p.tasks) ? p.tasks.filter(isValidTask) : [],
+          events: sanitizeEvents(p.events),
+          tasks: sanitizeTasks(p.tasks),
           settings: sanitizeSettings(p.settings),
           deviceId: typeof p.deviceId === 'string' ? p.deviceId : '',
           subscription: { ...defaultSubscription, ...p.subscription },

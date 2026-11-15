@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { AlertTriangle, Download, Moon } from 'lucide-react';
+import { useRef, useState, type ChangeEvent } from 'react';
+import { AlertTriangle, Download, Moon, Upload } from 'lucide-react';
 import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
+import { BackupError, downloadBackup, parseBackup, readBackupFile, serializeBackup, type BackupPayload } from '../../lib/backup';
 import { todayISO } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
@@ -22,8 +23,50 @@ export default function ReglagesPage() {
   const tasks = useStore((s) => s.tasks);
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
+  const restoreBackup = useStore((s) => s.restoreBackup);
   const pushToast = useUiStore((s) => s.pushToast);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<BackupPayload | null>(null);
+  const [confirmRestore, setConfirmRestore] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onExport = () => {
+    const s = useStore.getState();
+    downloadBackup(serializeBackup({ events: s.events, tasks: s.tasks, settings: s.settings }));
+    pushToast({ message: 'Sauvegarde exportée : fichier JSON téléchargé.' });
+  };
+
+  const onFilePicked = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    let json: string;
+    try {
+      json = await readBackupFile(file);
+    } catch {
+      pushToast({ message: 'Impossible de lire ce fichier.' });
+      return;
+    }
+    try {
+      const payload = parseBackup(json);
+      setPendingRestore(payload);
+      setConfirmRestore(true);
+      window.setTimeout(() => {
+        setConfirmRestore(false);
+        setPendingRestore(null);
+      }, 8000);
+    } catch (err) {
+      pushToast({ message: err instanceof BackupError ? err.message : 'Fichier de sauvegarde invalide.' });
+    }
+  };
+
+  const applyRestore = () => {
+    if (!pendingRestore) return;
+    restoreBackup(pendingRestore);
+    setPendingRestore(null);
+    setConfirmRestore(false);
+    pushToast({ message: 'Sauvegarde restaurée : tes données ont été remplacées par celles du fichier.' });
+  };
 
   const exportJson = () => {
     const data = {
@@ -194,6 +237,39 @@ export default function ReglagesPage() {
             ci-dessus), une copie est enregistrée en ligne ; la synchronisation multi-appareils de l’offre Premium
             (voir Abonnement ci-dessus) envoie aussi un snapshot vers le serveur.
           </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={onExport}>
+              <Download size={16} aria-hidden /> Sauvegarder mes données
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload size={16} aria-hidden /> Restaurer une sauvegarde…
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              aria-label="Choisir un fichier de sauvegarde JSON"
+              onChange={onFilePicked}
+            />
+          </div>
+          {confirmRestore && pendingRestore && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="danger" size="sm" onClick={applyRestore}>
+                Confirmer la restauration ({pendingRestore.events.length} événéments, {pendingRestore.tasks.length} tâches)
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setConfirmRestore(false);
+                  setPendingRestore(null);
+                }}
+              >
+                Annuler
+              </Button>
+            </div>
+          )}
           <div>
             <Button
               variant={confirmReset ? 'danger' : 'secondary'}

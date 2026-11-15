@@ -53,6 +53,7 @@ Configuration (voir `.env.local.example`) : `NEXT_ELEVENLABS_API_KEY` (et option
 |---|---|
 | `npm run dev` | serveur de développement |
 | `npm run build` | build de production |
+| `npm test` | suite Vitest + Testing Library (parseur, store, voix, sauvegarde, résilience localStorage, écran d’erreur) — aussi lancée en CI |
 | `npm run test:parser` | tests du parseur FR + conflits + commandes vocales (sans navigateur) |
 | `npm run icons` | régénère les icônes PWA + le manifest depuis `design/tokens.ts` |
 
