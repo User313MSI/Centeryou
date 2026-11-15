@@ -4,15 +4,15 @@ Ce fichier s'adresse à tous les agents travaillant sur ce dépôt. Lis-le en en
 
 ## Ton identité et ton journal
 - Tu portes un prénom d'agent. Crée et tiens à jour ton journal : `apps/centeryou/docs/journal/<ton-prénom>.md` (mission, date et heure, avancée, décisions, lien de ta PR).
-- **Avant de commencer et avant de finir**, lis le dossier `apps/centeryou/docs/journal/` : d'autres agents travaillent en parallèle. Ne refais pas ce qui est déjà fait, ne touche pas à la zone d'un autre (voix, comptes, paiement, design, tests…).
+- **Avant de commencer et avant de finir**, lis le dossier `apps/centeryou/docs/journal/` : d'autres agents peuvent travailler en parallèle. Ne refais pas ce qui est déjà fait, ne touche pas à la zone d'un autre (voix, comptes, paiement, design, tests…).
 
 ## Publication en temps réel
 - Pousse ta branche (`git push`) à chaque étape significative, même en cours de travail.
-- Ouvre ta pull request dès que possible (brouillon accepté), en ciblant la **branche par défaut du dépôt : `vibe/novaloom-suite-fe60b6`**. ⚠️ N'utilise JAMAIS la branche `main` comme base (c'est une vieille branche gelée).
+- Ouvre ta pull request dès que possible (brouillon accepté), avec **`main` comme branche de base** — c'est la branche par défaut du dépôt.
 - Mets à jour ton journal à chaque push, avec l'heure.
 
 ## Coordination entre camps
-- Avant de terminer : synchronise-toi avec la branche par défaut (`vibe/novaloom-suite-fe60b6`) et résous tes propres conflits — jamais l'inverse.
+- Avant de terminer : synchronise-toi avec `main` et résous tes propres conflits — jamais l'inverse.
 - Si ta mission chevauche celle d'un autre agent (regarde son journal), arrête-toi et signale-le dans ton rapport au lieu d'écraser son travail.
 
 ## Règles qualité bloquantes
