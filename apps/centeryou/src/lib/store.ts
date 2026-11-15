@@ -110,6 +110,7 @@ export const useStore = create<CenteryouState>()(
             ...defaultSettings,
             briefShownDate: get().settings.briefShownDate,
             welcomeShownDate: get().settings.welcomeShownDate,
+            onboarded: get().settings.onboarded,
           },
         }),
       restoreBackup: (payload) =>

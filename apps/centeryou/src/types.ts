@@ -51,6 +51,6 @@ export interface Settings {
   welcomeSequence: WelcomeSequenceMode;
   /** dernière date (YYYY-MM-DD) où la séquence d'accueil a été affichée */
   welcomeShownDate: string;
-  /** mode sombre (offre Premium uniquement — ignoré sinon) */
+  /** mode sombre (champ historique, le thème actif est piloté par `theme`) */
   darkMode: boolean;
 }

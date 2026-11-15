@@ -9,6 +9,7 @@ import { initSync } from '../../lib/sync';
 import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { getStorageReport } from '../../lib/safe-storage';
 import { clamp } from '../../lib/utils';
+import { isPublicRoute } from '../../lib/routes';
 import { Logo } from '../brand/logo';
 import { SyncProvider } from '../account/sync-provider';
 import { ErrorBoundary } from '../error/error-boundary';
@@ -16,6 +17,7 @@ import { EventDialog } from '../events/event-dialog';
 import { HelpDialog } from '../help-dialog';
 import { Toasts } from '../ui/toast';
 import { Footer } from './footer';
+import { PublicNav } from './public-nav';
 import { TopNav } from './top-nav';
 import { BottomNav } from './bottom-nav';
 import { VoiceFab } from './voice-fab';
@@ -35,6 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const theme = useStore((s) => s.settings.theme);
   const onboarded = useStore((s) => s.settings.onboarded);
+  const publicRoute = isPublicRoute(pathname);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
   const setPlanningView = useUiStore((s) => s.setPlanningView);
   const setHelpOpen = useUiStore((s) => s.setHelpOpen);
@@ -59,16 +62,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     initSync();
   }, [hydrated]);
 
-  // nouveaux arrivants : parcours d'accueil en 3 étapes avant toute navigation
+  // nouveaux arrivants : parcours d'accueil en 3 étapes avant toute navigation dans l'app
+  // (les routes publiques — accueil, démo, presse, inscription — restent accessibles à tous)
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || publicRoute) return;
     if (!onboarded && pathname !== '/bienvenue') router.replace('/bienvenue');
-    else if (onboarded && pathname === '/bienvenue') router.replace('/');
-  }, [hydrated, onboarded, pathname, router]);
+    else if (onboarded && pathname === '/bienvenue') router.replace('/aujourdhui');
+  }, [hydrated, onboarded, pathname, publicRoute, router]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isPublicRoute(pathname)) return;
       const el = e.target as HTMLElement | null;
       if (
         el &&
@@ -85,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         openEventDialog({ date: todayISO(), start: nextSlot() });
       } else if (k === 't') {
         e.preventDefault();
-        if (pathname !== '/') router.push('/');
+        if (pathname !== '/aujourdhui') router.push('/aujourdhui');
         window.setTimeout(() => document.getElementById('quick-add-input')?.focus(), 400);
       } else if (k === 'v') {
         e.preventDefault();
@@ -103,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [openEventDialog, setPlanningView, setHelpOpen, toggleListening, router, pathname]);
 
-  if (!hydrated) {
+  if (!publicRoute && !hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
         <div className="animate-fade-in flex flex-col items-center gap-3">
@@ -116,19 +121,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      {publicRoute ? <PublicNav /> : <TopNav />}
       <main className="mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12">
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
-      <BottomNav />
       <Footer />
       <Toasts />
-      <EventDialog />
-      <HelpDialog />
-      <TaskActionsMenu />
-      <VoiceFab />
-      <InstallPrompt />
-      <PwaRegister />
+      {!publicRoute && (
+        <>
+          <BottomNav />
+          <EventDialog />
+          <HelpDialog />
+          <TaskActionsMenu />
+          <VoiceFab />
+          <InstallPrompt />
+          <PwaRegister />
+        </>
+      )}
       <SyncProvider />
     </div>
   );

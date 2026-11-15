@@ -8,7 +8,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: '/', label: "Aujourd'hui", icon: CalendarDays },
+  { href: '/aujourdhui', label: "Aujourd'hui", icon: CalendarDays },
   { href: '/planning', label: 'Planning', icon: CalendarRange },
   { href: '/taches', label: 'Tâches', icon: ListChecks },
   { href: '/voix', label: 'Voix', icon: Mic },
@@ -19,3 +19,4 @@ export function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
