@@ -42,3 +42,28 @@ composant ou de page, aucune variable d'environnement renommée, aucune dépenda
   - Tests : 5 nouveaux cas dans `tests/api-voix.test.ts` (21e requête → 429 + `Retry-After`, plafond
     bien par IP, requêtes invalides comptées, aucune fuite dans le 429, `x-forwarded-for`
     multi-IP). `npm test` ✅ **144/144**, `npm run build` ✅.
+  - Smoke test loopback (`next start` + requêtes HTTP locales) : 20 requêtes → 503 (pas de clé
+    en local), la 21e depuis la même IP → **429 + `Retry-After: 2601`**, une autre IP non bloquée.
+- **Étape 2 — CSP stricte par nonce** :
+  - Nouveau `src/middleware.ts` : nonce aléatoire (128 bits, hex) **par requête**, posé dans
+    l'en-tête de requête `Content-Security-Policy` (que Next.js 14.2 relit pour signer ses
+    propres scripts inline : bootstrap + données RSC `self.__next_f.push`) et dans `x-nonce`
+    (lu par le layout via `headers()` pour signer le script inline anti-flash). La CSP complète
+    est renvoyée au navigateur : `script-src 'self' 'nonce-…'` — **`'unsafe-inline'` supprimé**.
+  - `next.config.mjs` : la CSP statique en est retirée (sinon double en-tête CSP, la version
+    sans nonce gagnerait) ; `poweredByHeader: false` ajouté → **`X-Powered-By` ne part plus**.
+  - `style-src 'self' 'unsafe-inline'` **conservé et justifié** : le layout racine injecte une
+    balise `<style>` inline (variables CSS des deux thèmes, `layout.tsx`) et React/Next peuvent
+    injecter des styles inline ; aucun contenu saisi par l'utilisateur n'y entre (échappement
+    React), donc le risque XSS via CSS reste nul. À retirer exigerait de sortir les variables
+    CSS du layout (zone UI) — hors périmètre.
+  - Point technique constaté (Next 14.2.35) : une page **statique** est servie telle quelle, sans
+    nonce sur ses scripts inline → CSP stricte impossible en statique. Le layout racine lit
+    donc `headers()` (pattern officiel Next), ce qui rend les pages en rendu dynamique (ƒ) :
+    Next applique alors le nonce à tous ses scripts inline. **Seule retouche du layout** :
+    lecture du nonce + constante du script anti-flash déplacée dans `src/lib/theme-init.ts`
+    (aucun changement de rendu/UI). Aucun composant ni `page.tsx` touché.
+  - Vérification empirique (`next start` + requêtes loopback, 7 pages) : `script-src 'self'
+    'nonce-…'`, **tous** les scripts inline (7–8/page, y compris le script anti-flash) portent
+    le nonce de la requête, nonce **unique par requête**, `X-Powered-By` absent, CSP aussi
+    présente sur les routes API. `npm test` ✅ 144/144, `npm run build` ✅.
