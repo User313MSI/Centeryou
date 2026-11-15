@@ -1,9 +1,10 @@
 'use client';
 
 import { create } from 'zustand';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useStore } from './store';
 import { useUiStore } from './ui-store';
-import { getSupabase } from './supabase';
+import { getSupabase, hasStoredSession } from './supabase';
 import { fetchBackup, hasLocalData, pullBackup, pushBackup, syncNow, type SyncOutcome } from './sync';
 
 export interface AuthUser {
@@ -66,7 +67,7 @@ function toSyncStatus(outcome: SyncOutcome): SyncStatus {
 }
 
 async function loadProfile(userId: string): Promise<string> {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) return '';
   const { data, error } = await sb.from('profiles').select('prenom').eq('id', userId).maybeSingle();
   if (error || !data) return '';
@@ -79,34 +80,66 @@ async function loadProfile(userId: string): Promise<string> {
   return prenom;
 }
 
+let afterSignInFor: string | null = null;
+let authListenerRegistered = false;
+
+/**
+ * Enregistre une seule fois l'écoute des changements de session Supabase.
+ * Charge le client à la demande (import dynamique) : jamais au premier chargement
+ * si aucun compte n'est connecté.
+ */
+async function ensureAuthListener(get: () => AuthState): Promise<SupabaseClient | null> {
+  const sb = await getSupabase();
+  if (!sb || authListenerRegistered) return sb;
+  authListenerRegistered = true;
+  sb.auth.onAuthStateChange((event, session) => {
+    const u = session?.user ?? null;
+    useAuthStore.setState({ status: 'ready', user: u ? { id: u.id, email: u.email ?? '' } : null });
+    if (event === 'SIGNED_IN' && u) {
+      void loadProfile(u.id);
+      void afterSignIn(get, u.id);
+    }
+    if (event === 'SIGNED_OUT') {
+      useAuthStore.setState({ prenom: '', offerOpen: false, syncStatus: 'idle', lastSyncAt: null, remoteAvailable: false });
+    }
+  });
+  return sb;
+}
+
 /** Après connexion : restaure si la sauvegarde distante est plus récente, sinon propose l'enregistrement. */
 async function afterSignIn(get: () => AuthState, userId: string): Promise<void> {
-  const set = (patch: Partial<AuthState>) => useAuthStore.setState(patch);
-  const sb = getSupabase();
-  if (!sb) return;
-  set({ syncStatus: 'syncing' });
-  let remote = null;
+  if (afterSignInFor === userId) return; // déjà en cours pour ce compte (événement + appel direct)
+  afterSignInFor = userId;
   try {
-    remote = await fetchBackup(userId);
-  } catch {
-    remote = null;
+    const set = (patch: Partial<AuthState>) => useAuthStore.setState(patch);
+    const sb = await getSupabase();
+    if (!sb) return;
+    set({ syncStatus: 'syncing' });
+    let remote = null;
+    try {
+      remote = await fetchBackup(userId);
+    } catch {
+      remote = null;
+    }
+    set({ remoteAvailable: !!remote });
+    const localAt = hasLocalData() ? Date.now() : 0;
+    const remoteSavedAt = remote?.savedAt ?? 0;
+    if (remote && remoteSavedAt > localAt) {
+      const outcome = await get().pullNow();
+      useUiStore.getState().pushToast({ message: 'Données récupérées depuis ton compte ✓' });
+      set({ syncStatus: toSyncStatus(outcome), lastSyncAt: Date.now(), offerOpen: false });
+      return;
+    }
+    if (!remote && hasLocalData()) {
+      // première connexion avec des données locales : on propose « Enregistrer mes données en ligne »
+      set({ syncStatus: 'idle', offerOpen: true });
+      return;
+    }
+    const outcome = await get().runSync();
+    set({ syncStatus: toSyncStatus(outcome), lastSyncAt: Date.now() });
+  } finally {
+    afterSignInFor = null;
   }
-  set({ remoteAvailable: !!remote });
-  const localAt = hasLocalData() ? Date.now() : 0;
-  const remoteSavedAt = remote?.savedAt ?? 0;
-  if (remote && remoteSavedAt > localAt) {
-    const outcome = await get().pullNow();
-    useUiStore.getState().pushToast({ message: 'Données récupérées depuis ton compte ✓' });
-    set({ syncStatus: toSyncStatus(outcome), lastSyncAt: Date.now(), offerOpen: false });
-    return;
-  }
-  if (!remote && hasLocalData()) {
-    // première connexion avec des données locales : on propose « Enregistrer mes données en ligne »
-    set({ syncStatus: 'idle', offerOpen: true });
-    return;
-  }
-  const outcome = await get().runSync();
-  set({ syncStatus: toSyncStatus(outcome), lastSyncAt: Date.now() });
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -120,37 +153,27 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   init: () => {
     if (get().status !== 'loading') return;
-    const sb = getSupabase();
-    if (!sb) {
-      set({ status: 'ready' });
-      return;
-    }
     set({ status: 'ready' });
-    void sb.auth.getSession().then(({ data }) => {
-      const u = data.session?.user ?? null;
-      if (u) {
-        set({ user: { id: u.id, email: u.email ?? '' } });
-        void loadProfile(u.id);
-        void afterSignIn(get, u.id);
-      }
-    });
-    sb.auth.onAuthStateChange((event, session) => {
-      const u = session?.user ?? null;
-      set({ status: 'ready', user: u ? { id: u.id, email: u.email ?? '' } : null });
-      if (event === 'SIGNED_IN' && u) {
-        void loadProfile(u.id);
-        void afterSignIn(get, u.id);
-      }
-      if (event === 'SIGNED_OUT') {
-        set({ prenom: '', offerOpen: false, syncStatus: 'idle', lastSyncAt: null, remoteAvailable: false });
-      }
+    // aucun compte connecté (pas de session persistée) : le client Supabase
+    // (~250 Ko) n'est PAS téléchargé — la landing reste légère pour tous
+    if (!hasStoredSession()) return;
+    void ensureAuthListener(get).then((sb) => {
+      if (!sb) return;
+      void sb.auth.getSession().then(({ data }) => {
+        const u = data.session?.user ?? null;
+        if (u) {
+          set({ user: { id: u.id, email: u.email ?? '' } });
+          void loadProfile(u.id);
+          void afterSignIn(get, u.id);
+        }
+      });
     });
   },
 
   setOfferOpen: (b) => set({ offerOpen: b }),
 
   signUp: async (email, password, prenom) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
     if (password.length < 6) return { error: 'Mot de passe trop faible : 6 caractères minimum.' };
     const { data, error } = await sb.auth.signUp({
@@ -169,25 +192,40 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     if (!data.session) {
       return { info: 'Compte créé ! Confirme ton e-mail (lien envoyé), puis connecte-toi.' };
     }
+    // session active : on branche la synchro (le client vient d'être chargé à la demande)
+    void ensureAuthListener(get);
+    if (u) {
+      set({ user: { id: u.id, email: u.email ?? '' } });
+      void loadProfile(u.id);
+      void afterSignIn(get, u.id);
+    }
     return {};
   },
 
   signIn: async (email, password) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return { error: frenchAuthError(error) };
+    // connexion = activation de la sauvegarde en ligne : on branche la synchro
+    void ensureAuthListener(get);
+    const u = data.user;
+    if (u) {
+      set({ user: { id: u.id, email: u.email ?? '' } });
+      void loadProfile(u.id);
+      void afterSignIn(get, u.id);
+    }
     return {};
   },
 
   signOut: async () => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return;
     await sb.auth.signOut();
   },
 
   resetPassword: async (email) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
     const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reglages`,
@@ -198,7 +236,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   savePrenom: async (prenom) => {
     const { user } = get();
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!user || !sb) return { error: 'Connecte-toi d’abord pour modifier ton profil.' };
     const clean = prenom.trim().slice(0, 30);
     const { error } = await sb

@@ -18,6 +18,7 @@ d'environnement renommée, `next.config.mjs` et les routes API non touchés, tok
 sauf l'exception teal, interface 100 % française.
 
 **Branche** : `vibe/lynx-fluidite-ui-ad7213` (base `main`).
+**PR** : https://github.com/User313MSI/Centeryou/pull/18 (brouillon, base `main`).
 
 ## Mesures de référence (avant, build du 2026-11-15 sur `main`)
 
@@ -31,3 +32,21 @@ sauf l'exception teal, interface 100 % française.
 
 - 2026-11-15 — Création de la branche `vibe/lynx-fluidite-ui-ad7213` depuis `main`, build de
   référence + mesure du poids initial de la landing (voir ci-dessus), ouverture du PR brouillon.
+- 2026-11-15 08:10 UTC — **Étape 1 : Supabase en import dynamique** ✅.
+  - `src/lib/supabase.ts` : `import type` uniquement (aucun runtime) ; `getSupabase()` devient
+    asynchrone et fait `await import('@supabase/supabase-js')` (mémoïsé, avec remise à zéro en
+    cas d'échec du chunk) ; nouveau `hasStoredSession()` (détection bon marché de la clé
+    `sb-*-auth-token` dans le localStorage, sans charger Supabase).
+  - `src/lib/auth-store.ts` : tous les appels `await getSupabase()` ; `init()` ne charge le
+    client **que si une session est déjà persistée** (visiteur anonyme / landing : rien n'est
+    téléchargé) ; `ensureAuthListener()` enregistre une seule fois `onAuthStateChange` ;
+    `signIn`/`signUp` branchent la synchro eux-mêmes (connexion = activation de la sauvegarde
+    en ligne) avec garde anti double exécution d'`afterSignIn`.
+  - `src/lib/sync.ts` : `fetchBackup`/`pushBackup`/`syncNow` awaitent le client (atteints
+    uniquement avec un compte connecté).
+  - **Mesure après** : chargement initial de `/` = **457,5 kB en 13 fichiers** (422,3 kB JS),
+    contre 704,9 kB en 15 fichiers avant → **−247,4 kB (−35 %)**, objectif ≥ 150 Ko ✅.
+    Les chunks Supabase (`879-*.js` 191,4 kB + `44530001-*.js` 68,8 kB, soit ~260 kB) ne figurent
+    plus dans le manifest initial d'**aucune** page : chargés uniquement à la demande.
+  - Vérifs : `npx tsc --noEmit` ✅, `npm run build` ✅, `npm test` ✅ **139/139**,
+    `npm run test:parser` ✅. Push de l'étape.
