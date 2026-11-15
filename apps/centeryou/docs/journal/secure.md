@@ -86,3 +86,45 @@ composant ou de page, aucune variable d'environnement renommée, aucune dépenda
     rejeu > 5 min refusé, rotation multi-v1, webhook 400/200 en route, 503 sans clé checkout/portal,
     500 sans fuite d'interne, garde-fous sync 400/413 + repli mémoire fonctionnel).
     `npm test` ✅ **162/162** (139 initiaux + 23 nouveaux), `npm run build` ✅.
+- **Étape 4 — audit des dépendances (`npm audit`)** :
+  - Résultat initial : **8 vulnérabilités** (3 critical, 2 high, 3 moderate) : `next` (critical,
+    correctif = next@16.4.6, **majeur**), `postcss` imbriqué sous next (high, idem), et 6 paquets
+    **dev uniquement** (`vitest`, `vite`, `vite-node`, `esbuild`, `tinypool`, `@vitest/mocker` —
+    correctif = vitest@5.1.0, **majeur**).
+  - `npm audit fix` (sans `--force`, donc sans breaking change) : **aucun correctif applicable** —
+    `next@14.2.35` est le dernier 14.2.x et `vitest@2.1.9` le dernier 2.x ; toutes les corrections
+    exigent une montée de version majeure, interdite par la mission. Le lockfile n'a subi aucune
+    modification de version (bruit d'entrées optionnelles swc rétabli à l'identique).
+  - **Reste à corriger (hors cette PR, car breaking)** : monter `next` vers 15.x puis 16.x
+    (résout next + postcss imbriqué ; 2 vulnérabilités de production restantes) et `vitest`
+    vers 5.x (6 vulnérabilités dev-only, jamais déployées : le bundle livré ne contient aucune
+    de ces librairies — `npm audit --omit=dev` ne remonte que next/postcss).
+  - Atténuations déjà en place ici : CSP stricte par nonce (bloque l'exécution de tout script
+    injecté), rate-limit `/api/voix`, en-têtes de sécurité, erreurs API non verbeuses.
+- **Étape 5 — preuve qu'aucune clé n'est dans le bundle client** :
+  - Méthode : build de production avec des **valeurs secrètes factices** injectées
+    (`NEXT_ELEVENLABS_API_KEY=FAUX-XI-KEY-SECRET-12345`, `STRIPE_SECRET_KEY=sk_test_FAUXSECRET123456`,
+    `STRIPE_WEBHOOK_SECRET=whsec_FAUXSECRET654321`, `KV_REST_API_TOKEN=kv_FAUXTOKEN999888`,
+    `SUPABASE_SERVICE_ROLE_KEY=supa_FAUXSERVICE111222`), puis `grep -rEo` dans `.next/static`
+    (tout le bundle navigateur) sur (a) chaque valeur factice et (b) les préfixes/patterns
+    `sk_live_`, `sk_test_`, `whsec_`, `xi-api-key`, `api.elevenlabs.io`, `api.stripe.com`,
+    `service_role`.
+  - Résultat : **0 occurrence** de chaque valeur factice et de chaque préfixe dans `.next/static`.
+    Les 7 occurrences de `Bearer ` trouvées sont des template literals de `@supabase/supabase-js`
+    (`Bearer ${jwt}` à l'exécution — clé anon publique/JWT utilisateur, jamais une clé secrète).
+  - Contrôle positif : `xi-api-key` et `api.elevenlabs.io` n'existent que dans
+    `.next/server/app/api/voix/route.js` (code serveur) ✅. `NEXT_PUBLIC_SUPABASE_URL` est bien
+    présent côté client — c'est une URL **publique par design** (pas une clé).
+  - Côté dépôt : seul `.env.local.example` est commité (placeholders uniquement) ; grep de
+    littéraux ressemblant à des clés (`sk_live…`, `sk_test…`, `whsec_…`, `xi-api-key…`, JWT `eyJ…`)
+    dans `src/`, `next.config.mjs`, `public/` → **0**.
+
+## Vérifications finales
+
+- `npm run build` ✅ (avec et sans fausses clés)
+- `npm test` ✅ **162/162** (139 initiaux + 23 nouveaux : rate-limit IP ×5, sécurité API ×18)
+- `npm run test:parser` ✅
+- `next start` + requêtes loopback : CSP nonce servie sur toutes les pages, scripts inline signés,
+  `X-Powered-By` absent, 21e requête `/api/voix` depuis une IP → 429 + `Retry-After`
+- PR : **https://github.com/User313MSI/Centeryou/pull/19** (base `main`, branche
+  `vibe/secure-hardening-c8ed2d`)
