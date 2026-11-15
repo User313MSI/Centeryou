@@ -84,6 +84,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) {
         return;
       }
+      // fenêtre modale ouverte (accueil, événement, aide…) : les raccourcis globaux restent inactifs
+      if (document.querySelector('[aria-modal="true"]')) return;
       const k = e.key.toLowerCase();
       if (k === 'n') {
         e.preventDefault();
@@ -110,10 +112,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!publicRoute && !hydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg">
-        <div className="animate-fade-in flex flex-col items-center gap-3">
+      <div className="flex min-h-screen items-center justify-center bg-bg" aria-busy="true">
+        <div className="animate-fade-in flex w-full max-w-sm flex-col items-center gap-3 px-6">
           <Logo size={56} />
           <p className="text-sm font-semibold text-muted">Centeryou</p>
+          {/* squelette de chargement court (opacité seule), visible uniquement avant l'hydratation */}
+          <div className="mt-3 flex w-full flex-col items-center gap-2" aria-hidden>
+            <div className="h-4 w-3/4 animate-pulse rounded-pill bg-line" />
+            <div className="h-4 w-1/2 animate-pulse rounded-pill bg-line" />
+            <div className="h-24 w-full animate-pulse rounded-card bg-line/70" />
+          </div>
+          <span className="sr-only">Chargement…</span>
         </div>
       </div>
     );

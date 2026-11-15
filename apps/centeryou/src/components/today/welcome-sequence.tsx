@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChartLine, Hand, ListChecks, Play, SkipForward, Sparkles, Square } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Waves } from '../brand/waves';
@@ -84,17 +84,61 @@ export function WelcomeSequence() {
     timers.current = [];
   };
 
-  useEffect(() => clearTimers, []);
-
-  if (!open) return null;
-
-  const close = () => {
+  const close = useCallback(() => {
     clearTimers();
     stopSpeaking();
     setSpeaking(false);
     setActiveStep(-1);
     setOpen(false);
-  };
+  }, []);
+
+  useEffect(() => clearTimers, []);
+
+  // fenêtre modale : focus initial dans le panneau, piège de focus (Tab) et Échap fiable
+  // (écouté sur window, même si le focus est hors de la boîte) — comme ui/dialog.tsx
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<Element | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    previouslyFocused.current = document.activeElement;
+    const panel = panelRef.current;
+    const target =
+      panel?.querySelector<HTMLElement>('[data-autofocus]') ??
+      panel?.querySelector<HTMLElement>('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    target?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close();
+        return;
+      }
+      if (e.key === 'Tab' && panel) {
+        const focusables = Array.from(
+          panel.querySelectorAll<HTMLElement>('button, input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+        ).filter((el) => !el.hasAttribute('disabled'));
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = '';
+      if (previouslyFocused.current instanceof HTMLElement) previouslyFocused.current.focus();
+    };
+  }, [open, close]);
+
+  if (!open) return null;
 
   const buildSegments = (): { step: number; text: string }[] => [
     { step: 0, text: `${greeting}. Nous sommes le ${dateFr}.` },
@@ -163,12 +207,12 @@ export function WelcomeSequence() {
       role="dialog"
       aria-modal="true"
       aria-label="Séquence d’accueil — résumé de ta journée"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') close();
-      }}
       className="animate-fade-in fixed inset-0 z-dialog flex items-center justify-center bg-veil/45 p-4 backdrop-blur-sm"
     >
-      <div className="animate-slide-up flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-tile bg-surface p-6 shadow-hover md:p-8">
+      <div
+        ref={panelRef}
+        className="animate-slide-up flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-tile bg-surface p-6 shadow-hover md:p-8"
+      >
         <section className={sectionClass(0)} style={{ animationDelay: '120ms' }}>
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-ink md:text-3xl">
             {greeting} <Hand size={26} aria-hidden className="shrink-0 text-warning" />
@@ -184,7 +228,7 @@ export function WelcomeSequence() {
             <div className="h-2.5 flex-1 overflow-hidden rounded-pill bg-line/70">
               <div className="h-full rounded-pill bg-voice transition-all duration-normal ease-out" style={{ width: `${dayPct}%` }} />
             </div>
-            <span className="text-sm font-bold text-voice">{dayPct} %</span>
+            <span className="text-sm font-bold text-voicetext">{dayPct} %</span>
           </div>
         </section>
 
@@ -225,7 +269,7 @@ export function WelcomeSequence() {
                 >
                   {formatDayNumber(d.iso)}
                 </span>
-                <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voice' : 'text-muted')}>
+                <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voicetext' : 'text-muted')}>
                   {d.count > 0 ? `${d.count} él.` : '—'}
                 </span>
               </div>
@@ -235,7 +279,7 @@ export function WelcomeSequence() {
 
         <div className="animate-slide-up mt-1 flex flex-wrap items-center justify-end gap-2.5" style={{ animationDelay: '1080ms' }}>
           {speaking && (
-            <span className="mr-auto flex items-center gap-2 text-sm font-semibold text-voice">
+            <span className="mr-auto flex items-center gap-2 text-sm font-semibold text-voicetext">
               <Waves /> Lecture en cours…
             </span>
           )}

@@ -50,7 +50,8 @@ export default function TachesPage() {
 
       <Tabs options={FILTER_OPTIONS} value={filter} onChange={(v) => setFilter(v as Filter)} ariaLabel="Filtrer les tâches" />
 
-      {visible.length === 0 ? (
+      <div id={`tab-panel-${filter}`} role="tabpanel" aria-labelledby={`tab-${filter}`}>
+        {visible.length === 0 ? (
         <EmptyState
           icon={ListChecks}
           title={
@@ -82,6 +83,7 @@ export default function TachesPage() {
           ))}
         </ul>
       )}
+      </div>
     </div>
   );
 }

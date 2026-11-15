@@ -30,6 +30,11 @@ function nextSlot(): string {
 const selectClass =
   'w-full min-h-11 rounded-card border border-line bg-surface px-4 text-base text-ink transition-colors duration-fast ease-out focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
 
+/** Fin « 00:00 » = minuit (24 h) : acceptée comme fin de journée. */
+function endMinutesOf(t: string): number {
+  return t === '00:00' ? 24 * 60 : minutesOf(t);
+}
+
 export function EventDialog() {
   const eventDialog = useUiStore((s) => s.eventDialog);
   const closeEventDialog = useUiStore((s) => s.closeEventDialog);
@@ -73,8 +78,9 @@ export function EventDialog() {
 
   const conflict = useMemo(() => {
     if (!date || !start || !end) return null;
-    if (minutesOf(end) <= minutesOf(start)) return null;
-    return findConflict(events, { date, start, end }, editing?.id);
+    if (endMinutesOf(end) <= minutesOf(start)) return null;
+    // 00:00 en fin compte comme 24 h pour le calcul de chevauchement
+    return findConflict(events, { date, start, end: end === '00:00' ? '24:00' : end }, editing?.id);
   }, [events, date, start, end, editing?.id]);
 
   const save = () => {
@@ -87,7 +93,7 @@ export function EventDialog() {
       setError('Choisis une date.');
       return;
     }
-    if (minutesOf(end) <= minutesOf(start)) {
+    if (endMinutesOf(end) <= minutesOf(start)) {
       setError("L'heure de fin doit être après l'heure de début.");
       return;
     }

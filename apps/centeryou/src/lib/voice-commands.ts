@@ -37,7 +37,8 @@ function programSentence(iso: string): string {
       .join(', ');
     parts.push(`${open.length} tâche${open.length > 1 ? 's' : ''} à faire : ${list}${open.length > 3 ? '…' : ''}`);
   }
-  return `${who}${label}, ${parts.join('. Et ')}.`;
+  // « . Et . » : pauses nettes à l'oral entre les deux segments de la phrase
+  return `${who}${label}, ${parts.join(' . Et . ')}.`;
 }
 
 /**

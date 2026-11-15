@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { categoryColor } from '../../lib/categories';
 import { WEEKDAY_NAMES, formatDayLong, formatDayNumber, isSameMonth, isToday, monthMatrix } from '../../lib/dates';
 import { calendarMonthOnDate } from '../../lib/events';
@@ -21,7 +22,12 @@ export function MonthView({
   onEventClick: (ev: EventItem) => void;
   onTaskToggle: (task: TaskItem) => void;
 }) {
-  const weeks = monthMatrix(cursor);
+  const weeks = useMemo(() => monthMatrix(cursor), [cursor]);
+  // mémoïsé : les 42 cellules du mois ne sont recalculées qu'à changement de données
+  const cells = useMemo(
+    () => weeks.flat().map((iso) => ({ iso, dayEvents: calendarMonthOnDate(events, tasks, iso) })),
+    [weeks, events, tasks],
+  );
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[560px] overflow-hidden rounded-card border border-line bg-surface shadow-card">
@@ -33,8 +39,7 @@ export function MonthView({
           ))}
         </div>
         <div className="grid grid-cols-7">
-          {weeks.flat().map((iso) => {
-            const dayEvents = calendarMonthOnDate(events, tasks, iso);
+          {cells.map(({ iso, dayEvents }) => {
             const outOfMonth = !isSameMonth(iso, cursor);
             return (
               <div

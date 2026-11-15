@@ -91,7 +91,14 @@ export default function PlanningPage() {
       ) : (
         <Card>
           <CardBody className="p-2 md:p-4">
-            <div key={`${view}-${cursor}`} ref={swipeRef} className="animate-view-in touch-pan-y">
+            <div
+              key={`${view}-${cursor}`}
+              ref={swipeRef}
+              id={`tab-panel-${view}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${view}`}
+              className="animate-view-in touch-pan-y"
+            >
               {view === 'jour' && (
                 <DayView date={cursor} events={events} tasks={tasks} dayStart={dayStart} onSlotClick={onSlotClick} onEventClick={onEventClick} onTaskToggle={onTaskToggle} onDropAt={onDropAt} />
               )}
