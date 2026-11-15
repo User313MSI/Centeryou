@@ -55,6 +55,12 @@ export function minutesOf(time: string): number {
   return (h || 0) * 60 + (m || 0);
 }
 
+/** minutes de FIN d'un créneau : "00:00" vaut minuit de fin de journée (24h00 = 1440) */
+export function endMinutesOf(time: string): number {
+  const m = minutesOf(time);
+  return m === 0 ? 24 * 60 : m;
+}
+
 export function timeOf(min: number): string {
   const clamped = Math.max(0, Math.min(24 * 60 - 1, Math.round(min)));
   return `${pad2(Math.floor(clamped / 60))}:${pad2(clamped % 60)}`;

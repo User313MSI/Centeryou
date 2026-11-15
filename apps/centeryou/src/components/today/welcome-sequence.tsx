@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChartLine, Hand, ListChecks, Play, SkipForward, Sparkles, Square } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Waves } from '../brand/waves';
@@ -8,6 +8,7 @@ import { categoryColor } from '../../lib/categories';
 import {
   addDaysISO,
   capitalize,
+  endMinutesOf,
   formatDayLong,
   formatDayNumber,
   formatRangeFr,
@@ -65,7 +66,7 @@ export function WelcomeSequence() {
   const nextItems = useMemo<CalendarInstance[]>(() => {
     const now = nowMinutes();
     return calendarOnDate(events, tasks, today)
-      .filter((i) => minutesOf(i.end) >= now)
+      .filter((i) => endMinutesOf(i.end) >= now)
       .slice(0, 3);
   }, [events, tasks, today]);
 
@@ -77,24 +78,68 @@ export function WelcomeSequence() {
     });
   }, [events, tasks, today]);
   const weekTotal = weekDays.reduce((a, d) => a + d.count, 0);
-  const todayCount = calendarOnDate(events, tasks, today).length;
+  const todayCount = useMemo(() => calendarOnDate(events, tasks, today).length, [events, tasks, today]);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     timers.current.forEach((t) => window.clearTimeout(t));
     timers.current = [];
-  };
+  }, []);
 
-  useEffect(() => clearTimers, []);
+  useEffect(() => clearTimers, [clearTimers]);
 
-  if (!open) return null;
-
-  const close = () => {
+  const close = useCallback(() => {
     clearTimers();
     stopSpeaking();
     setSpeaking(false);
     setActiveStep(-1);
     setOpen(false);
-  };
+  }, [clearTimers]);
+
+  // focus initial + piège de focus + Échap fiable, même pattern que ui/dialog.tsx :
+  // le focus est déplacé à l'ouverture, Tab boucle dans la fenêtre, Échap ferme
+  // (capture) même si le focus n'est pas dans la boîte, et le focus est restauré à la fermeture
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement;
+    const panel = dialogRef.current;
+    if (panel) {
+      const target = panel.querySelector<HTMLElement>('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      target?.focus();
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close();
+        return;
+      }
+      if (e.key === 'Tab' && panel) {
+        const focusables = Array.from(
+          panel.querySelectorAll<HTMLElement>('button, input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+        ).filter((el) => !el.hasAttribute('disabled'));
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = '';
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, [open, close]);
+
+  if (!open) return null;
 
   const buildSegments = (): { step: number; text: string }[] => [
     { step: 0, text: `${greeting}. Nous sommes le ${dateFr}.` },
@@ -103,9 +148,11 @@ export function WelcomeSequence() {
       step: 2,
       text:
         nextItems.length > 0
-          ? `Tes ${nextItems.length} prochains rendez-vous aujourd’hui : ${nextItems
-              .map((n) => `${n.title} à ${formatTimeFr(n.start)}`)
-              .join(' ; ')}.`
+          ? nextItems.length === 1
+            ? `Ton prochain rendez-vous aujourd’hui : ${nextItems.map((n) => `${n.title} à ${formatTimeFr(n.start)}`).join(' ; ')}.`
+            : `Tes ${nextItems.length} prochains rendez-vous aujourd’hui : ${nextItems
+                .map((n) => `${n.title} à ${formatTimeFr(n.start)}`)
+                .join(' ; ')}.`
           : 'Rien de plus de prévu pour le reste de la journée.',
     },
     {
@@ -160,12 +207,10 @@ export function WelcomeSequence() {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Séquence d’accueil — résumé de ta journée"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') close();
-      }}
       className="animate-fade-in fixed inset-0 z-dialog flex items-center justify-center bg-veil/45 p-4 backdrop-blur-sm"
     >
       <div className="animate-slide-up flex max-h-[92vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-tile bg-surface p-6 shadow-hover md:p-8">
@@ -184,7 +229,7 @@ export function WelcomeSequence() {
             <div className="h-2.5 flex-1 overflow-hidden rounded-pill bg-line/70">
               <div className="h-full rounded-pill bg-voice transition-all duration-normal ease-out" style={{ width: `${dayPct}%` }} />
             </div>
-            <span className="text-sm font-bold text-voice">{dayPct} %</span>
+            <span className="text-sm font-bold text-voicetext">{dayPct} %</span>
           </div>
         </section>
 
@@ -225,7 +270,7 @@ export function WelcomeSequence() {
                 >
                   {formatDayNumber(d.iso)}
                 </span>
-                <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voice' : 'text-muted')}>
+                <span className={cx('text-xs font-semibold md:text-[10px]', d.count > 0 ? 'text-voicetext' : 'text-muted')}>
                   {d.count > 0 ? `${d.count} él.` : '—'}
                 </span>
               </div>
@@ -235,7 +280,7 @@ export function WelcomeSequence() {
 
         <div className="animate-slide-up mt-1 flex flex-wrap items-center justify-end gap-2.5" style={{ animationDelay: '1080ms' }}>
           {speaking && (
-            <span className="mr-auto flex items-center gap-2 text-sm font-semibold text-voice">
+            <span className="mr-auto flex items-center gap-2 text-sm font-semibold text-voicetext">
               <Waves /> Lecture en cours…
             </span>
           )}

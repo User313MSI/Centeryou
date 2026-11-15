@@ -24,6 +24,11 @@ export function AujourdhuiView() {
 
   const prenom = settings.prenom.trim();
   const todayTasks = useMemo(() => tasks.filter((t) => t.date === today), [tasks, today]);
+  // copie avant tri : ne mute jamais le tableau mémoïsé
+  const sortedTodayTasks = useMemo(
+    () => [...todayTasks].sort((a, b) => Number(a.done) - Number(b.done) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99')),
+    [todayTasks],
+  );
   const doneCount = todayTasks.filter((t) => t.done).length;
   const todayItems = useMemo(() => calendarOnDate(events, tasks, today), [events, tasks, today]);
 
@@ -88,11 +93,9 @@ export function AujourdhuiView() {
             />
           ) : (
             <ul className="flex flex-col gap-2.5">
-              {todayTasks
-                .sort((a, b) => Number(a.done) - Number(b.done) || (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
-                .map((t) => (
-                  <TaskItemRow key={t.id} task={t} />
-                ))}
+              {sortedTodayTasks.map((t) => (
+                <TaskItemRow key={t.id} task={t} />
+              ))}
             </ul>
           )}
         </CardBody>

@@ -28,7 +28,7 @@ export function Toasts() {
                 t.onAction?.();
                 dismiss(t.id);
               }}
-              className="rounded-pill px-2 py-1 font-semibold text-voice transition-colors duration-fast hover:bg-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
+              className="rounded-pill px-2 py-1 font-semibold text-voicetext transition-colors duration-fast hover:bg-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
             >
               {t.actionLabel}
             </button>

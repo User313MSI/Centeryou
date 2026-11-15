@@ -1,5 +1,5 @@
 import type { Category, EventItem, TaskItem } from '../types';
-import { minutesOf, parseISO, timeOf, weekdayOf } from './dates';
+import { endMinutesOf, minutesOf, parseISO, timeOf, weekdayOf } from './dates';
 
 export interface EventInstance {
   event: EventItem;
@@ -32,7 +32,8 @@ export function eventsOnDate(events: EventItem[], iso: string): EventInstance[] 
 }
 
 export function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
-  return minutesOf(aStart) < minutesOf(bEnd) && minutesOf(bStart) < minutesOf(aEnd);
+  // une fin à 00:00 = minuit (24h00) : elle chevauche bien les créneaux tardifs
+  return minutesOf(aStart) < endMinutesOf(bEnd) && minutesOf(bStart) < endMinutesOf(aEnd);
 }
 
 export interface Conflict {

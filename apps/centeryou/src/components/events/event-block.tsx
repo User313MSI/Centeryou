@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, typ
 import type { EventItem, TaskItem } from '../../types';
 import type { CalendarInstance } from '../../lib/events';
 import { categoryColor } from '../../lib/categories';
-import { formatTimeFr, minutesOf } from '../../lib/dates';
+import { endMinutesOf, formatTimeFr, minutesOf } from '../../lib/dates';
 import { useUiStore } from '../../lib/ui-store';
 import { cx } from '../../lib/utils';
 
@@ -25,7 +25,7 @@ export function EventBlock({
 }) {
   const isTask = instance.kind === 'task';
   const startMin = minutesOf(instance.start);
-  const endMin = minutesOf(instance.end);
+  const endMin = endMinutesOf(instance.end); // fin à 00:00 = minuit (24h00)
   const top = Math.max(0, (startMin - dayStartMin) * pxPerMin);
   const height = Math.max(22, (endMin - startMin) * pxPerMin);
 

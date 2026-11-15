@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { CATEGORY_LIST } from '../../lib/categories';
-import { DAY_END, DAY_START, formatRangeFr, minutesOf, timeOf, todayISO } from '../../lib/dates';
+import { DAY_END, DAY_START, endMinutesOf, formatRangeFr, minutesOf, timeOf, todayISO } from '../../lib/dates';
 import { findConflict } from '../../lib/events';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
@@ -73,7 +73,8 @@ export function EventDialog() {
 
   const conflict = useMemo(() => {
     if (!date || !start || !end) return null;
-    if (minutesOf(end) <= minutesOf(start)) return null;
+    // fin à 00:00 = minuit (24h00) : acceptée, elle doit juste rester après le début
+    if (endMinutesOf(end) <= minutesOf(start)) return null;
     return findConflict(events, { date, start, end }, editing?.id);
   }, [events, date, start, end, editing?.id]);
 
@@ -87,7 +88,7 @@ export function EventDialog() {
       setError('Choisis une date.');
       return;
     }
-    if (minutesOf(end) <= minutesOf(start)) {
+    if (endMinutesOf(end) <= minutesOf(start)) {
       setError("L'heure de fin doit être après l'heure de début.");
       return;
     }
