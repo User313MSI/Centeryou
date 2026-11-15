@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => '/reglages',
+}));
 import ReglagesPage from '../src/app/reglages/page';
 import { parseBackup, serializeBackup } from '../src/lib/backup';
 import { defaultSettings } from '../src/lib/defaults';
