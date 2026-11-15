@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { useStore } from './store';
 import { useUiStore } from './ui-store';
-import { getSupabase } from './supabase';
+import { getSupabase, hasStoredSupabaseSession, isSupabaseConfigured } from './supabase';
 import { fetchBackup, hasLocalData, pullBackup, pushBackup, syncNow, type SyncOutcome } from './sync';
 
 export interface AuthUser {
@@ -66,7 +66,7 @@ function toSyncStatus(outcome: SyncOutcome): SyncStatus {
 }
 
 async function loadProfile(userId: string): Promise<string> {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) return '';
   const { data, error } = await sb.from('profiles').select('prenom').eq('id', userId).maybeSingle();
   if (error || !data) return '';
@@ -82,7 +82,7 @@ async function loadProfile(userId: string): Promise<string> {
 /** Après connexion : restaure si la sauvegarde distante est plus récente, sinon propose l'enregistrement. */
 async function afterSignIn(get: () => AuthState, userId: string): Promise<void> {
   const set = (patch: Partial<AuthState>) => useAuthStore.setState(patch);
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) return;
   set({ syncStatus: 'syncing' });
   let remote = null;
@@ -120,37 +120,42 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   init: () => {
     if (get().status !== 'loading') return;
-    const sb = getSupabase();
-    if (!sb) {
+    // Le client Supabase (~188 Ko) n'est importé que si la sauvegarde en ligne est
+    // réellement utilisée sur ce navigateur : configuration + session persistée
+    // (ou retour de confirmation d'e-mail dans l'URL). Sinon, aucun chargement.
+    if (!isSupabaseConfigured() || !hasStoredSupabaseSession()) {
       set({ status: 'ready' });
       return;
     }
     set({ status: 'ready' });
-    void sb.auth.getSession().then(({ data }) => {
-      const u = data.session?.user ?? null;
-      if (u) {
-        set({ user: { id: u.id, email: u.email ?? '' } });
-        void loadProfile(u.id);
-        void afterSignIn(get, u.id);
-      }
-    });
-    sb.auth.onAuthStateChange((event, session) => {
-      const u = session?.user ?? null;
-      set({ status: 'ready', user: u ? { id: u.id, email: u.email ?? '' } : null });
-      if (event === 'SIGNED_IN' && u) {
-        void loadProfile(u.id);
-        void afterSignIn(get, u.id);
-      }
-      if (event === 'SIGNED_OUT') {
-        set({ prenom: '', offerOpen: false, syncStatus: 'idle', lastSyncAt: null, remoteAvailable: false });
-      }
+    void getSupabase().then((sb) => {
+      if (!sb) return;
+      void sb.auth.getSession().then(({ data }) => {
+        const u = data.session?.user ?? null;
+        if (u) {
+          set({ user: { id: u.id, email: u.email ?? '' } });
+          void loadProfile(u.id);
+          void afterSignIn(get, u.id);
+        }
+      });
+      sb.auth.onAuthStateChange((event, session) => {
+        const u = session?.user ?? null;
+        set({ status: 'ready', user: u ? { id: u.id, email: u.email ?? '' } : null });
+        if (event === 'SIGNED_IN' && u) {
+          void loadProfile(u.id);
+          void afterSignIn(get, u.id);
+        }
+        if (event === 'SIGNED_OUT') {
+          set({ prenom: '', offerOpen: false, syncStatus: 'idle', lastSyncAt: null, remoteAvailable: false });
+        }
+      });
     });
   },
 
   setOfferOpen: (b) => set({ offerOpen: b }),
 
   signUp: async (email, password, prenom) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
     if (password.length < 6) return { error: 'Mot de passe trop faible : 6 caractères minimum.' };
     const { data, error } = await sb.auth.signUp({
@@ -173,7 +178,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   signIn: async (email, password) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return { error: frenchAuthError(error) };
@@ -181,13 +186,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   signOut: async () => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return;
     await sb.auth.signOut();
   },
 
   resetPassword: async (email) => {
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!sb) return { error: 'La sauvegarde en ligne n’est pas configurée sur ce déploiement.' };
     const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reglages`,
@@ -198,7 +203,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   savePrenom: async (prenom) => {
     const { user } = get();
-    const sb = getSupabase();
+    const sb = await getSupabase();
     if (!user || !sb) return { error: 'Connecte-toi d’abord pour modifier ton profil.' };
     const clean = prenom.trim().slice(0, 30);
     const { error } = await sb

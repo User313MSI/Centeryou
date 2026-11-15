@@ -15,7 +15,10 @@ d'accueil), fluidité perçue et micro-textes FR.
 ## Journal des étapes
 
 - 2026-11-15 15:55 UTC — branche créée, baseline mesuré (build + 139/139), PR brouillon ouverte (lien ci-dessous).
+- 2026-11-15 15:53 UTC — **Étape 1 : Supabase en import dynamique** ✅. `src/lib/supabase.ts` : `getSupabase()` devient async et importe `@supabase/supabase-js` via `import()` (chunk isolé) ; `hasStoredSupabaseSession()` détecte une session persistée (clé `sb-*-auth-token` ou hash `#access_token`) sans charger le paquet. `auth-store.init()` ne charge le client que si Supabase est configuré ET une session existe (sinon `status: 'ready'` directement) ; toutes les actions compte (`signUp/signIn/signOut/…`, `fetchBackup/pushBackup/syncNow`) font `await getSupabase()`. Aucun import statique du paquet ne reste côté client.
+  - **Mesure après build** : landing `/` = **15 chunks, 572 Ko** (contre 17 chunks, 824 Ko) → **−252 Ko au premier chargement** (objectif ≥ 150 Ko ✅). Le chunk Supabase (`879-….js`, 188 Ko) n'est plus référencé dans le HTML initial de `/`, `/aujourdhui`, `/reglages`, `/planning`, `/taches` : il n'est téléchargé que lors d'une action compte ou d'une session persistée.
+  - `npx tsc --noEmit` ✅ · `npm run build` ✅ · `npm test` ✅ 139/139 · `npm run test:parser` ✅. Aucun renommage de variable d'environnement.
 
 ## PR
 
-- Brouillon : https://github.com/User313MSI/Dev-Apps/pull/18 (base `main`, head `vibe/lynx-fluidite-00d765`)
+- Brouillon : https://github.com/User313MSI/Centeryou/pull/20 (base `main`, head `vibe/lynx-fluidite-00d765`)

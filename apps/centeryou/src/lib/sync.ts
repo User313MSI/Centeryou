@@ -98,7 +98,7 @@ export function applyPayload(p: BackupPayload): void {
 
 /** Sauvegarde distante actuelle, ou null si aucune / erreur. */
 export async function fetchBackup(userId: string): Promise<BackupPayload | null> {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) return null;
   const { data, error } = await sb.from('backups').select('payload').eq('user_id', userId).maybeSingle();
   if (error) throw error;
@@ -108,7 +108,7 @@ export async function fetchBackup(userId: string): Promise<BackupPayload | null>
 
 /** Envoie l'état local en ligne (écrase la sauvegarde distante). */
 export async function pushBackup(userId: string): Promise<void> {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) throw new Error('Supabase non configuré');
   const savedAt = Date.now();
   const payload = buildPayload(savedAt);
@@ -133,7 +133,7 @@ export async function pullBackup(userId: string): Promise<BackupPayload | null> 
  * - identiques → rien à faire.
  */
 export async function syncNow(userId: string): Promise<SyncOutcome> {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   if (!sb) return 'disabled';
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
   try {
