@@ -71,9 +71,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur de traitement' },
-      { status: 500 },
-    );
+    // 500 = Stripe réessaie ; le détail de l'erreur reste côté logs serveur uniquement.
+    console.error('[api/stripe/webhook]', err);
+    return NextResponse.json({ error: 'Erreur de traitement' }, { status: 500 });
   }
 }

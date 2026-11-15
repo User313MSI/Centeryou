@@ -34,9 +34,8 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur Stripe' },
-      { status: 500 },
-    );
+    // Détail (ex. message d'erreur Stripe) uniquement dans les logs serveur.
+    console.error('[api/checkout]', err);
+    return NextResponse.json({ error: 'Erreur interne lors de la création du paiement' }, { status: 500 });
   }
 }

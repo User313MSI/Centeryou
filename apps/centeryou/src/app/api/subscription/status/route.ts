@@ -68,9 +68,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ snapshot: fallback, configured: true, fromCache: true });
     }
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur' },
-      { status: 500 },
-    );
+    // Détail interne uniquement dans les logs serveur — jamais dans la réponse client.
+    console.error('[api/subscription/status]', err);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
   }
 }

@@ -67,3 +67,22 @@ composant ou de page, aucune variable d'environnement renommée, aucune dépenda
     'nonce-…'`, **tous** les scripts inline (7–8/page, y compris le script anti-flash) portent
     le nonce de la requête, nonce **unique par requête**, `X-Powered-By` absent, CSP aussi
     présente sur les routes API. `npm test` ✅ 144/144, `npm run build` ✅.
+- **Étape 3 — vérifications « paiement / erreurs » + anti-rejeu** :
+  - **Signature webhook Stripe vérifiée** ✅ : HMAC-SHA256 sur `t.body` avec `STRIPE_WEBHOOK_SECRET`,
+    comparaison en **temps constant** (`timingSafeEqual`), aucune signature valide → 400.
+    Renforcement ajouté : **tolérance d'horodatage ±300 s** (recommandation Stripe) → un webhook
+    rejoué avec un vieux `t` est rejeté même si la signature est valide (`src/lib/server/stripe.ts`).
+  - **Refus sans clés vérifié** : `/api/checkout` et `/api/portal` → **503** propre si
+    `STRIPE_SECRET_KEY` absent ; `/api/subscription/status` → `{ snapshot: null, configured: false }` ;
+    `/api/compte/suppression` → 200 explicite « aucun compte serveur configuré ». `/api/sync`
+    **sans clés KV** ne refuse pas : repli **mémoire** intentionnel et documenté (déjà en place,
+    aucune donnée secrète en jeu, la synchro locale reste fonctionnelle) — mais il gagne des
+    garde-fous : `customerId` borné à 100 caractères et corps POST plafonné à **1 Mo (413)**.
+  - **Aucune route API ne fuit de détails d'erreur** : `sync`, `checkout`, `portal`,
+    `stripe/webhook`, `subscription/status` renvoient désormais un **message générique français**
+    en 500 et loguent le détail côté serveur (`console.error('[api/…]')`) — avant, `err.message`
+    partait dans la réponse (ex. message d'erreur Stripe/KV).
+  - Tests : nouveau `tests/api-securite.test.ts` (18 cas : signature valide/invalide/maltraitée,
+    rejeu > 5 min refusé, rotation multi-v1, webhook 400/200 en route, 503 sans clé checkout/portal,
+    500 sans fuite d'interne, garde-fous sync 400/413 + repli mémoire fonctionnel).
+    `npm test` ✅ **162/162** (139 initiaux + 23 nouveaux), `npm run build` ✅.
