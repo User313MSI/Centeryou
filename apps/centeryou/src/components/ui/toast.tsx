@@ -1,5 +1,6 @@
 'use client';
 
+import { X } from 'lucide-react';
 import { useUiStore } from '../../lib/ui-store';
 import { cx } from '../../lib/utils';
 
@@ -35,9 +36,9 @@ export function Toasts() {
           <button
             onClick={() => dismiss(t.id)}
             aria-label="Fermer la notification"
-            className="rounded-pill px-1 text-surface/60 transition-colors duration-fast hover:text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
+            className="flex min-h-8 min-w-8 items-center justify-center rounded-pill text-surface/60 transition-colors duration-fast hover:text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
           >
-            ✕
+            <X size={16} aria-hidden />
           </button>
         </div>
       ))}

@@ -28,7 +28,7 @@ export function useEventActions() {
   const onTaskToggle = (task: TaskItem) => {
     toggleTask(task.id);
     if (useStore.getState().settings.sounds) playBlip(task.done ? 520 : 760);
-    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée ✅` });
+    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée.` });
   };
   const onDropAt = (eventId: string, x: number, y: number) => {
     const zone = resolveDropZone(x, y);

@@ -57,14 +57,9 @@ export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean;
         <div className="flex flex-wrap items-center gap-2" aria-label="Suggestions rapides">
           <span className="text-xs font-semibold text-muted">Essayer :</span>
           {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => submitText(s)}
-              className="min-h-11 rounded-pill border border-line bg-surface px-4 text-sm font-semibold text-muted transition-all duration-fast ease-out hover:border-primary hover:text-primarydark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
+            <Button key={s} variant="secondary" size="sm" onClick={() => submitText(s)}>
               {s}
-            </button>
+            </Button>
           ))}
         </div>
       )}

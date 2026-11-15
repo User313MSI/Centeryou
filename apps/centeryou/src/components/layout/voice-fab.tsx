@@ -86,7 +86,7 @@ export function VoiceFab() {
           'fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-fab flex min-h-14 items-center gap-2.5 rounded-pill px-5 text-sm font-bold shadow-hover transition-all duration-normal ease-out',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.97]',
           'md:bottom-8 md:right-8',
-          listening ? 'bg-voice text-ink' : 'bg-primarydark text-surface hover:bg-primary',
+          listening ? 'bg-voice text-onbright' : 'bg-primarydark text-surface hover:bg-primary',
         )}
       >
         {listening ? <Waves /> : <Mic size={20} aria-hidden />}

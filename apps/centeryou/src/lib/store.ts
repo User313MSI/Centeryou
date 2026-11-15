@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, WelcomeSequenceMode } from '../types';
+import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
 import { minutesOf, parseISO, timeOf, todayISO } from './dates';
 import { uid } from './utils';
 
@@ -52,6 +52,9 @@ function sanitizeSettings(s: Partial<Settings> | undefined): Settings {
     ...defaultSettings,
     ...(s ?? {}),
     dayStart: Number.isFinite(dayStart) ? Math.min(10, Math.max(6, dayStart)) : defaultSettings.dayStart,
+    // nouveaux champs (Dario) : valeurs sûres garanties même si le localStorage est édité à la main
+    theme: s?.theme === 'sombre' ? 'sombre' : 'clair',
+    onboarded: typeof s?.onboarded === 'boolean' ? s.onboarded : defaultSettings.onboarded,
   };
 }
 
@@ -60,6 +63,8 @@ export const defaultSettings: Settings = {
   dayStart: 8,
   sounds: true,
   voice: true,
+  theme: 'clair',
+  onboarded: false,
   briefShownDate: '',
   welcomeSequence: 'daily',
   welcomeShownDate: '',
@@ -147,12 +152,23 @@ export const useStore = create<CenteryouState>()(
     }),
     {
       name: 'centeryou-v1',
-      version: 1,
+      version: 2,
       skipHydration: true,
       partialize: (s) => ({ events: s.events, tasks: s.tasks, settings: s.settings }),
-      // fusion douce + sanitation : les entrées persistées malformées (localStorage édité
-      // ou corrompu) sont ignorées pour éviter tout crash de rendu ; les nouveaux champs
-      // de réglages prennent leur valeur par défaut si absents de l'état persisté
+      // v1 -> v2 (Dario) : ajout de theme + onboarded. Les utilisateurs existants (données
+      // déjà présentes) sont considérés comme déjà onboardés ; seuls les nouveaux arrivants
+      // voient le parcours d'accueil.
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<CenteryouState>;
+        if (version < 2) {
+          return { ...p, settings: { ...sanitizeSettings(p.settings), onboarded: true } } as CenteryouState;
+        }
+        return persisted as CenteryouState;
+      },
+      // fusion douce + sanitation (Alpha) : les entrées persistées malformées (localStorage
+      // édité ou corrompu) sont ignorées pour éviter tout crash de rendu ; les nouveaux
+      // champs de réglages (theme, onboarded) prennent une valeur sûre par défaut si
+      // absents ou invalides dans l'état persisté
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CenteryouState>;
         return {
@@ -166,4 +182,4 @@ export const useStore = create<CenteryouState>()(
   ),
 );
 
-export type { Category, Priority, Repeat, WelcomeSequenceMode };
+export type { Category, Priority, Repeat, Theme, WelcomeSequenceMode };

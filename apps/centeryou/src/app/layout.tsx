@@ -1,9 +1,22 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
-import { colors } from '../../design/tokens';
+import { categoryColors, colors, darkColors, darkShadows, hexToRgbTriplet, shadows, themeCssVars } from '../../design/tokens';
 import { AppShell } from '../components/layout/app-shell';
 import './globals.css';
+
+const catVars = Object.entries(categoryColors)
+  .map(([k, v]) => `--c-cat-${k}: ${hexToRgbTriplet(v)};`)
+  .join(' ');
+
+/** variables CSS des deux thèmes, produites depuis design/tokens.ts (source unique) */
+const themeStyle = `:root{${themeCssVars(colors, shadows)} ${catVars}}.dark{color-scheme:dark;${themeCssVars(darkColors, darkShadows)} ${catVars}}`;
+
+/**
+ * Anti-flash : applique la classe .dark avant le premier rendu si le thème
+ * sombre est mémorisé dans le localStorage (même clé que le store Zustand).
+ */
+const themeInitScript = `(function(){try{var d=localStorage.getItem('centeryou-v1');if(!d)return;var s=JSON.parse(d);var t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t==='sombre'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,8 +56,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className={inter.variable}>
+    <html lang="fr" className={inter.variable} suppressHydrationWarning>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
         <AppShell>{children}</AppShell>
       </body>
     </html>

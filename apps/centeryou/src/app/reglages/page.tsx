@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Download } from 'lucide-react';
+import { AlertTriangle, Download, Moon } from 'lucide-react';
 import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
@@ -45,7 +45,7 @@ export default function ReglagesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-extrabold text-ink">Réglages</h1>
+      <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Réglages</h1>
 
       <Card>
         <CardHeader>
@@ -68,6 +68,30 @@ export default function ReglagesPage() {
       </Card>
 
       <AccountSection />
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-base font-bold text-ink">Apparence</h2>
+        </CardHeader>
+        <CardBody>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <Moon size={16} aria-hidden className="text-primary" /> Mode sombre
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                Un thème sombre reposant pour les yeux, mémorisé sur cet appareil.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.theme === 'sombre'}
+              onChange={(v) => updateSettings({ theme: v ? 'sombre' : 'clair' })}
+              label="Mode sombre"
+              id="toggle-theme"
+            />
+          </div>
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader>
