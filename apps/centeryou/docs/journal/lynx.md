@@ -27,4 +27,4 @@ d'accueil), fluidité perçue et micro-textes FR.
 
 ## PR
 
-- Brouillon : https://github.com/User313MSI/Centeryou/pull/20 (base `main`, head `vibe/lynx-fluidite-00d765`)
+- **PR finale (ready for review)** : https://github.com/User313MSI/Centeryou/pull/20 — base `main`, head `vibe/lynx-fluidite-00d765`. Brouillon ouvert dès la première étape, poussé à chaque étape, passé en revue à la fin avec le bilan mesuré.
