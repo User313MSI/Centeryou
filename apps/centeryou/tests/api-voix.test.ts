@@ -17,10 +17,12 @@ async function loadRoute(withKey: boolean): Promise<Post> {
   return mod.POST as unknown as Post;
 }
 
-function makeReq(body: unknown, user = 'Camille'): Request {
+function makeReq(body: unknown, user = 'Camille', ip = ''): Request {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-centeryou-user': user };
+  if (ip) headers['x-forwarded-for'] = ip;
   return new Request('http://localhost/api/voix', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-centeryou-user': user },
+    headers,
     body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 }
@@ -157,5 +159,86 @@ describe('/api/voix — quota de 300 caractères/jour par profil', () => {
     const res = await POST(makeReq({ text: 'bonjour' }, 'Ines'));
     const body = await res.text();
     expect(body).not.toContain('cle-serveur-de-test');
+  });
+});
+
+describe('/api/voix — plafond par IP : 20 requêtes/heure/adresse', () => {
+  function stubUpstream() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(4) }),
+    );
+  }
+
+  it('la 21e requête depuis la même IP est refusée 429 avec Retry-After et message français', async () => {
+    const POST = await loadRoute(true);
+    stubUpstream();
+    const ip = '203.0.113.10';
+    for (let i = 0; i < 20; i++) {
+      const res = await POST(makeReq({ text: 'hi' }, 'Rate', ip));
+      expect(res.status).toBe(200);
+    }
+    const res = await POST(makeReq({ text: 'hi' }, 'Rate', ip));
+    expect(res.status).toBe(429);
+    const data = await res.json();
+    expect(data.reason).toBe('rate-limit');
+    expect(data.limit).toBe(20);
+    expect(data.remaining).toBe(0);
+    expect(data.message).toContain('20');
+    const retryAfter = Number(res.headers.get('Retry-After'));
+    expect(retryAfter).toBeGreaterThan(0);
+    expect(retryAfter).toBeLessThanOrEqual(3600);
+    expect(data.retryAfter).toBe(retryAfter);
+  });
+
+  it('le plafond est par IP : une autre adresse n’est pas bloquée', async () => {
+    const POST = await loadRoute(true);
+    stubUpstream();
+    for (let i = 0; i < 20; i++) {
+      await POST(makeReq({ text: 'hi' }, 'Rate', '203.0.113.10'));
+    }
+    const res = await POST(makeReq({ text: 'hi' }, 'Rate', '198.51.100.23'));
+    expect(res.status).toBe(200);
+  });
+
+  it('les requêtes invalides comptent aussi dans le plafond (compteur avant validation)', async () => {
+    const POST = await loadRoute(true);
+    stubUpstream();
+    const ip = '203.0.113.99';
+    for (let i = 0; i < 20; i++) {
+      const res = await POST(makeReq({ text: '' }, 'Rate', ip));
+      expect(res.status).toBe(400);
+    }
+    const res = await POST(makeReq({ text: 'bonjour' }, 'Rate', ip));
+    expect(res.status).toBe(429);
+    expect((await res.json()).reason).toBe('rate-limit');
+  });
+
+  it('le 429 ne fuit aucune donnée interne (clé, détail d’erreur)', async () => {
+    const POST = await loadRoute(true);
+    stubUpstream();
+    const ip = '203.0.113.77';
+    for (let i = 0; i < 20; i++) {
+      await POST(makeReq({ text: 'hi' }, 'Rate', ip));
+    }
+    const res = await POST(makeReq({ text: 'hi' }, 'Rate', ip));
+    const body = await res.text();
+    expect(body).not.toContain('cle-serveur-de-test');
+    expect(body).not.toContain('elevenlabs');
+    expect(body).not.toContain('Error');
+  });
+
+  it('x-forwarded-for multi-IP : la dernière entrée (ajoutée par le proxy) fait foi', async () => {
+    const POST = await loadRoute(true);
+    stubUpstream();
+    for (let i = 0; i < 20; i++) {
+      await POST(makeReq({ text: 'hi' }, 'Rate', '203.0.113.10'));
+    }
+    // même IP réelle en dernière position, en-tête usurpé en première : toujours bloquée
+    const res = await POST(makeReq({ text: 'hi' }, 'Rate', '10.0.0.1, 203.0.113.10'));
+    expect(res.status).toBe(429);
+    // une autre IP réelle en dernière position : autorisée
+    const res2 = await POST(makeReq({ text: 'hi' }, 'Rate', '10.0.0.1, 198.51.100.7'));
+    expect(res2.status).toBe(200);
   });
 });

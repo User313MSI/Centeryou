@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic';
 
 const DAILY_CHAR_LIMIT = 300;
 const MAX_TEXT_LENGTH = 1000;
+// Plafond anti-abus par adresse IP, en plus du quota par profil ci-dessous.
+const RATE_LIMIT_PER_HOUR = 20;
 const ELEVENLABS_API_KEY = process.env.NEXT_ELEVENLABS_API_KEY ?? process.env.ELEVENLABS_API_KEY ?? '';
 const ELEVENLABS_VOICE_ID =
   process.env.NEXT_ELEVENLABS_VOICE_ID ?? process.env.ELEVENLABS_VOICE_ID ?? 'EXAVITQu4vr4xnSDxMaL';
@@ -12,9 +14,40 @@ const ELEVENLABS_MODEL = 'eleven_multilingual_v2';
 const ELEVENLABS_URL = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`;
 
 const usageByDay = new Map<string, { day: string; used: number }>();
+const rateByIp = new Map<string, { hour: string; count: number }>();
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function hourKey(): string {
+  return new Date().toISOString().slice(0, 13);
+}
+
+/**
+ * Adresse IP du client : dernière entrée de x-forwarded-for (ajoutée par le
+ * proxy de confiance, ex. Vercel), sinon x-real-ip, sinon 'inconnu'.
+ */
+function clientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const last = forwarded
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .pop();
+    if (last) return last.slice(0, 60);
+  }
+  const real = req.headers.get('x-real-ip')?.trim();
+  if (real) return real.slice(0, 60);
+  return 'inconnu';
+}
+
+function pruneRate(hour: string): void {
+  if (rateByIp.size < 1000) return;
+  rateByIp.forEach((v, k) => {
+    if (v.hour !== hour) rateByIp.delete(k);
+  });
 }
 
 function baseHeaders(extra: Record<string, string> = {}): Record<string, string> {
@@ -27,8 +60,8 @@ function baseHeaders(extra: Record<string, string> = {}): Record<string, string>
   };
 }
 
-function json(body: Record<string, unknown>, status: number): NextResponse {
-  return NextResponse.json(body, { status, headers: baseHeaders() });
+function json(body: Record<string, unknown>, status: number, extra: Record<string, string> = {}): NextResponse {
+  return NextResponse.json(body, { status, headers: baseHeaders(extra) });
 }
 
 function pruneUsage(day: string): void {
@@ -39,6 +72,34 @@ function pruneUsage(day: string): void {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // 1) Plafond par IP (toutes requêtes confondues, même invalides) avant tout traitement.
+  const hour = hourKey();
+  pruneRate(hour);
+  const ip = clientIp(req);
+  const rateKey = `${hour}:${ip}`;
+  const rate = rateByIp.get(rateKey) ?? { hour, count: 0 };
+  if (rate.hour !== hour) {
+    rate.hour = hour;
+    rate.count = 0;
+  }
+  if (rate.count >= RATE_LIMIT_PER_HOUR) {
+    const retryAfter = Math.max(1, Math.ceil((3_600_000 - (Date.now() % 3_600_000)) / 1000));
+    return json(
+      {
+        ok: false,
+        reason: 'rate-limit',
+        limit: RATE_LIMIT_PER_HOUR,
+        remaining: 0,
+        retryAfter,
+        message: `Trop de requêtes depuis cette adresse : plafond de ${RATE_LIMIT_PER_HOUR} appels par heure. Réessaie dans ${retryAfter} seconde${retryAfter > 1 ? 's' : ''} — la voix de ton navigateur reste disponible.`,
+      },
+      429,
+      { 'Retry-After': String(retryAfter) },
+    );
+  }
+  rate.count += 1;
+  rateByIp.set(rateKey, rate);
+
   if (!ELEVENLABS_API_KEY) {
     return json(
       { ok: false, reason: 'not-configured', message: 'Voix premium non configurée côté serveur.' },
