@@ -10,34 +10,47 @@ export const dynamic = 'force-dynamic';
  * Synchronisation multi-appareils de l'offre Premium (dernier écrivain gagne,
  * horodatage updatedAt). Sans customerId → 400. Aucune donnée de carte ici.
  */
+const MAX_CUSTOMER_ID_LENGTH = 100;
+const MAX_BODY_CHARS = 1_000_000;
+
+function cleanError(err: unknown): void {
+  // Détail complet uniquement dans les logs serveur — jamais dans la réponse client.
+  console.error('[api/sync]', err);
+}
+
 export async function GET(req: Request) {
   const customerId = new URL(req.url).searchParams.get('customerId')?.trim();
-  if (!customerId) return NextResponse.json({ error: 'customerId requis' }, { status: 400 });
+  if (!customerId || customerId.length > MAX_CUSTOMER_ID_LENGTH) {
+    return NextResponse.json({ error: 'customerId requis' }, { status: 400 });
+  }
   try {
     const snap = await getSnapshot(customerId);
     return NextResponse.json({ snapshot: snap });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur' },
-      { status: 500 },
-    );
+    cleanError(err);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json().catch(() => ({}))) as Partial<SyncSnapshot>;
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_CHARS) {
+      return NextResponse.json({ error: 'Corps de requête trop volumineux' }, { status: 413 });
+    }
+    const body = (JSON.parse(raw || '{}') as Partial<SyncSnapshot>) ?? {};
     const customerId = body.customerId?.trim();
-    if (!customerId || typeof body.updatedAt !== 'number' || body.state === undefined) {
+    if (!customerId || customerId.length > MAX_CUSTOMER_ID_LENGTH || typeof body.updatedAt !== 'number' || body.state === undefined) {
       return NextResponse.json({ error: 'customerId, updatedAt et state requis' }, { status: 400 });
     }
     const snap: SyncSnapshot = { customerId, updatedAt: body.updatedAt, state: body.state };
     await putSnapshot(snap);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur' },
-      { status: 500 },
-    );
+    if (err instanceof SyntaxError) {
+      return NextResponse.json({ error: 'Corps de requête JSON invalide' }, { status: 400 });
+    }
+    cleanError(err);
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 });
   }
 }

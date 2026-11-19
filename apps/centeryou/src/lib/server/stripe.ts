@@ -199,6 +199,9 @@ export function readCachedSubscription(customerId: string): SubscriptionSnapshot
 /* Vérification de signature des webhooks Stripe (HMAC-SHA256)        */
 /* ------------------------------------------------------------------ */
 
+/** Tolérance d'horodatage des webhooks (recommandation Stripe : 5 min) — anti-rejeu. */
+const WEBHOOK_TOLERANCE_SECONDS = 300;
+
 export function verifyWebhookSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {
   if (!signatureHeader || !secret) return false;
   const parts = signatureHeader.split(',');
@@ -210,6 +213,10 @@ export function verifyWebhookSignature(rawBody: string, signatureHeader: string 
     if (k === 'v1' && v) signatures.push(v);
   }
   if (!timestamp || signatures.length === 0) return false;
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - ts) > WEBHOOK_TOLERANCE_SECONDS) return false;
   const expected = createHmac('sha256', secret).update(`${timestamp}.${rawBody}`, 'utf8').digest('hex');
   const expectedBuf = Buffer.from(expected, 'utf8');
   return signatures.some((sig) => {

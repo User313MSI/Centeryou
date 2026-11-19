@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { categoryColors, colors, darkColors, darkShadows, hexToRgbTriplet, shadows, themeCssVars } from '../../design/tokens';
 import { AppShell } from '../components/layout/app-shell';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SLOGAN } from '../lib/site';
+import { themeInitScript } from '../lib/theme-init';
 import './globals.css';
 
 const catVars = Object.entries(categoryColors)
@@ -12,12 +14,6 @@ const catVars = Object.entries(categoryColors)
 
 /** variables CSS des deux thèmes, produites depuis design/tokens.ts (source unique) */
 const themeStyle = `:root{${themeCssVars(colors, shadows)} ${catVars}}.dark{color-scheme:dark;${themeCssVars(darkColors, darkShadows)} ${catVars}}`;
-
-/**
- * Anti-flash : applique la classe .dark avant le premier rendu si le thème
- * sombre est mémorisé dans le localStorage (même clé que le store Zustand).
- */
-const themeInitScript = `(function(){try{var d=localStorage.getItem('centeryou-v1');if(!d)return;var s=JSON.parse(d);var t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t==='sombre'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 const inter = Inter({
   subsets: ['latin'],
@@ -108,10 +104,14 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Nonce CSP généré par src/middleware.ts (posé sur l'en-tête de requête x-nonce) :
+  // il signe le script inline anti-flash ci-dessous. Next.js signe de la même façon
+  // ses propres scripts inline grâce à l'en-tête Content-Security-Policy de la requête.
+  const nonce = headers().get('x-nonce') ?? undefined;
   return (
     <html lang="fr" className={inter.variable} suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
         <AppShell>{children}</AppShell>
       </body>

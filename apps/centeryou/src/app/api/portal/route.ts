@@ -29,9 +29,8 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erreur Stripe' },
-      { status: 500 },
-    );
+    // Détail (ex. message d'erreur Stripe) uniquement dans les logs serveur.
+    console.error('[api/portal]', err);
+    return NextResponse.json({ error: 'Erreur interne lors de l’ouverture du portail' }, { status: 500 });
   }
 }
