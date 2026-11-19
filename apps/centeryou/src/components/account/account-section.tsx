@@ -96,7 +96,11 @@ export function AccountSection() {
               reste 100 % local.
             </p>
           )}
-          {configured && status === 'loading' && <p className="text-sm text-muted">Chargement du compte…</p>}
+          {configured && status === 'loading' && (
+            <p role="status" className="flex items-center gap-2 text-sm text-muted">
+              <span className="h-3.5 w-24 animate-pulse rounded-pill bg-line/80" aria-hidden /> Chargement du compte…
+            </p>
+          )}
           {configured && status === 'ready' && !user && (
             <>
               <p className="text-sm text-muted">

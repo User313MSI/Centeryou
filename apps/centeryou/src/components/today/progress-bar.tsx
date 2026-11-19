@@ -8,7 +8,7 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
         <span className="font-semibold text-ink">
           {total === 0 ? 'Aucune tâche aujourd’hui' : `${done}/${total} tâche${total > 1 ? 's' : ''} accomplie${done > 1 ? 's' : ''}`}
         </span>
-        <span className="font-bold text-voice">{pct} %</span>
+        <span className="font-bold text-voicetext">{pct} %</span>
       </div>
       <div
         role="progressbar"

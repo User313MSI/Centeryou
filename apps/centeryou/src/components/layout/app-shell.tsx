@@ -74,6 +74,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isPublicRoute(pathname)) return;
+      // une fenêtre modale est ouverte (séquence d'accueil, dialogue…) : les raccourcis globaux restent inertes derrière
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const el = e.target as HTMLElement | null;
       if (
         el &&
@@ -111,8 +113,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (!publicRoute && !hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
-        <div className="animate-fade-in flex flex-col items-center gap-3">
+        {/* squelette de chargement court (opacité seule, donc aussi sous prefers-reduced-motion) */}
+        <div className="animate-fade-in flex w-full max-w-xs flex-col items-center gap-4 px-6">
           <Logo size={56} />
+          <div className="h-3.5 w-32 animate-pulse rounded-pill bg-line/80" aria-hidden />
+          <div className="h-24 w-full animate-pulse rounded-card bg-line/50" aria-hidden />
           <p className="text-sm font-semibold text-muted">Centeryou</p>
         </div>
       </div>

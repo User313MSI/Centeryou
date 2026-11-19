@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { layout } from '../../../design/tokens';
 import { DAY_END, formatDayNumber, formatWeekdayShort, isToday, nowMinutes, pad2, startOfWeekISO, addDaysISO } from '../../lib/dates';
 import { calendarOnDate } from '../../lib/events';
@@ -31,9 +32,18 @@ export function WeekView({
   const pxPerMin = layout.hourHeightWeek / 60;
   const dayStartMin = dayStart * 60;
   const weekStart = startOfWeekISO(cursor);
-  const days = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i));
-  const hours: number[] = [];
-  for (let h = dayStart; h < DAY_END; h += 1) hours.push(h);
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i)), [weekStart]);
+  // instances mémoïsées par jour (évite un recalcul de calendarOnDate à chaque rendu × 7 jours)
+  const instancesByDay = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof calendarOnDate>>();
+    for (const iso of days) map.set(iso, calendarOnDate(events, tasks, iso));
+    return map;
+  }, [days, events, tasks]);
+  const hours = useMemo(() => {
+    const hs: number[] = [];
+    for (let h = dayStart; h < DAY_END; h += 1) hs.push(h);
+    return hs;
+  }, [dayStart]);
   const gridHeight = (DAY_END * 60 - dayStartMin) * pxPerMin;
 
   return (
@@ -73,7 +83,7 @@ export function WeekView({
             ))}
           </div>
           {days.map((iso) => {
-            const instances = calendarOnDate(events, tasks, iso);
+            const instances = instancesByDay.get(iso) ?? [];
             const showNow = isToday(iso);
             const nowTop = (nowMinutes() - dayStartMin) * pxPerMin;
             return (

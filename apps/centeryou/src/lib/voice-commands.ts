@@ -37,7 +37,7 @@ function programSentence(iso: string): string {
       .join(', ');
     parts.push(`${open.length} tâche${open.length > 1 ? 's' : ''} à faire : ${list}${open.length > 3 ? '…' : ''}`);
   }
-  return `${who}${label}, ${parts.join('. Et ')}.`;
+  return `${who}${label}, ${parts.join('. Et . ')}.`;
 }
 
 /**

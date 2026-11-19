@@ -73,7 +73,7 @@ export function VoiceFab() {
           aria-live="polite"
           className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] right-4 z-fab max-w-[calc(100vw-2rem)] rounded-card bg-ink px-4 py-3 text-sm text-surface shadow-hover animate-slide-up md:bottom-28 md:right-8 md:max-w-xs"
         >
-          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-voice">Écoute en cours</p>
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-voicetext">Écoute en cours</p>
           <p>{transcript || 'Parle maintenant…'}</p>
         </div>
       )}

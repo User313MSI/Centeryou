@@ -2,7 +2,7 @@
 
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
-import { DAY_END, formatDayShort, formatTimeFr, minutesOf, timeOf } from '../../lib/dates';
+import { DAY_END, endMinutesOf, formatDayShort, formatTimeFr, minutesOf, timeOf } from '../../lib/dates';
 import { clamp } from '../../lib/utils';
 import { playBlip } from '../../lib/voice';
 import type { EventItem, TaskItem } from '../../types';
@@ -35,7 +35,7 @@ export function useEventActions() {
     if (!zone) return;
     const ev = events.find((e) => e.id === eventId);
     if (!ev) return;
-    const duration = Math.max(15, minutesOf(ev.end) - minutesOf(ev.start));
+    const duration = Math.max(15, endMinutesOf(ev.end) - minutesOf(ev.start));
     const startMin = clamp(Math.round(zone.minutes / 30) * 30, dayStart * 60, DAY_END * 60 - duration);
     const start = timeOf(startMin);
     if (zone.date === ev.date && start === ev.start) return;

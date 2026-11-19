@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
 import type { BackupPayload } from './backup';
-import { minutesOf, timeOf, todayISO } from './dates';
+import { endMinutesOf, minutesOf, timeOf, todayISO } from './dates';
 import { defaultSettings } from './defaults';
 import { currentMonth, defaultSubscription, defaultVoiceQuota, type SubscriptionState, type VoiceQuota } from './subscription';
 import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
@@ -78,7 +78,7 @@ export const useStore = create<CenteryouState>()(
         set((s) => ({
           events: s.events.map((e) => {
             if (e.id !== id) return e;
-            const duration = Math.max(15, minutesOf(e.end) - minutesOf(e.start));
+            const duration = Math.max(15, endMinutesOf(e.end) - minutesOf(e.start));
             const maxStart = 24 * 60 - duration;
             const clamped = Math.min(Math.max(minutesOf(start), 0), Math.max(0, maxStart));
             return { ...e, date, start: timeOf(clamped), end: timeOf(clamped + duration) };
