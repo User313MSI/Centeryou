@@ -15,17 +15,13 @@
 
 ## Missions en cours
 
-### M-01 — Apollon · Expérience parfaite (audit + corrections)
-- **État : PR OUVERTE — EN ATTENTE DU VERDICT DE VIBE WORK** (lancée par l'Adjudant le 2026-11-20 à 03:14 UTC)
-- Objectif : parcours réels de l'app complète (découverte, fidèle, mobile 360 px, voix), corriger tout : bugs, textes FR, états vides, cohérence visuelle, accessibilité, performance. Le prompt complet est fourni dans la session de l'Adjudant.
-- PR : https://github.com/User313MSI/Centeryou/pull/22 (brouillon, base `main`, branche `vibe/apollon-son-dossier`, 43 fichiers, +582/−193, 5 commits) · Dernière nouvelle : 2026-11-20 03:53 UTC — PR #22 ouverte par Apollon : ~30 corrections (bugs, textes FR, accessibilité), journal dans `docs/journal/apollon.md`, CI verte (tests Vitest + build ✅), mergeable clean, preview Vercel prêt. **En attente de vérification et fusion par Vibe Work** — l'Adjudant ne fusionne pas.
-
 ### M-02 — Bâtisseur · Installateur Windows (.exe)
-- **État : EN ATTENTE DE M-01** (le .exe doit embarquer la version parfaite)
-- Objectif : configurer electron-builder (NSIS x64), compiler `Centeryou-Setup-1.0.0.exe` 100 % français, le tester, publier la Release GitHub « Centeryou Bureau v1.0 ». Le prompt complet est fourni dans la session de l'Adjudant.
-- PR : — · Dernière nouvelle : —.
+- **État : ✅ PRÊTE À LANCER — M-01 est fusionnée, la voie est libre.** L'Adjudant lance Bâtisseur dès que l'utilisateur dit « on y go » (prompt complet dans la session de l'Adjudant).
+- Objectif : configurer electron-builder (NSIS x64), compiler `Centeryou-Setup-1.0.0.exe` 100 % français, le tester (installation, connexion, voix, mode sombre), publier la Release GitHub « Centeryou Bureau v1.0 » (tag `bureau-v1.0`), journal dans `docs/journal/batisseur.md`, PR base `main` (configuration seulement, jamais le .exe dans le dépôt).
+- PR : — · Dernière nouvelle : 2026-11-20 — Vibe Work a donné le feu vert (M-01 fusionnée, commit `89e4120`).
 
 ## Missions terminées (mémoire)
 
+- **M-01 — Apollon · Expérience parfaite — ✅ fusionnée par Vibe Work le 2026-11-20** (PR #22, squash commit `89e4120`, 43 fichiers, ~30 corrections : bugs Windows/render, chevauchements en colonnes, textes FR 100 %, accessibilité clavier + contrastes, pages légales alignées sur la réalité Premium). Revue Vibe Work : conforme aux règles (tokens inchangés, aucun test supprimé — 176/176, pas de sidebar, aucune variable d'env renommée, CI verte + build ✅). Déploiement Vercel automatique lancé. Journal : `journal/apollon.md`. Sujet à garder sous le coude pour plus tard (noté par Apollon) : montée de version majeure next/vitest pour les vulnérabilités connues.
 - Campagne v4 (17 PR fusionnées 13-15/11) : voix sécurisée, comptes, paiement, mobile, bureau-web, conformité, lancement — voir `journal/omega.md`.
 - Polish 15-20/11 : fluidité (Lynx, −31 % de poids), sécurité (Sécure, CSP nonce + rate-limit), stats (Sigma, page /stats en ligne — fusionnée par Vibe Work le 20/11).
