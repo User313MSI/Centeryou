@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { CATEGORY_LIST } from '../../lib/categories';
 import { DAY_END, DAY_START, endMinutesOf, formatRangeFr, minutesOf, timeOf, todayISO } from '../../lib/dates';
 import { findConflict } from '../../lib/events';
+
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import type { Category, Repeat } from '../../types';
@@ -34,6 +35,8 @@ export function EventDialog() {
   const eventDialog = useUiStore((s) => s.eventDialog);
   const closeEventDialog = useUiStore((s) => s.closeEventDialog);
   const pushToast = useUiStore((s) => s.pushToast);
+  const requestExit = useUiStore((s) => s.requestExit);
+  const cancelExit = useUiStore((s) => s.cancelExit);
   const events = useStore((s) => s.events);
   const addEvent = useStore((s) => s.addEvent);
   const updateEvent = useStore((s) => s.updateEvent);
@@ -110,12 +113,14 @@ export function EventDialog() {
 
   const remove = () => {
     if (!editing) return;
-    deleteEvent(editing.id);
+    // sortie douce du bloc dans le planning (rétrécissement + fondu) avant suppression réelle
+    requestExit(`event:${editing.id}`, () => deleteEvent(editing.id));
     pushToast({
       message: `« ${editing.title} » supprimé`,
       actionLabel: 'Annuler',
       duration: 5000,
-      onAction: () =>
+      onAction: () => {
+        if (cancelExit(`event:${editing.id}`)) return; // sortie annulée à temps : l'événement est toujours là
         addEvent({
           title: editing.title,
           date: editing.date,
@@ -123,7 +128,8 @@ export function EventDialog() {
           end: editing.end,
           category: editing.category,
           repeat: editing.repeat,
-        }),
+        });
+      },
     });
     closeEventDialog();
   };

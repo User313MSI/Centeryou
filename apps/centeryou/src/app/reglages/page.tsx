@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Download, Moon, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, Download, Moon, Sparkles, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
@@ -141,6 +141,32 @@ export default function ReglagesPage() {
               onChange={(v) => updateSettings({ theme: v ? 'sombre' : 'clair' })}
               label="Mode sombre"
               id="toggle-theme"
+            />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-base font-bold text-ink">Animations &amp; célébrations</h2>
+        </CardHeader>
+        <CardBody>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <Sparkles size={16} aria-hidden className="text-primary" /> Animations &amp; célébrations
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                Apparitions douces, micro-confettis et petits feux d’artifice lors des moments forts. Si tu désactives
+                cette option — ou si ton système demande « réduire les animations » — tout redevient statique
+                instantanément.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.animations}
+              onChange={(v) => updateSettings({ animations: v })}
+              label="Animations & célébrations"
+              id="toggle-animations"
             />
           </div>
         </CardBody>

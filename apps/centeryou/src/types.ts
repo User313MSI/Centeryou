@@ -53,4 +53,6 @@ export interface Settings {
   welcomeShownDate: string;
   /** mode sombre (champ historique, le thème actif est piloté par `theme`) */
   darkMode: boolean;
+  /** animations & célébrations (apparitions douces, micro-confettis, petits feux d'artifice) — activées par défaut */
+  animations: boolean;
 }

@@ -36,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const theme = useStore((s) => s.settings.theme);
+  const animationsSetting = useStore((s) => s.settings.animations);
   const onboarded = useStore((s) => s.settings.onboarded);
   const publicRoute = isPublicRoute(pathname);
   const openEventDialog = useUiStore((s) => s.openEventDialog);
@@ -51,10 +52,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (r.status !== 'ok' && r.message) pushToast({ message: r.message, duration: 9000 });
   }, [hydrated, pushToast]);
 
-  // thème sombre mémorisé : bascule la classe .dark sur <html> (variables CSS du thème)
+  // thème sombre mémorisé + réglage « Animations & célébrations » :
+  // bascule .dark / .animations-off sur <html> (variables CSS du thème ; classe qui rend
+  // tout statique instantanément quand les animations sont désactivées — même patron
+  // que le bloc prefers-reduced-motion global de globals.css)
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'sombre');
-  }, [theme]);
+    document.documentElement.classList.toggle('animations-off', !animationsSetting);
+  }, [theme, animationsSetting]);
 
   // synchro multi-appareils Premium (Stripe) : pull initial + push différé sur chaque changement
   useEffect(() => {
@@ -127,7 +132,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-bg">
       {publicRoute ? <PublicNav /> : <TopNav />}
-      <main className="mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12">
+      {/* key = route courante : transition douce entre les vues (fondu + translate sobre) */}
+      <main
+        key={pathname}
+        className="animate-view-in mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12"
+      >
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
       <Footer />

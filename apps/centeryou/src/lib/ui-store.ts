@@ -1,7 +1,26 @@
 'use client';
 
 import { create } from 'zustand';
+
+import { useStore } from './store';
+
 import { uid } from './utils';
+
+/** durée de la sortie douce à la suppression (rétrécissement + fondu) — 0 = statique instantané */
+export const EXIT_ANIMATION_MS = 220;
+
+/** animations actives maintenant ? (réglage + prefers-reduced-motion) — check local pour ne pas alourdir le graphe initial */
+function motionActiveNow(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  } catch {
+    // matchMedia indisponible : on se fie au réglage
+  }
+  return useStore.getState().settings.animations === true;
+}
+
+const exitTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 export type PlanningView = 'jour' | 'semaine' | 'mois';
 
@@ -54,6 +73,19 @@ interface UiState {
   /** invite d'installation PWA refusée pour la session (non persistée) */
   installDismissed: boolean;
   dismissInstall: () => void;
+
+  /** ids (préfixés « event: » / « task: ») en cours de sortie douce avant suppression (non persisté) */
+  exitingIds: string[];
+  /**
+   * Sortie douce : marque `id` (classe animate-exit) puis exécute `done` (suppression réelle)
+   * après EXIT_ANIMATION_MS — délai 0 (immédiat) si les animations sont inactives.
+   */
+  requestExit: (id: string, done: () => void) => void;
+  /**
+   * Annule une sortie programmée (bouton « Annuler » du toast) ; renvoie true si une sortie
+   * était en cours — l'élément est alors toujours présent, rien à restaurer.
+   */
+  cancelExit: (id: string) => boolean;
 }
 
 export const useUiStore = create<UiState>()((set, get) => ({
@@ -95,4 +127,32 @@ export const useUiStore = create<UiState>()((set, get) => ({
 
   installDismissed: false,
   dismissInstall: () => set({ installDismissed: true }),
+
+  exitingIds: [],
+  requestExit: (id, done) => {
+    // une seule sortie par id
+    const prev = exitTimers.get(id);
+    if (prev !== undefined) {
+      clearTimeout(prev);
+      exitTimers.delete(id);
+    }
+    set((s) => ({ exitingIds: s.exitingIds.includes(id) ? s.exitingIds : [...s.exitingIds, id] }));
+    const delay = motionActiveNow() ? EXIT_ANIMATION_MS : 0;
+    exitTimers.set(
+      id,
+      setTimeout(() => {
+        exitTimers.delete(id);
+        set((s) => ({ exitingIds: s.exitingIds.filter((x) => x !== id) }));
+        done();
+      }, delay),
+    );
+  },
+  cancelExit: (id) => {
+    const t = exitTimers.get(id);
+    if (t === undefined) return false;
+    clearTimeout(t);
+    exitTimers.delete(id);
+    set((s) => ({ exitingIds: s.exitingIds.filter((x) => x !== id) }));
+    return true;
+  },
 }));
