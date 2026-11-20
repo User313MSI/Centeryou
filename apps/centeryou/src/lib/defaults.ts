@@ -15,4 +15,8 @@ export const defaultSettings: Settings = {
   launchFilmVoice: true,
   darkMode: false,
   animations: true,
+  reminders: true,
+  reminderDefaultMinutes: 10,
+  tasksReminder: true,
+  tasksReminderTime: '09:00',
 };

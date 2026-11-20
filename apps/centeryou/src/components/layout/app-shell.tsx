@@ -67,6 +67,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     initSync();
   }, [hydrated]);
 
+  // moteur de rappels (M-04) : notifications locales du navigateur, vérifiées toutes les 30 s.
+  // Chargé en import dynamique : AUCUN poids ajouté au premier chargement (le chunk n'est
+  // téléchargé qu'après l'hydratation, et uniquement sur les routes de l'app).
+  useEffect(() => {
+    if (!hydrated || publicRoute) return;
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void import('../../lib/rappels-service')
+      .then((m) => {
+        if (!cancelled) stop = m.startRappelService();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [hydrated, publicRoute]);
+
   // nouveaux arrivants : parcours d'accueil en 3 étapes avant toute navigation dans l'app
   // (les routes publiques — accueil, démo, presse, inscription — restent accessibles à tous)
   useEffect(() => {

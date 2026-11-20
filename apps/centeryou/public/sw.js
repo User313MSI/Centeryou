@@ -80,3 +80,42 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(caches.match(request).then((hit) => hit || fetch(request)));
 });
+
+/**
+ * Clic sur une notification de rappel (M-04, rappels locaux uniquement) :
+ * - clic simple : ouvre / ramène l'app sur la page Aujourd'hui et met l'événement en vedette
+ *   (paramètre ?rappel=voir:<eventId> consommé par le moteur) ;
+ * - bouton « Terminé » : ?rappel=fait:<clé> (plus jamais notifié pour cette occurrence) ;
+ * - bouton « Reporter de 5 min » : ?rappel=reporter:<clé> (un seul rappel reprogrammé).
+ * Le message postMessage doublonne la navigation pour les clients ouverts sur une autre page.
+ */
+self.addEventListener('notificationclick', (event) => {
+  const notif = event.notification;
+  notif.close();
+  const data = notif.data || {};
+  const action = event.action || '';
+  let url = '/aujourdhui';
+  if (action === 'done' && data.key) url = '/aujourdhui?rappel=fait:' + encodeURIComponent(data.key);
+  else if (action === 'snooze' && data.key) url = '/aujourdhui?rappel=reporter:' + encodeURIComponent(data.key);
+  else if (data.eventId) url = '/aujourdhui?rappel=voir:' + encodeURIComponent(data.eventId);
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windowClients) => {
+        for (const client of windowClients) {
+          if (!client.url.startsWith(self.location.origin)) continue;
+          // message de secours si la navigation client échoue (le moteur écoute aussi les messages)
+          try {
+            client.postMessage({ type: 'centeryou-rappel', action: action || 'voir', key: data.key || '', eventId: data.eventId || '' });
+          } catch (e) {
+            // ignore
+          }
+          if ('focus' in client) {
+            if ('navigate' in client) client.navigate(url);
+            return client.focus();
+          }
+        }
+        return clients.openWindow(url);
+      }),
+  );
+});

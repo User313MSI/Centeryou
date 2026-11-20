@@ -207,6 +207,37 @@
   animation: exit-out 200ms ease-in both;
 }
 
+/*
+ * Cloche (M-04) — mise en vedette d'un événement après un clic sur une notification
+ * de rappel : halo pulsant autour du bloc, comme la carte « Prochaine étape » du film.
+ * Le halo devient STATIQUE (anneau plein) si prefers-reduced-motion ou si le réglage
+ * « Animations & célébrations » est désactivé (classe html.animations-off).
+ */
+.rappel-halo {
+  animation: rappel-halo-pulse 1.9s ease-out infinite;
+}
+
+@keyframes rappel-halo-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(var(--c-primary) / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgb(var(--c-primary) / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rappel-halo {
+    animation: none !important;
+    box-shadow: 0 0 0 3px rgb(var(--c-primary) / 0.85);
+  }
+}
+
+html.animations-off .rappel-halo {
+  animation: none !important;
+  box-shadow: 0 0 0 3px rgb(var(--c-primary) / 0.85);
+}
+
 /* halo posé à côté du bloc (mêmes coordonnées, débord de 6 px) — derrière le bloc */
 .celebrate-halo {
   position: absolute;

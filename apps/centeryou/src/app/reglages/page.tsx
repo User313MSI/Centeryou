@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Download, Moon, Sparkles, Trash2, Upload, Volume2 } from 'lucide-react';
+import { AlertTriangle, Bell, Download, Moon, Sparkles, Trash2, Upload, Volume2 } from 'lucide-react';
 import Link from 'next/link';
 import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
@@ -12,9 +12,11 @@ import { Toggle } from '../../components/ui/toggle';
 import { BackupError, downloadBackup, parseBackup, readBackupFile, serializeBackup, type BackupPayload } from '../../lib/backup';
 import { useStore } from '../../lib/store';
 import { getSupabase } from '../../lib/supabase';
+import { REMINDER_LEADS, REMINDER_LEAD_LABELS } from '../../lib/rappel-leads';
+
 import { useUiStore } from '../../lib/ui-store';
 import { SubscriptionCard } from '../../components/settings/subscription-card';
-import type { LaunchFilmMode, WelcomeSequenceMode } from '../../types';
+import type { LaunchFilmMode, ReminderLead, WelcomeSequenceMode } from '../../types';
 
 const selectClass =
   'w-full min-h-11 rounded-card border border-line bg-surface px-4 text-base text-ink transition-colors duration-fast ease-out focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
@@ -72,6 +74,30 @@ export default function ReglagesPage() {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // rappels (M-04) : état de la permission navigateur, relu au focus de la fenêtre
+  type PermRappels = 'unsupported' | 'default' | 'granted' | 'denied';
+  const [permRappels, setPermRappels] = useState<PermRappels>('unsupported');
+  useEffect(() => {
+    const lire = () =>
+      setPermRappels(typeof Notification === 'undefined' ? 'unsupported' : (Notification.permission as PermRappels));
+    lire();
+    window.addEventListener('focus', lire);
+    return () => window.removeEventListener('focus', lire);
+  }, []);
+  const activerRappels = () => {
+    // import dynamique : le domaine des rappels (Notification API, tampon) ne pèse pas au premier chargement
+    void import('../../lib/rappels').then(async (m) => {
+      const res = await m.requestRappelPermission();
+      setPermRappels(res);
+      if (res === 'granted') pushToast({ message: 'Notifications autorisées : tes rappels pourront arriver au bon moment.' });
+      else if (res === 'denied')
+        pushToast({
+          message: 'Notifications refusées : tu peux les réactiver à tout moment dans les réglages du site de ton navigateur.',
+          duration: 9000,
+        });
+    });
+  };
 
   const onDeleteAccount = async () => {
     if (!confirmDelete) {
@@ -303,6 +329,88 @@ export default function ReglagesPage() {
             </div>
             <Toggle checked={settings.voice} onChange={(v) => updateSettings({ voice: v })} label="Assistant vocal" id="toggle-voix" />
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Bell size={18} aria-hidden className="text-primary" /> Rappels
+          </h2>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-4">
+          <p className="text-xs text-muted">
+            Les rappels sont des notifications locales envoyées par ton navigateur : ils fonctionnent quand Centeryou
+            est ouvert ou en arrière-plan — pas quand l’application est complètement fermée.
+          </p>
+          {permRappels === 'unsupported' && (
+            <p className="text-xs text-muted">Ce navigateur ne permet pas les notifications : aucun rappel ne sera envoyé.</p>
+          )}
+          {permRappels === 'granted' && (
+            <p className="text-xs font-semibold text-voicetext">Notifications autorisées : tes rappels arriveront au bon moment.</p>
+          )}
+          {permRappels === 'denied' && (
+            <div className="rounded-card border border-warning/40 bg-warning/10 px-4 py-3">
+              <p className="text-sm font-semibold text-ink">Notifications bloquées par ton navigateur.</p>
+              <p className="mt-1 text-xs text-muted">
+                Pour les réactiver : clique sur l’icône cadenas (ou « Informations du site ») à gauche de l’adresse,
+                ouvre « Notifications » et choisis « Autoriser ». Sur Safari : menu Safari → Réglages de ce site web →
+                Notifications → Autoriser.
+              </p>
+            </div>
+          )}
+          {permRappels === 'default' && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" id="btn-activer-rappels" onClick={activerRappels}>
+                <Bell size={16} aria-hidden /> Activer les rappels
+              </Button>
+              <p className="text-xs text-muted">
+                On ne te demande la permission qu’à ce moment — ou à la première création d’événement avec un rappel.
+              </p>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">Tous les rappels</p>
+              <p className="text-xs text-muted">Active ou coupe tous les rappels (événements et tâches du jour).</p>
+            </div>
+            <Toggle checked={settings.reminders} onChange={(v) => updateSettings({ reminders: v })} label="Tous les rappels" id="toggle-rappels" />
+          </div>
+          <Field label="Rappel par défaut des nouveaux événements" htmlFor="reglage-rappel-defaut">
+            <select
+              id="reglage-rappel-defaut"
+              value={String(settings.reminderDefaultMinutes)}
+              onChange={(e) => updateSettings({ reminderDefaultMinutes: Number(e.target.value) as ReminderLead })}
+              className={selectClass}
+            >
+              {REMINDER_LEADS.map((l) => (
+                <option key={l} value={l}>
+                  {REMINDER_LEAD_LABELS[l]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">Rappel des tâches du jour</p>
+              <p className="text-xs text-muted">Une notification récapitulative si des tâches du jour ne sont pas terminées.</p>
+            </div>
+            <Toggle
+              checked={settings.tasksReminder}
+              onChange={(v) => updateSettings({ tasksReminder: v })}
+              label="Rappel des tâches du jour"
+              id="toggle-rappel-taches"
+            />
+          </div>
+          <Field label="Heure du rappel des tâches" htmlFor="reglage-rappel-taches-heure">
+            <Input
+              id="reglage-rappel-taches-heure"
+              type="time"
+              value={settings.tasksReminderTime}
+              disabled={!settings.tasksReminder}
+              onChange={(e) => updateSettings({ tasksReminderTime: e.target.value })}
+            />
+          </Field>
         </CardBody>
       </Card>
 

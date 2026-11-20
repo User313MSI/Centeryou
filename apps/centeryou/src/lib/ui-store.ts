@@ -74,6 +74,13 @@ interface UiState {
   installDismissed: boolean;
   dismissInstall: () => void;
 
+  /** événement mis en vedette après un clic sur une notification de rappel (M-04, non persisté) */
+  highlightEventId: string | null;
+  /** horodatage de la mise en vedette (le halo s'efface après quelques secondes) */
+  highlightAt: number;
+  setHighlightEvent: (id: string) => void;
+  clearHighlightEvent: () => void;
+
   /** ids (préfixés « event: » / « task: ») en cours de sortie douce avant suppression (non persisté) */
   exitingIds: string[];
   /**
@@ -127,6 +134,11 @@ export const useUiStore = create<UiState>()((set, get) => ({
 
   installDismissed: false,
   dismissInstall: () => set({ installDismissed: true }),
+
+  highlightEventId: null,
+  highlightAt: 0,
+  setHighlightEvent: (id) => set({ highlightEventId: id, highlightAt: Date.now() }),
+  clearHighlightEvent: () => set({ highlightEventId: null, highlightAt: 0 }),
 
   exitingIds: [],
   requestExit: (id, done) => {
