@@ -5,7 +5,7 @@ const fs = require('fs');
 const APP_NAME = 'Centeryou';
 const PROD_URL = process.env.CENTERYOU_URL || 'https://dev-apps-centeryou.vercel.app';
 const PROD_ORIGIN = new URL(PROD_URL).origin;
-const DOWNLOAD_URL = process.env.CENTERYOU_DOWNLOAD_URL || 'https://github.com/User313MSI/Dev-Apps/releases';
+const DOWNLOAD_URL = process.env.CENTERYOU_DOWNLOAD_URL || 'https://github.com/User313MSI/Centeryou/releases';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 
 let mainWindow = null;
