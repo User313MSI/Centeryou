@@ -41,11 +41,9 @@ export function EventBlock({
   const gridHeight = (DAY_END * 60 - dayStartMin) * pxPerMin;
   const visStart = Math.max(startMin, dayStartMin);
   const visEnd = Math.min(endMin, DAY_END * 60);
-  if (visEnd <= visStart) return null;
   const top = (visStart - dayStartMin) * pxPerMin;
   let height = Math.max(22, (visEnd - visStart) * pxPerMin);
   if (top + height > gridHeight) height = gridHeight - top;
-  if (height <= 0) return null;
 
   const drag = useRef<{ sx: number; sy: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
@@ -93,6 +91,12 @@ export function EventBlock({
       if (bounceTimer.current) window.clearTimeout(bounceTimer.current);
     };
   }, [lastDrop, instance.id]);
+
+  // Retours précoces APRÈS tous les hooks (règles des hooks React, correctif M-08) :
+  // un bloc qui passe de visible à masqué (ou l'inverse) ne doit jamais exécuter
+  // moins de hooks au rendu suivant — sinon React lève « fewer hooks ».
+  if (visEnd <= visStart) return null;
+  if (height <= 0) return null;
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (isTask) return; // les tâches ne se déplacent pas dans le planning

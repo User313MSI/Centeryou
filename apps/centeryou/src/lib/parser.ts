@@ -1,5 +1,5 @@
 import type { Category, Priority } from '../types';
-import { WEEKDAY_NAMES, addDaysISO, nextWeekdayISO, timeOf, todayISO } from './dates';
+import { WEEKDAY_NAMES, addDaysISO, nextWeekdayISO, parseISO, timeOf, todayISO } from './dates';
 import { normalizeText } from './utils';
 
 export interface ParsedInput {
@@ -22,6 +22,19 @@ const CATEGORY_WORDS: Record<string, Category> = {
 const WEEKDAY_IDX: Record<string, number> = Object.fromEntries(
   WEEKDAY_NAMES.map((name, idx) => [name, idx]),
 );
+
+/**
+ * Plafond de la saisie relative « dans N jours/semaines » (M-08) : au-delà, les
+ * mots restent simplement dans le titre et la date reste valide (jamais de date
+ * NaN, donc jamais de crash Intl — ex. « dans 999999999 jours »).
+ */
+const MAX_RELATIVE_UNITS = 500;
+
+/** true si la chaîne est une date ISO YYYY-MM-DD réellement valide (pas NaN). */
+function isValidISODate(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  return !Number.isNaN(parseISO(iso).getTime());
+}
 
 function isTimeToken(t: string): boolean {
   return /^(\d{1,2})h(\d{2})$/.test(t) || /^(\d{1,2})h$/.test(t) || /^(\d{1,2}):(\d{2})$/.test(t);
@@ -111,15 +124,17 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
     if (t === 'dans' && /^\d+$/.test(norm[i + 1] ?? '')) {
       const n = Number(norm[i + 1]);
       const unit = norm[i + 2] ?? '';
-      if (unit === 'jour' || unit === 'jours') {
-        date = addDaysISO(today, n);
-        i += 2;
-        continue;
-      }
-      if (unit === 'semaine' || unit === 'semaines' || unit === 'sem') {
-        date = addDaysISO(today, n * 7);
-        i += 2;
-        continue;
+      const isDays = unit === 'jour' || unit === 'jours';
+      const isWeeks = unit === 'semaine' || unit === 'semaines' || unit === 'sem';
+      // quantité plafonnée + date produite toujours valide : sinon les mots restent
+      // dans le titre (date inchangée), comme pour toute saisie non reconnue
+      if ((isDays || isWeeks) && Number.isFinite(n) && n <= MAX_RELATIVE_UNITS) {
+        const candidate = addDaysISO(today, isDays ? n : n * 7);
+        if (isValidISODate(candidate)) {
+          date = candidate;
+          i += 2;
+          continue;
+        }
       }
     }
 

@@ -152,6 +152,16 @@ export async function listCustomerSubscriptions(customerId: string): Promise<Str
   return res.data ?? [];
 }
 
+export interface StripeCustomer {
+  id: string;
+  email: string | null;
+}
+
+/** Client Stripe (pour vérifier qu'un customerId appartient bien au compte connecté). */
+export async function retrieveCustomer(customerId: string): Promise<StripeCustomer> {
+  return stripeRequest<StripeCustomer>('GET', `/customers/${encodeURIComponent(customerId)}`);
+}
+
 /* ------------------------------------------------------------------ */
 /* Statut d'abonnement dérivé (source de vérité : Stripe)             */
 /* ------------------------------------------------------------------ */

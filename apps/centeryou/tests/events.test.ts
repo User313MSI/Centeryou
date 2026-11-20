@@ -30,8 +30,36 @@ describe('récurrence', () => {
     expect(eventsOnDate([{ ...base, repeat: 'jour' }], '2025-03-01')).toHaveLength(1);
     expect(eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-13')).toHaveLength(1);
     expect(eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-14')).toHaveLength(0);
-    expect(eventsOnDate([{ ...base, date: '2025-01-31', repeat: 'mois' }], '2025-02-28')).toHaveLength(0);
+    // M-08 : un 31 avec « chaque mois » est aussi présent les mois courts (clamp au
+    // dernier jour du mois, comme addMonthsISO) — avant : absent de février
+    expect(eventsOnDate([{ ...base, date: '2025-01-31', repeat: 'mois' }], '2025-02-28')).toHaveLength(1);
     expect(eventsOnDate([{ ...base, date: '2025-01-15', repeat: 'mois' }], '2025-02-15')).toHaveLength(1);
+  });
+
+  it('mois sur un 31 : clamp au dernier jour du mois (M-08)', () => {
+    const ev31 = { ...base, date: '2025-01-31', repeat: 'mois' as const };
+    expect(eventOccursOn(ev31, '2025-02-28')).toBe(true); // février non bissextile
+    expect(eventOccursOn(ev31, '2025-02-27')).toBe(false);
+    expect(eventOccursOn(ev31, '2025-03-31')).toBe(true); // mois avec 31 jours
+    expect(eventOccursOn(ev31, '2025-04-30')).toBe(true); // avril a 30 jours
+    expect(eventOccursOn(ev31, '2025-04-29')).toBe(false);
+    expect(eventOccursOn(ev31, '2024-12-31')).toBe(false); // avant la date de référence
+  });
+
+  it('mois sur un 29 février (bissextile) : clamp les années suivantes (M-08)', () => {
+    const ev29 = { ...base, date: '2024-02-29', repeat: 'mois' as const };
+    expect(eventOccursOn(ev29, '2028-02-29')).toBe(true); // bissextile
+    expect(eventOccursOn(ev29, '2028-02-28')).toBe(false);
+    expect(eventOccursOn(ev29, '2025-02-28')).toBe(true); // année non bissextile suivante
+    expect(eventOccursOn(ev29, '2025-02-27')).toBe(false);
+    expect(eventOccursOn(ev29, '2025-03-29')).toBe(true); // mars a 31 jours
+  });
+
+  it('mois sur un jour normal : inchangé (M-08)', () => {
+    const ev15 = { ...base, date: '2025-01-15', repeat: 'mois' as const };
+    expect(eventOccursOn(ev15, '2025-03-15')).toBe(true);
+    expect(eventOccursOn(ev15, '2025-03-14')).toBe(false);
+    expect(eventOccursOn(ev15, '2024-12-15')).toBe(false);
   });
 
   it('rien avant la date de référence, même avec récurrence', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseInput, type ParsedInput } from '../src/lib/parser';
+import { addDaysISO, parseISO } from '../src/lib/dates';
 
 // lundi 6 janvier 2025 (référence fixe pour des tests déterministes)
 const TODAY = '2025-01-06';
@@ -69,5 +70,51 @@ describe('parseur de saisie naturelle (français)', () => {
   it('les mots de catégorie ne restent pas dans le titre', () => {
     expect(p('ménage perso').title).toBe('Ménage');
     expect(p('deep work focus').title).toBe('Deep work');
+  });
+});
+
+describe('parseur — quantités relatives plafonnées (M-08 : plus jamais de date NaN)', () => {
+  it('« dans 999999999 jours » ne crashe plus : date valide (aujourd’hui) et texte conservé dans le titre', () => {
+    const r = p('dans 999999999 jours');
+    expect(r.date).toBe(TODAY);
+    expect(r.title).toBe('Dans 999999999 jours');
+    expect(/^\d{4}-\d{2}-\d{2}$/.test(r.date)).toBe(true);
+    expect(Number.isNaN(parseISO(r.date).getTime())).toBe(false);
+  });
+
+  it('quantité au-delà du plafond (501) → reste dans le titre, date toujours valide', () => {
+    const r = p('sport dans 501 jours');
+    expect(r.date).toBe(TODAY);
+    expect(r.title).toBe('Sport dans 501 jours');
+    expect(Number.isNaN(parseISO(r.date).getTime())).toBe(false);
+  });
+
+  it('quantité au plafond (500 jours) → date calculée normalement, valide', () => {
+    const r = p('sport dans 500 jours');
+    expect(r.date).toBe(addDaysISO(TODAY, 500));
+    expect(r.title).toBe('Sport');
+    expect(Number.isNaN(parseISO(r.date).getTime())).toBe(false);
+  });
+
+  it('nombre colossal (non fini en JS) → reste dans le titre, date valide', () => {
+    const r = p(`dans ${'9'.repeat(400)} jours`);
+    expect(r.date).toBe(TODAY);
+    expect(Number.isNaN(parseISO(r.date).getTime())).toBe(false);
+  });
+
+  it('« dans 2 semaines » continue de fonctionner exactement pareil', () => {
+    const r = p('récap dans 2 semaines');
+    expect(r).toEqual({ title: 'Récap', date: '2025-01-20', time: null, category: 'autre', priority: 'moyenne' });
+  });
+
+  it('« dans 3 jours » et « dans 3 sem » inchangés', () => {
+    expect(p('appel dans 3 jours').date).toBe('2025-01-09');
+    expect(p('visio dans 3 sem').date).toBe('2025-01-27');
+  });
+
+  it('unité non supportée (« dans 2 mois ») → reste dans le titre, comme avant', () => {
+    const r = p('dans 2 mois');
+    expect(r.date).toBe(TODAY);
+    expect(r.title).toBe('Dans 2 mois');
   });
 });

@@ -87,6 +87,13 @@ check('travail jeudi 9h', parseInput('réunion travail jeudi 9h', TODAY), {
 });
 check('après-demain', parseInput('ménage après-demain', TODAY).date, '2025-01-08');
 check('dans 3 jours', parseInput('appel dans 3 jours', TODAY).date, '2025-01-09');
+check('dans 2 semaines', parseInput('récap dans 2 semaines', TODAY).date, '2025-01-20');
+// M-08 : plus de date NaN — au-delà du plafond, le texte reste dans le titre et la date reste valide
+check('« dans 999999999 jours » → date du jour (valide) + texte dans le titre', parseInput('dans 999999999 jours', TODAY), {
+  title: 'Dans 999999999 jours', date: TODAY, time: null, category: 'autre', priority: 'moyenne',
+});
+check('« dans 501 jours » → reste dans le titre, date du jour', parseInput('sport dans 501 jours', TODAY).date, TODAY);
+check('« dans 500 jours » → date calculée normalement', parseInput('sport dans 500 jours', TODAY).date, addDaysISO(TODAY, 500));
 check('focus + heure avec « à »', parseInput('deep work focus à 15h', TODAY), {
   title: 'Deep work', date: '2025-01-06', time: '15:00', category: 'focus', priority: 'moyenne',
 });
@@ -104,6 +111,10 @@ check('même heure, autre jour = pas de conflit', findConflict([base], { date: '
 check('répétition quotidienne couvre demain', eventsOnDate([{ ...base, repeat: 'jour' }], '2025-01-07').length, 1);
 check('répétition hebdomadaire même jour de semaine', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-13').length, 1);
 check('répétition hebdomadaire autre jour', eventsOnDate([{ ...base, repeat: 'semaine' }], '2025-01-08').length, 0);
+// M-08 : « chaque mois » sur un 31 = clamp au dernier jour du mois (comme addMonthsISO)
+check('répétition mensuelle sur un 31 : présente le 28 février', eventsOnDate([{ ...base, date: '2025-01-31', repeat: 'mois' }], '2025-02-28').length, 1);
+check('répétition mensuelle sur un 31 : présente le 30 avril', eventsOnDate([{ ...base, date: '2025-01-31', repeat: 'mois' }], '2025-04-30').length, 1);
+check('répétition mensuelle sur un 29/02 bissextile : présente le 28 février suivant', eventsOnDate([{ ...base, date: '2024-02-29', repeat: 'mois' }], '2025-02-28').length, 1);
 
 console.log('Éléments calendrier (événements + tâches) :');
 const taskSport = { id: 't1', title: 'Sport', date: '2025-01-07', time: '14:00', category: 'perso', priority: 'moyenne', done: false, createdAt: 2 };

@@ -11,6 +11,7 @@ import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
 import { BackupError, downloadBackup, parseBackup, readBackupFile, serializeBackup, type BackupPayload } from '../../lib/backup';
 import { useStore } from '../../lib/store';
+import { getSupabase } from '../../lib/supabase';
 import { useUiStore } from '../../lib/ui-store';
 import { SubscriptionCard } from '../../components/settings/subscription-card';
 import type { LaunchFilmMode, WelcomeSequenceMode } from '../../types';
@@ -80,9 +81,19 @@ export default function ReglagesPage() {
     }
     setDeleting(true);
     try {
+      // session courante (jeton Bearer) pour que le serveur vérifie que le compte
+      // supprimé est bien celui de la session authentifiée (M-08)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      try {
+        const sb = await getSupabase();
+        const token = sb ? (await sb.auth.getSession()).data.session?.access_token : undefined;
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        // sans session : appel anonyme, le serveur refuse proprement si configuré
+      }
       await fetch('/api/compte/suppression', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({}),
       });
     } catch {
