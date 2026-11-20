@@ -18,8 +18,8 @@
 Ordre décidé par Vibe Work le 2026-11-20, après fusion de l'audit (M-03 ✅), du film (M-06 ✅) et des correctifs (M-08 ✅) : **M-04 rappels + notifications → M-07 export/import ICS**.
 
 ### M-04 — Rappels & notifications (prochaine mission)
-- **État : À LANCER MAINTENANT** — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2). Rappels avant les événements (notification navigateur, avec report), rappel des tâches du jour, demande de permission propre, réglages dédiés. Périmètre exact et priorités détaillés dans le prompt de Vibe Work, rédigé sur mesure après lecture du rapport Sentinelle et de l'étude marché — l'utilisateur le colle dans la session de l'Adjudant.
-- PR : — · Dernière nouvelle : —.
+- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 17:00 UTC — prompt complet M-04 « Cloche » reçu de l'utilisateur ; M-08 Bouclier ✅ fusionnée `2dd7119`) — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2). Branche `vibe/cloche-rappels`.
+- PR : — · Dernière nouvelle : 2026-11-20 17:00 UTC — mission déléguée à l'agent Cloche (branche `vibe/cloche-rappels`) : notifications navigateur LOCALES uniquement (pas de push serveur) — permission demandée au bon moment, rappel par événement (5 min / 10 min défaut / 30 min / 1 h / 1 jour avant, stocké dans l'événement), moteur local toutes les 30 s en heure locale murale, anti-spam (1 notif/événement, tampon persisté), actions « Terminé » / « Reporter de 5 min », rappel des tâches à 9h paramétrable, section Réglages « Rappels » dédiée, formulation honnête (app ouverte ou en arrière-plan). 263/263 tests à garder verts + nouveaux tests. En attente de sa PR « Cloche : rappels & notifications (M-04) ».
 
 ### M-07 — Export / import ICS
 - **État : EN ATTENTE** (inscrite le 20/11 — à lancer après M-04 ; le prompt sera fourni par l'utilisateur le moment venu).
