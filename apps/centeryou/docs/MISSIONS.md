@@ -16,9 +16,9 @@
 ## Missions en cours
 
 ### M-01 — Apollon · Expérience parfaite (audit + corrections)
-- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 03:14 UTC)
+- **État : PR OUVERTE — EN ATTENTE DU VERDICT DE VIBE WORK** (lancée par l'Adjudant le 2026-11-20 à 03:14 UTC)
 - Objectif : parcours réels de l'app complète (découverte, fidèle, mobile 360 px, voix), corriger tout : bugs, textes FR, états vides, cohérence visuelle, accessibilité, performance. Le prompt complet est fourni dans la session de l'Adjudant.
-- PR : — · Dernière nouvelle : 2026-11-20 03:14 UTC — mission déléguée à l'agent Apollon (branche `vibe/apollon-son-dossier`) : audit des 4 parcours sur https://dev-apps-centeryou.vercel.app, corrections (bugs → textes FR → états vides → cohérence → accessibilité → performance), puis PR base `main`. En attente de sa PR.
+- PR : https://github.com/User313MSI/Centeryou/pull/22 (brouillon, base `main`, branche `vibe/apollon-son-dossier`, 43 fichiers, +582/−193, 5 commits) · Dernière nouvelle : 2026-11-20 03:53 UTC — PR #22 ouverte par Apollon : ~30 corrections (bugs, textes FR, accessibilité), journal dans `docs/journal/apollon.md`, CI verte (tests Vitest + build ✅), mergeable clean, preview Vercel prêt. **En attente de vérification et fusion par Vibe Work** — l'Adjudant ne fusionne pas.
 
 ### M-02 — Bâtisseur · Installateur Windows (.exe)
 - **État : EN ATTENTE DE M-01** (le .exe doit embarquer la version parfaite)
