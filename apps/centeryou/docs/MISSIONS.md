@@ -16,9 +16,9 @@
 ## Missions en cours
 
 ### M-02 — Bâtisseur · Installateur Windows (.exe)
-- **État : ✅ PRÊTE À LANCER — M-01 est fusionnée, la voie est libre.** L'Adjudant lance Bâtisseur dès que l'utilisateur dit « on y go » (prompt complet dans la session de l'Adjudant).
+- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 04:48 UTC, après le « on y go » de l'utilisateur et le feu vert de Vibe Work : M-01 fusionnée, commit `89e4120`)
 - Objectif : configurer electron-builder (NSIS x64), compiler `Centeryou-Setup-1.0.0.exe` 100 % français, le tester (installation, connexion, voix, mode sombre), publier la Release GitHub « Centeryou Bureau v1.0 » (tag `bureau-v1.0`), journal dans `docs/journal/batisseur.md`, PR base `main` (configuration seulement, jamais le .exe dans le dépôt).
-- PR : — · Dernière nouvelle : 2026-11-20 — Vibe Work a donné le feu vert (M-01 fusionnée, commit `89e4120`).
+- PR : — · Dernière nouvelle : 2026-11-20 04:48 UTC — mission déléguée à l'agent Bâtisseur (branche `vibe/batisseur-son-dossier`) : installateur NSIS x64 100 % FR + Release GitHub `bureau-v1.0` + PR base `main` (config seule). En attente de sa PR.
 
 ## Missions terminées (mémoire)
 
