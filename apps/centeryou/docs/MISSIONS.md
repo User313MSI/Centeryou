@@ -17,12 +17,18 @@
 
 ### M-03 — Sentinelle · Audit technique complet (lecture seule, rapport)
 - **État : À LANCER** (inscrite par Vibe Work le 20/11 après l'étude produit/marché — l'utilisateur va dire « on y go » à l'Adjudant)
-- Objectif : audit technique complet SANS aucun correctif de code, sur 7 axes (sécurité, robustesse métier/parseur/récurrences/fuseaux, performance, dette code, accessibilité, tests/CI, cohérence des données), chaque axe noté 0-5 avec preuves. Livrable : journal `docs/journal/sentinelle.md` (contrat + top 15 des risques restants classés impact/effort + verdict « prêt pour le lancement du 1/01/2027 ? ») + PR base main contenant uniquement le rapport. Le prompt complet est fourni dans la session de l'Adjudant (section « Mission M-03 » du rapport d'étude de Vibe Work).
+- Objectif : audit technique complet SANS aucun correctif de code, sur 7 axes (sécurité, robustesse métier/parseur/récurrences/fuseaux, performance, dette code, accessibilité, tests/CI, cohérence des données), chaque axe noté 0-5 avec preuves. Livrable : journal `docs/journal/sentinelle.md` (contrat + top 15 des risques restants classés impact/effort + verdict « prêt pour le lancement du 1/01/2027 ? ») + PR base main contenant uniquement le rapport. Le prompt complet est fourni dans la session de l'Adjudant.
 - Contexte venant de l'étude (Vibe Work, 20/11) : à confirmer précisément pendant l'audit — niveau exact du champ `repeat` (récurrences), comportement des fuseaux horaires, ce que les 176 tests ne couvrent pas (restore corrompu, offline, webhook Stripe), vulnérabilités next 14.2.35 / vitest 2.x (CVE réelles), contraste token voix en mode sombre.
-- PR : — · Dernière nouvelle : attente de lancement. Après M-03, les prochains chantiers pressentis (ordre à confirmer avec l'utilisateur après lecture du rapport) : M-04 rappels + notifications, M-05 export/import ICS.
+- PR : — · Dernière nouvelle : attente de lancement. Ordre pressenti après M-03 (demande utilisateur du 20/11, sauf alerte grave dans le rapport Sentinelle) : **M-05 Paillette** (animations & célébrations, demande de l'utilisateur), puis **M-04 rappels + notifications** (priorité n°1 de l'étude marché), puis M-06 export/import ICS.
 
-### M-04 — Rappels & notifications (pressenti, après M-03)
-- **État : EN ATTENTE** — à spécifier avec l'utilisateur après la lecture du rapport M-03 (priorité n°1 de l'étude marché : chaînon manquant de l'app, notifications = rétention ×2).
+### M-05 — Paillette · Animations & célébrations (demande utilisateur du 20/11)
+- **État : À LANCER juste après M-03** (l'utilisateur a demandé : « animations quand un événement se crée » + petites joies d'usage ; le prompt complet est fourni dans la session de l'Adjudant)
+- Objectif : rendre les moments clés vivants et joyeux, avec goût (jamais de carnival) : création d'événement (apparition élastique + halo + onde violette depuis le point de création), coche de tâche (micro-confettis sobres au niveau du bloc, jamais plein écran, vibration mobile légère si activée), nouveau record dans les statistiques (petit feu d'artifice discret), transitions douces entre vues, sortie douce à la suppression. Un réglage « Animations & célébrations » (activé par défaut) dans les Réglages, et respect total de prefers-reduced-motion (tout devient statique si l'utilisateur le demande au système).
+- Contraintes : aucune nouvelle dépendance (CSS + requestAnimationFrame uniquement), animations en transform/opacity uniquement (pas de re-layout), aucune régression de la vitrine ni du premier chargement, le glisser-déposer et les cibles tactiles restent parfaits pendant et après les animations, tokens inchangés, 176/176 tests intacts, interface 100 % FR. Journal docs/journal/paillette.md, PR base main.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 20/11.
+
+### M-04 — Rappels & notifications (pressenti, après M-05)
+- **État : EN ATTENTE** — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2) ; à lancer après Paillette, sauf alerte grave dans le rapport Sentinelle qui passerait avant.
 - PR : — · Dernière nouvelle : —.
 
 ## Missions terminées (mémoire)
