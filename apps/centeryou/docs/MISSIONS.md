@@ -16,9 +16,9 @@
 ## Missions en cours
 
 ### M-01 — Apollon · Expérience parfaite (audit + corrections)
-- **État : À LANCER** (délegate par l'Adjudant)
+- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 03:14 UTC)
 - Objectif : parcours réels de l'app complète (découverte, fidèle, mobile 360 px, voix), corriger tout : bugs, textes FR, états vides, cohérence visuelle, accessibilité, performance. Le prompt complet est fourni dans la session de l'Adjudant.
-- PR : — · Dernière nouvelle : attente de lancement.
+- PR : — · Dernière nouvelle : 2026-11-20 03:14 UTC — mission déléguée à l'agent Apollon (branche `vibe/apollon-son-dossier`) : audit des 4 parcours sur https://dev-apps-centeryou.vercel.app, corrections (bugs → textes FR → états vides → cohérence → accessibilité → performance), puis PR base `main`. En attente de sa PR.
 
 ### M-02 — Bâtisseur · Installateur Windows (.exe)
 - **État : EN ATTENTE DE M-01** (le .exe doit embarquer la version parfaite)
