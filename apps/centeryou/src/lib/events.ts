@@ -17,8 +17,16 @@ export function eventOccursOn(ev: EventItem, iso: string): boolean {
       return true;
     case 'semaine':
       return weekdayOf(iso) === weekdayOf(ev.date);
-    case 'mois':
-      return parseISO(iso).getDate() === parseISO(ev.date).getDate();
+    case 'mois': {
+      // même règle que addMonthsISO : le quantième est ramené au dernier jour du
+      // mois cible (un 31 apparaît aussi le 30 avril, le 28/29 février…)
+      const d = parseISO(iso);
+      const start = parseISO(ev.date);
+      const months = (d.getFullYear() - start.getFullYear()) * 12 + (d.getMonth() - start.getMonth());
+      if (months < 0) return false;
+      const lastOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      return d.getDate() === Math.min(start.getDate(), lastOfMonth);
+    }
     default:
       return iso === ev.date;
   }
