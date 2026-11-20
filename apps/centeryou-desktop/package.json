@@ -23,7 +23,6 @@
     "appId": "com.centeryou.app",
     "productName": "Centeryou",
     "copyright": "© 2026 Origine",
-    "publisherName": "Origine",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -60,7 +59,7 @@
       "displayLanguageSelector": false,
       "unicode": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": "always",
+      "createStartMenuShortcut": true,
       "shortcutName": "Centeryou",
       "menuCategory": true,
       "runAfterFinish": true,
