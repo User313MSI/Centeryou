@@ -29,8 +29,8 @@ export default function ConfidentialitePage() {
         <LegalList
           items={[
             `Ton prénom (réglages) : saisi par toi, stocké uniquement dans ton navigateur (stockage local).`,
-            'Tes données de planning (événements, tâches, réglages) : stockées uniquement dans ton navigateur (stockage local). Aucune copie n\'est envoyée sur un serveur par l\'application à ce jour.',
-            'Aucun compte, e-mail ou mot de passe n\'est demandé par l\'application pour l\'utiliser.',
+            'Tes données de planning (événements, tâches, réglages) : stockées dans ton navigateur (stockage local). Aucune copie n\'est envoyée sur un serveur, sauf si tu crées un compte en ligne facultatif (voir ci-dessous).',
+            'Aucun compte n\'est nécessaire pour utiliser l\'application : un compte en ligne facultatif (e-mail + mot de passe, hébergé par Supabase) existe uniquement pour la sauvegarde en ligne et la synchronisation multi-appareils ; s\'il est créé, une copie de tes données de planning est alors enregistrée côté serveur, et supprimable à tout moment.',
             'Voix premium (ElevenLabs) : le texte à prononcer et ton prénom (en-tête « x-centeryou-user », uniquement pour le quota journalier) sont envoyés à notre route serveur /api/voix hébergée par Vercel ; le prénom sert uniquement à un compteur en mémoire, jamais enregistré, et le texte est transmis à l\'API d\'ElevenLabs qui renvoie l\'audio. La clé API reste côté serveur et n\'est jamais exposée au navigateur. Sans voix premium (ou en bascule automatique), la voix est produite par ton navigateur (Web Speech API) et aucune donnée ne sort de ton appareil.',
             'Journaux d\'hébergement : comme tout site web, l\'hébergeur (Vercel) peut enregistrer des journaux techniques (adresse IP, date et heure, pages demandées) pour la sécurité et le fonctionnement du service.',
             `Correspondance : si tu nous écris par e-mail (${LEGAL.contactEmail}), ton adresse e-mail et ton message sont utilisés uniquement pour te répondre.`,
@@ -74,13 +74,13 @@ export default function ConfidentialitePage() {
           items={[
             'Vercel : hébergement de l\'application et de ses journaux techniques.',
             'ElevenLabs : synthèse vocale premium, appelée uniquement via notre route serveur /api/voix (la clé API n\'est jamais dans le navigateur) ; le texte prononcé lui est transmis lorsqu\'on utilise la voix premium, depuis les États-Unis, dans le cadre de garanties appropriées (clauses contractuelles types de la Commission européenne).',
-            'Aucun paiement n\'est traité en ligne par l\'application à ce jour ; aucun autre sous-traitant n\'a accès à tes données.',
+            'Paiement de l\'offre Premium (facultative) : traité exclusivement par Stripe, qui reçoit ton e-mail de compte et tes données de paiement — jamais ton planning ni tes tâches. Aucun autre sous-traitant n\'a accès à tes données.',
           ]}
         />
         <p>
-          Si une sauvegarde en ligne de compte (hébergée par exemple chez Supabase) ou un paiement en ligne
-          (par exemple via Stripe) venait à être proposé, cette page serait mise à jour avant leur activation
-          pour décrire précisément les données concernées.
+          La sauvegarde en ligne de compte (Supabase) et le paiement de l'offre Premium (Stripe) sont des
+          fonctionnalités facultatives, décrites ci-dessus : elles ne sont utilisées que si tu les actives,
+          et cette page est mise à jour avant toute évolution de ces traitements.
         </p>
       </LegalSection>
 

@@ -74,7 +74,7 @@ export function BriefCard() {
           <div className="flex items-center gap-2">
             {speaking && (
               <Button variant="secondary" size="sm" onClick={stop} aria-label="Arrêter la lecture du brief">
-                <Square size={14} aria-hidden /> Stop
+                <Square size={14} aria-hidden /> Arrêter
               </Button>
             )}
             <Button size="sm" onClick={listen} disabled={speaking} aria-label="Écouter mon brief du jour">

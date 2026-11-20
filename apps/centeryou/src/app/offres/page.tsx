@@ -6,7 +6,7 @@ import { Card, CardBody, CardHeader } from '../../components/ui/card';
 export const metadata: Metadata = {
   title: 'Offres',
   description:
-    'Centeryou est gratuit, sans abonnement ni publicité : agenda illimité, tâches en langage naturel, assistant vocal et données 100 % locales.',
+    'Centeryou : agenda illimité, tâches en langage naturel, assistant vocal et données 100 % locales, gratuits. Offre Premium optionnelle pour la voix premium illimitée et la synchronisation multi-appareils.',
   alternates: { canonical: '/offres' },
 };
 
@@ -14,14 +14,14 @@ const INCLUDED = [
   'Agenda illimité — vues Jour, Semaine, Mois, glisser-déposer',
   'Tâches en langage naturel (« sport demain 14h », « !lundi réunion »)',
   'Assistant vocal en français + brief du matin à la voix',
-  'Application installable (PWA), utilisable sur téléphone',
+  'Application installable sur téléphone, même hors-ligne',
   'Données 100 % locales : aucun compte serveur, rien d’envoyé',
 ];
 
 const PRINCIPLES = [
-  'Aucun abonnement, aucune publicité, aucune revente de données',
+  'Aucune publicité, aucune revente de données, aucun pistage (aucun cookie tiers, aucune mesure d’audience externe)',
+  'Gratuit par défaut : aucune carte bancaire demandée pour commencer',
   'Stockage uniquement dans ce navigateur — effaçable en un clic dans Réglages',
-  'Pas de pistage : aucun cookie tiers, aucune mesure d’audience externe',
 ];
 
 export default function OffresPage() {
@@ -30,7 +30,7 @@ export default function OffresPage() {
       <header>
         <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Offres</h1>
         <p className="mt-1 text-sm font-semibold text-muted">
-          Une seule offre, simple : tout est gratuit, et tout reste chez toi.
+          L’essentiel est gratuit, et tout reste chez toi par défaut. Une offre Premium optionnelle existe pour aller plus loin.
         </p>
       </header>
 
@@ -43,7 +43,7 @@ export default function OffresPage() {
           <ul className="flex flex-col gap-2">
             {INCLUDED.map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm text-muted">
-                <Check size={16} aria-hidden className="mt-0.5 shrink-0 text-voice" />
+                <Check size={16} aria-hidden className="mt-0.5 shrink-0 text-voicetext" />
                 {item}
               </li>
             ))}
@@ -75,11 +75,16 @@ export default function OffresPage() {
             ))}
           </ul>
           <p className="mt-4 text-xs text-muted">
-            Centeryou est local-first : il n’y a aucun compte serveur, donc aucune offre payante aujourd’hui. Tu peux aussi{' '}
+            Centeryou est 100 % local par défaut : sans compte, rien ne quitte ton appareil. Tu peux aussi{' '}
             <Link href="/demo" className="font-semibold text-primarydark underline-offset-2 hover:underline">
               essayer la démo
             </Link>{' '}
-            sans compte.
+            sans compte. L’offre Premium optionnelle (voix premium illimitée, sauvegarde en ligne et
+            synchronisation multi-appareils) se gère dans{' '}
+            <Link href="/reglages" className="font-semibold text-primarydark underline-offset-2 hover:underline">
+              Réglages → Abonnement
+            </Link>
+            .
           </p>
         </CardBody>
       </Card>

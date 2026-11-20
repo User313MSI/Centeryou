@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
+import { LEGAL } from '../../lib/legal';
 
 export const metadata: Metadata = {
   title: 'Mentions légales & confidentialité',
@@ -14,7 +15,7 @@ export default function LegalPage() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Mentions légales & confidentialité</h1>
-        <p className="mt-1 text-sm font-semibold text-muted">Dernière mise à jour : janvier 2026.</p>
+        <p className="mt-1 text-sm font-semibold text-muted">Dernière mise à jour : {LEGAL.cguUpdated}.</p>
       </header>
 
       <Card>
@@ -23,18 +24,18 @@ export default function LegalPage() {
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-muted">
           <p>
-            <strong className="text-ink">Centeryou</strong> est édité par <strong className="text-ink">NovaLoom Studio</strong>{' '}
-            (marque du studio, définie dans <code>brand.config.json</code> à la racine du dépôt).
+            <strong className="text-ink">Centeryou</strong> est édité à titre personnel, sans société immatriculée.
+            Contact : <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-primarydark underline-offset-2 hover:underline">{LEGAL.contactEmail}</a>.
           </p>
           <p>
-            Contact : dépôt GitHub{' '}
+            Dépôt GitHub :{' '}
             <a
-              href="https://github.com/User313MSI/Dev-Apps"
+              href="https://github.com/User313MSI/Centeryou"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-primarydark underline-offset-2 hover:underline"
             >
-              User313MSI/Dev-Apps
+              User313MSI/Centeryou
             </a>
             .
           </p>
@@ -57,10 +58,11 @@ export default function LegalPage() {
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-muted">
           <p>
-            Centeryou est <strong className="text-ink">local-first</strong> : toutes les données (événements, tâches,
+            Centeryou est <strong className="text-ink">100 % local par défaut</strong> : toutes les données (événements, tâches,
             prénom, réglages) sont stockées uniquement dans le <code>localStorage</code> de votre navigateur (clé{' '}
-            <code>centeryou-v1</code>). Aucun compte serveur n’existe, aucune donnée n’est envoyée, collectée, vendue ou
-            partagée.
+            <code>centeryou-v1</code>). Aucune donnée n’est envoyée, collectée, vendue ou partagée. Un compte en ligne
+            facultatif (sauvegarde chiffrée chez notre hébergeur) et un paiement facultatif (offre Premium) peuvent
+            être activés ponctuellement : voir la <Link href="/confidentialite" className="font-semibold text-primarydark underline-offset-2 hover:underline">politique de confidentialité</Link>.
           </p>
           <p>
             Aucun cookie de pistage ni outil de mesure d’audience externe n’est utilisé. Vous pouvez effacer toutes vos

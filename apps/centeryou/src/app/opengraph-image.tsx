@@ -2,6 +2,11 @@ import { ImageResponse } from 'next/og';
 import { colors } from '../../design/tokens';
 import { SITE_NAME, SLOGAN } from '../lib/site';
 
+// Runtime edge : les assets (police, wasm) sont embarqués, aucune lecture disque —
+// le prerender fonctionne ainsi sur toutes les plateformes (Windows inclus), où le
+// runtime node de next/og échoue (fileURLToPath sur un chemin Windows).
+export const runtime = 'edge';
+
 export const alt = `${SITE_NAME} — ${SLOGAN}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

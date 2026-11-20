@@ -17,7 +17,7 @@ import { calendarOnDate } from '../../lib/events';
 import { formatHoursFr, statsWeeks } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 
-const SUGGESTIONS = ['sport demain 14h', 'dentist mardi 10h30 santé', '!lundi réunion', 'rapport vendredi'];
+const SUGGESTIONS = ['sport demain 14h', 'médecin mardi 10h30 santé', '!lundi réunion', 'rapport vendredi'];
 
 export function AujourdhuiView() {
   const today = todayISO();
@@ -75,7 +75,7 @@ export function AujourdhuiView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <ChartLine size={18} aria-hidden className="text-voice" /> Ma progression
+            <ChartLine size={18} aria-hidden className="text-voicetext" /> Ma progression
           </h2>
         </CardHeader>
         <CardBody>
@@ -87,13 +87,13 @@ export function AujourdhuiView() {
         <CardBody>
           <Link
             href="/stats"
-            aria-label="Voir mes stats — ton temps, en clair"
+            aria-label="Voir mes statistiques — ton temps, en clair"
             className="group flex min-h-11 items-center justify-between gap-3 rounded-card px-2 transition-colors duration-fast ease-out hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <span className="flex items-center gap-2.5">
               <ChartPie size={18} aria-hidden className="text-primary" />
               <span>
-                <span className="block text-sm font-bold text-ink">Tes stats</span>
+                <span className="block text-sm font-bold text-ink">Tes statistiques</span>
                 <span className="block text-xs text-muted">Ton temps, en clair</span>
               </span>
             </span>

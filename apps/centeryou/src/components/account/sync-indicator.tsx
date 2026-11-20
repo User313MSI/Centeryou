@@ -46,7 +46,7 @@ export function SyncIndicator() {
       ) : syncStatus === 'offline' ? (
         <CloudOff size={13} aria-hidden />
       ) : syncStatus === 'saved' || syncStatus === 'restored' ? (
-        <Check size={13} aria-hidden className="text-voice" />
+        <Check size={13} aria-hidden className="text-voicetext" />
       ) : (
         <Cloud size={13} aria-hidden />
       )}

@@ -35,7 +35,9 @@ export default function TachesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Tâches</h1>
         <p className="text-sm font-semibold text-muted">
-          {activeCount} active{activeCount > 1 ? 's' : ''} sur {tasks.length}
+          {tasks.length === 0
+            ? 'Aucune tâche pour l’instant'
+            : `${activeCount} active${activeCount > 1 ? 's' : ''} sur ${tasks.length}`}
         </p>
       </div>
 
@@ -43,7 +45,7 @@ export default function TachesPage() {
         <CardBody className="pt-5">
           <QuickAdd />
           <p className="mt-2 text-xs text-muted">
-            Astuce : « sport demain 14h » · « dentist mardi 10h30 santé » · « rapport vendredi » · « !lundi réunion »
+            Astuce : « sport demain 14h » · « médecin mardi 10h30 santé » · « rapport vendredi » · « !lundi réunion »
           </p>
         </CardBody>
       </Card>

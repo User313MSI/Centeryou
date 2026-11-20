@@ -12,10 +12,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(here, '..');
 const outDir = path.join(appRoot, '.test-build');
 
+// On appelle le tsc local du projet via l'exécutable Node courant : fonctionne
+// partout (Windows inclus), là où `spawnSync('npx', …)` échoue (npx = npx.cmd
+// introuvable sans shell sous Windows).
+const tscBin = path.join(appRoot, 'node_modules', 'typescript', 'bin', 'tsc');
+
 execFileSync(
-  'npx',
+  process.execPath,
   [
-    'tsc',
+    tscBin,
     'src/lib/dates.ts',
     'src/lib/utils.ts',
     'src/lib/parser.ts',

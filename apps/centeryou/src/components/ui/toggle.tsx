@@ -22,7 +22,8 @@ export function Toggle({
       id={id}
       onClick={() => onChange(!checked)}
       className={cx(
-        'relative min-h-11 min-w-11 rounded-pill transition-colors duration-normal ease-out',
+        // largeur fixe 48 px : le curseur (20 px) en position active (left 26 px) tient dans le bouton
+        'relative h-7 min-h-11 w-12 rounded-pill transition-colors duration-normal ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
         checked ? 'bg-primarydark' : 'bg-line',
       )}

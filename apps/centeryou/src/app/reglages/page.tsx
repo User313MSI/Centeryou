@@ -10,7 +10,6 @@ import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
 import { Toggle } from '../../components/ui/toggle';
 import { BackupError, downloadBackup, parseBackup, readBackupFile, serializeBackup, type BackupPayload } from '../../lib/backup';
-import { todayISO } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { SubscriptionCard } from '../../components/settings/subscription-card';
@@ -21,8 +20,6 @@ const selectClass =
 
 export default function ReglagesPage() {
   const settings = useStore((s) => s.settings);
-  const events = useStore((s) => s.events);
-  const tasks = useStore((s) => s.tasks);
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
   const restoreBackup = useStore((s) => s.restoreBackup);
@@ -72,25 +69,6 @@ export default function ReglagesPage() {
     pushToast({ message: 'Sauvegarde restaurée : tes données ont été remplacées par celles du fichier.' });
   };
 
-  const exportJson = () => {
-    const data = {
-      app: 'centeryou',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      events,
-      tasks,
-      settings,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `centeryou-export-${todayISO()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    pushToast({ message: 'Export JSON téléchargé ✓' });
-  };
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -108,7 +86,7 @@ export default function ReglagesPage() {
         body: JSON.stringify({}),
       });
     } catch {
-      pushToast({ message: 'Suppression serveur indisponible, données locales supprimées' });
+      pushToast({ message: 'Suppression serveur indisponible — tes données locales, elles, ont bien été supprimées.' });
     }
     deleteAccount();
     setConfirmDelete(false);
@@ -209,7 +187,7 @@ export default function ReglagesPage() {
           </Field>
           <p className="mt-2 text-xs text-muted">
             Plein écran animé qui résume ta journée à l’arrivée. La voix ne se lance jamais toute seule : bouton
-            « ▶ Écouter le résumé » uniquement.
+            « Écouter le résumé » uniquement.
           </p>
         </CardBody>
       </Card>
@@ -234,22 +212,6 @@ export default function ReglagesPage() {
               </p>
             </div>
             <Toggle checked={settings.voice} onChange={(v) => updateSettings({ voice: v })} label="Assistant vocal" id="toggle-voix" />
-          </div>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <h2 className="text-base font-bold text-ink">Export des données</h2>
-        </CardHeader>
-        <CardBody className="flex flex-col gap-3">
-          <p className="text-sm text-muted">
-            Télécharge toutes tes données (événements, tâches, réglages) dans un fichier JSON.
-          </p>
-          <div>
-            <Button variant="secondary" size="sm" onClick={exportJson}>
-              <Download size={15} aria-hidden /> Télécharger mes données (JSON)
-            </Button>
           </div>
         </CardBody>
       </Card>
@@ -285,7 +247,7 @@ export default function ReglagesPage() {
           {confirmRestore && pendingRestore && (
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="danger" size="sm" onClick={applyRestore}>
-                Confirmer la restauration ({pendingRestore.events.length} événéments, {pendingRestore.tasks.length} tâches)
+                Confirmer la restauration ({pendingRestore.events.length} événement{pendingRestore.events.length > 1 ? 's' : ''}, {pendingRestore.tasks.length} tâche{pendingRestore.tasks.length > 1 ? 's' : ''})
               </Button>
               <Button
                 variant="ghost"
@@ -338,7 +300,7 @@ export default function ReglagesPage() {
           {confirmDelete ? (
             <div className="flex flex-col gap-2 rounded-card border border-danger/40 bg-danger/5 px-4 py-3">
               <p className="text-sm font-semibold text-ink">
-                Es-tu sûr(e) ? Cette action est définitive et ne peut pas être annulée.
+                Es-tu sûr de vouloir continuer ? Cette action est définitive et ne peut pas être annulée.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button variant="danger" size="sm" onClick={onDeleteAccount} disabled={deleting}>

@@ -7,14 +7,14 @@ import { Button } from '../../components/ui/button';
 import { Card, CardBody } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Logo } from '../../components/brand/logo';
-import { formatDayShort, formatTimeFr } from '../../lib/dates';
+import { formatDayShort, formatTimeFr, minutesOf, timeOf } from '../../lib/dates';
 import { parseInput, type ParsedInput } from '../../lib/parser';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { playBlip } from '../../lib/voice';
 import { cx } from '../../lib/utils';
 
-const EVENT_SUGGESTIONS = ['sport demain 14h', 'dentist mardi 10h30 santé', '!lundi réunion'];
+const EVENT_SUGGESTIONS = ['sport demain 14h', 'médecin mardi 10h30 santé', '!lundi réunion'];
 
 const STEPS = [
   { icon: Hand, title: 'Bienvenue sur Centeryou !', question: 'Comment tu t’appelles ?' },
@@ -32,6 +32,7 @@ export default function BienvenuePage() {
   const router = useRouter();
   const updateSettings = useStore((s) => s.updateSettings);
   const addTask = useStore((s) => s.addTask);
+  const addEvent = useStore((s) => s.addEvent);
   const sounds = useStore((s) => s.settings.sounds);
   const pushToast = useUiStore((s) => s.pushToast);
 
@@ -62,7 +63,13 @@ export default function BienvenuePage() {
     const text = raw.trim();
     if (!text) return;
     const p = parseInput(text);
-    addTask({ title: p.title, date: p.date, time: p.time, category: p.category, priority: p.priority });
+    // cohérent avec la commande vocale « ajoute… » : une heure = événement, sinon tâche
+    if (p.time) {
+      const end = timeOf(Math.min(minutesOf(p.time) + 60, 24 * 60 - 1));
+      addEvent({ title: p.title, date: p.date, start: p.time, end, category: p.category, repeat: 'jamais' });
+    } else {
+      addTask({ title: p.title, date: p.date, time: null, category: p.category, priority: p.priority });
+    }
     if (sounds) playBlip(720);
     pushToast({
       message: `C’est noté : « ${p.title} » — ${formatDayShort(p.date)}${p.time ? ` à ${formatTimeFr(p.time)}` : ''}.`,

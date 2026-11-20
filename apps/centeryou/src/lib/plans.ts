@@ -30,7 +30,8 @@ export const PLANS: Record<PlanId, PlanOffer> = {
       'Planning et tâches illimités',
       'Voix du navigateur (gratuite)',
       'Assistant vocal (commandes)',
-      '1 appareil',
+      'Mode sombre inclus',
+      'Données 100 % locales (1 appareil)',
     ],
     ctaLabel: 'Offre actuelle',
   },
@@ -41,7 +42,7 @@ export const PLANS: Record<PlanId, PlanOffer> = {
     tagline: 'Tout Centeryou, sans limite.',
     features: [
       'Voix premium illimitée (quota serveur)',
-      'Mode sombre',
+      'Sauvegarde en ligne avec un compte',
       'Synchronisation multi-appareils',
       'Toutes les fonctionnalités Découverte',
     ],

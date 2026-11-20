@@ -27,6 +27,7 @@ export function ProductMock() {
       onTaskToggle={noop}
       onDropAt={noop}
       onDayClick={noop}
+      readOnly
     />
   );
 }

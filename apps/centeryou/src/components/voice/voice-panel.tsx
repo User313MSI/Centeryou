@@ -78,7 +78,7 @@ export function VoicePanel() {
       )}
       {!voiceEnabled && (
         <p className="w-full max-w-md rounded-card bg-line/60 px-4 py-3 text-center text-sm text-ink" role="status">
-          Le réglage « Assistant vocal » est désactivé : les réponses s’affichent en texte dans Réglages.
+          Le réglage « Assistant vocal » est désactivé : les réponses s’affichent en texte dans cette fenêtre.
         </p>
       )}
 

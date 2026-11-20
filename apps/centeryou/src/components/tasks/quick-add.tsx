@@ -4,6 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { categoryLabel } from '../../lib/categories';
+
 import { formatDayShort, formatTimeFr } from '../../lib/dates';
 import { parseInput } from '../../lib/parser';
 import { useStore } from '../../lib/store';
@@ -11,7 +13,7 @@ import { useUiStore } from '../../lib/ui-store';
 import { playBlip } from '../../lib/voice';
 import { cx } from '../../lib/utils';
 
-const DEFAULT_PLACEHOLDER = 'Ajoute vite : « sport demain 14h », « dentist mardi 10h30 santé », « !lundi réunion »…';
+const DEFAULT_PLACEHOLDER = 'Ajoute vite : « sport demain 14h », « médecin mardi 10h30 santé », « !lundi réunion »…';
 const LARGE_PLACEHOLDER = 'Ajoute vite : sport demain 14h…';
 
 export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean; suggestions?: string[] }) {
@@ -27,7 +29,7 @@ export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean;
     addTask({ title: p.title, date: p.date, time: p.time, category: p.category, priority: p.priority });
     if (sounds) playBlip(720);
     pushToast({
-      message: `Tâche ajoutée : « ${p.title} » — ${formatDayShort(p.date)}${p.time ? ` à ${formatTimeFr(p.time)}` : ''}${p.priority === 'haute' ? ' · priorité haute' : ''}${p.category !== 'autre' ? ` · ${p.category}` : ''}`,
+      message: `Tâche ajoutée : « ${p.title} » — ${formatDayShort(p.date)}${p.time ? ` à ${formatTimeFr(p.time)}` : ''}${p.priority === 'haute' ? ' · priorité haute' : ''}${p.category !== 'autre' ? ` · ${categoryLabel(p.category)}` : ''}`,
     });
     setValue('');
   };
