@@ -6,9 +6,11 @@ import { CATEGORY_LIST } from '../../lib/categories';
 import { DAY_END, DAY_START, endMinutesOf, formatRangeFr, minutesOf, timeOf, todayISO } from '../../lib/dates';
 import { findConflict } from '../../lib/events';
 
+import { REMINDER_LEADS, REMINDER_LEAD_LABELS } from '../../lib/rappel-leads';
+
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
-import type { Category, Repeat } from '../../types';
+import type { Category, ReminderLead, Repeat } from '../../types';
 import { clamp, cx } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { Dialog } from '../ui/dialog';
@@ -50,7 +52,9 @@ export function EventDialog() {
   const [end, setEnd] = useState(timeOf(minutesOf(nextSlot()) + 60));
   const [category, setCategory] = useState<Category>('autre');
   const [repeat, setRepeat] = useState<Repeat>('jamais');
+  const [reminder, setReminder] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const reminderDefault = useStore((s) => s.settings.reminderDefaultMinutes);
 
   useEffect(() => {
     if (!eventDialog.open) return;
@@ -62,6 +66,7 @@ export function EventDialog() {
       setEnd(editing.end);
       setCategory(editing.category);
       setRepeat(editing.repeat);
+      setReminder(editing.reminderMinutes != null ? String(editing.reminderMinutes) : '');
     } else {
       const d = eventDialog.date ?? todayISO();
       const s = eventDialog.start ?? nextSlot();
@@ -71,8 +76,10 @@ export function EventDialog() {
       setEnd(timeOf(Math.min(minutesOf(s) + 60, 24 * 60 - 1)));
       setCategory('autre');
       setRepeat('jamais');
+      // nouveau rappel proposé par défaut = réglage « Rappels » (10 min avant par défaut)
+      setReminder(String(reminderDefault));
     }
-  }, [eventDialog, editing]);
+  }, [eventDialog, editing, reminderDefault]);
 
   const conflict = useMemo(() => {
     if (!date || !start || !end) return null;
@@ -101,12 +108,27 @@ export function EventDialog() {
       );
       return;
     }
+    const lead = reminder === '' ? null : (Number(reminder) as ReminderLead);
     if (editing) {
-      updateEvent(editing.id, { title: t, date, start, end, category, repeat });
+      updateEvent(editing.id, { title: t, date, start, end, category, repeat, reminderMinutes: lead });
       pushToast({ message: `Événement modifié : « ${t} »` });
     } else {
-      addEvent({ title: t, date, start, end, category, repeat });
+      addEvent({ title: t, date, start, end, category, repeat, reminderMinutes: lead });
       pushToast({ message: `Événement ajouté : « ${t} »` });
+    }
+    // demande de permission AU BON MOMENT : première création/modification d'événement
+    // AVEC rappel activé (geste utilisateur = ce clic). Jamais de popup au chargement.
+    if (lead !== null) {
+      void import('../../lib/rappels').then(async (m) => {
+        const res = await m.requestRappelPermission();
+        if (res === 'denied') {
+          pushToast({
+            message:
+              'Notifications bloquées par ton navigateur : réactive-les dans les réglages du site (icône cadenas de la barre d’adresse), puis « Notifications » → « Autoriser ».',
+            duration: 10000,
+          });
+        }
+      });
     }
     closeEventDialog();
   };
@@ -128,6 +150,7 @@ export function EventDialog() {
           end: editing.end,
           category: editing.category,
           repeat: editing.repeat,
+          reminderMinutes: editing.reminderMinutes ?? null,
         });
       },
     });
@@ -202,6 +225,21 @@ export function EventDialog() {
             ))}
           </select>
         </Field>
+        <Field label="Me rappeler" htmlFor="ev-reminder">
+          <select id="ev-reminder" value={reminder} onChange={(e) => setReminder(e.target.value)} className={selectClass}>
+            <option value="">Sans rappel</option>
+            {REMINDER_LEADS.map((l) => (
+              <option key={l} value={l}>
+                {REMINDER_LEAD_LABELS[l]}
+                {l === reminderDefault ? ' (défaut)' : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <p className="-mt-2 text-xs text-muted">
+          Notification locale envoyée par ton navigateur quand Centeryou est ouvert ou en arrière-plan — pas si
+          l’application est complètement fermée.
+        </p>
         {error && (
           <p role="alert" className="rounded-card bg-danger/10 px-4 py-3 text-sm font-semibold text-ink">
             {error}

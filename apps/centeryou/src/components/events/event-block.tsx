@@ -92,6 +92,17 @@ export function EventBlock({
     };
   }, [lastDrop, instance.id]);
 
+  // mise en vedette après un clic sur une notification de rappel (M-04) : halo pulsant
+  // (statique si prefers-reduced-motion / animations désactivées, voir globals.css)
+  const highlightEventId = useUiStore((s) => s.highlightEventId);
+  const highlightAt = useUiStore((s) => s.highlightAt);
+  const highlighted = instance.kind === 'event' && highlightEventId === instance.id && Date.now() - highlightAt < 9000;
+  useEffect(() => {
+    if (highlighted && blockRef.current) blockRef.current.scrollIntoView({ block: 'center' });
+    // une seule fois par mise en vedette
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlighted]);
+
   // Retours précoces APRÈS tous les hooks (règles des hooks React, correctif M-08) :
   // un bloc qui passe de visible à masqué (ou l'inverse) ne doit jamais exécuter
   // moins de hooks au rendu suivant — sinon React lève « fewer hooks ».
@@ -178,6 +189,7 @@ export function EventBlock({
           fresh && 'animate-event-celebrate',
           bouncing && 'animate-drop-settle',
           exiting && 'animate-exit',
+          highlighted && 'rappel-halo',
         )}
         style={{
           top,

@@ -10,6 +10,12 @@ export type LaunchFilmMode = 'always' | 'daily' | 'off';
 /** Thème d'apparence : clair (défaut) ou sombre, mémorisé */
 export type Theme = 'clair' | 'sombre';
 
+/**
+ * Délai de rappel d'un événement, en minutes avant le début :
+ * 5 min, 10 min (défaut), 30 min, 1 h (60) ou 1 jour (1440).
+ */
+export type ReminderLead = 5 | 10 | 30 | 60 | 1440;
+
 export interface EventItem {
   id: string;
   title: string;
@@ -22,6 +28,11 @@ export interface EventItem {
   category: Category;
   repeat: Repeat;
   createdAt: number;
+  /**
+   * Rappel local avant l'événement, en minutes avant le début.
+   * Champ optionnel : absent ou null = pas de rappel (données d'avant M-04 incluses).
+   */
+  reminderMinutes?: ReminderLead | null;
 }
 
 export interface TaskItem {
@@ -63,4 +74,12 @@ export interface Settings {
   darkMode: boolean;
   /** animations & célébrations (apparitions douces, micro-confettis, petits feux d'artifice) — activées par défaut */
   animations: boolean;
+  /** rappels (notifications locales du navigateur) — activés par défaut, mais jamais envoyés sans la permission navigateur */
+  reminders: boolean;
+  /** délai de rappel proposé par défaut dans le dialogue d'événement (10 min par défaut) */
+  reminderDefaultMinutes: ReminderLead;
+  /** rappel récapitulatif des tâches du jour non terminées */
+  tasksReminder: boolean;
+  /** heure locale du rappel des tâches du jour, « HH:mm » (09:00 par défaut) */
+  tasksReminderTime: string;
 }

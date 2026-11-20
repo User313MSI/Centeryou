@@ -1,6 +1,8 @@
 import type { Category, EventItem, Priority, Repeat, Settings, TaskItem } from '../types';
 import { defaultSettings } from './defaults';
 
+import { isReminderLead } from './rappel-leads';
+
 const CATEGORIES: Category[] = ['travail', 'perso', 'sante', 'focus', 'autre'];
 const PRIORITIES: Priority[] = ['basse', 'moyenne', 'haute'];
 const REPEATS: Repeat[] = ['jamais', 'jour', 'semaine', 'mois'];
@@ -31,7 +33,7 @@ export function sanitizeEvents(input: unknown): EventItem[] {
     if (!ISO_DATE.test(date) || !HH_MM.test(start) || !HH_MM.test(end)) continue;
     if (!CATEGORIES.includes(v.category as Category)) continue;
     if (!REPEATS.includes(v.repeat as Repeat)) continue;
-    out.push({
+    const ev: EventItem = {
       id,
       title,
       date,
@@ -40,7 +42,11 @@ export function sanitizeEvents(input: unknown): EventItem[] {
       category: v.category as Category,
       repeat: v.repeat as Repeat,
       createdAt: typeof v.createdAt === 'number' && Number.isFinite(v.createdAt) ? v.createdAt : Date.now(),
-    });
+    };
+    // rappel (M-04) : champ optionnel — absent on le laisse absent (données d'avant M-04),
+    // présent mais invalide on le répare en « pas de rappel » (null)
+    if (v.reminderMinutes !== undefined) ev.reminderMinutes = isReminderLead(v.reminderMinutes) ? v.reminderMinutes : null;
+    out.push(ev);
   }
   return out;
 }
@@ -98,5 +104,13 @@ export function sanitizeSettings(input: unknown): Settings {
   if (typeof input.darkMode === 'boolean') base.darkMode = input.darkMode;
   // champ ajouté ensuite (Paillette : animations & célébrations) : valeur sûre garantie
   if (typeof input.animations === 'boolean') base.animations = input.animations;
+  // champs ajoutés ensuite (Cloche : rappels & notifications M-04) : valeurs sûres garanties
+  if (typeof input.reminders === 'boolean') base.reminders = input.reminders;
+  if (isReminderLead(input.reminderDefaultMinutes)) base.reminderDefaultMinutes = input.reminderDefaultMinutes;
+  if (typeof input.tasksReminder === 'boolean') base.tasksReminder = input.tasksReminder;
+  if (typeof input.tasksReminderTime === 'string' && HH_MM.test(input.tasksReminderTime)) {
+    const [h, m] = input.tasksReminderTime.split(':').map(Number);
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) base.tasksReminderTime = input.tasksReminderTime;
+  }
   return base;
 }
