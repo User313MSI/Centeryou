@@ -1,8 +1,9 @@
 'use client';
 
 import type { EventItem, Settings, TaskItem } from '../types';
-import { defaultSettings, useStore } from './store';
+import { useStore } from './store';
 import { getSupabase } from './supabase';
+import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
 import { isPremiumActive } from './subscription';
 
 /**
@@ -85,10 +86,12 @@ function isBackupPayload(p: unknown): p is BackupPayload {
 export function applyPayload(p: BackupPayload): void {
   applyingRemote = true;
   try {
+    // sanitation item par item, comme la sauvegarde locale (M-08) : un payload
+    // distant malformé est réparé en douceur, jamais persisté tel quel
     useStore.setState({
-      events: p.events,
-      tasks: p.tasks,
-      settings: { ...defaultSettings, ...p.settings },
+      events: sanitizeEvents(p.events),
+      tasks: sanitizeTasks(p.tasks),
+      settings: sanitizeSettings(p.settings),
     });
     writeSyncMeta(p.savedAt);
   } finally {
@@ -162,6 +165,24 @@ export async function syncNow(userId: string): Promise<SyncOutcome> {
 let stripeSyncStarted = false;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 
+/**
+ * En-têtes d'authentification pour /api/sync : la session Supabase courante
+ * (jeton Bearer) quand elle existe, afin que le serveur vérifie que l'appelant
+ * est bien le propriétaire du compte (M-08). Sans session, aucun en-tête :
+ * le serveur refuse proprement si Supabase est configuré.
+ */
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const sb = await getSupabase();
+    if (!sb) return {};
+    const { data } = await sb.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 function snapshotState() {
   const s = useStore.getState();
   return { events: s.events, tasks: s.tasks, settings: s.settings };
@@ -174,7 +195,7 @@ async function pushStripe(): Promise<void> {
   try {
     await fetch('/api/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({
         customerId: s.subscription.customerId,
         updatedAt,
@@ -202,18 +223,21 @@ export async function pullSync(): Promise<void> {
   try {
     const res = await fetch(`/api/sync?customerId=${encodeURIComponent(s.subscription.customerId)}`, {
       cache: 'no-store',
+      headers: await authHeaders(),
     });
     if (!res.ok) return;
     const data = (await res.json().catch(() => ({}))) as {
       snapshot?: { updatedAt: number; state?: { events?: unknown; tasks?: unknown; settings?: unknown } } | null;
     };
     const snap = data.snapshot;
-    if (!snap || snap.updatedAt <= s.syncUpdatedAt) return;
+    if (!snap || typeof snap.updatedAt !== 'number' || snap.updatedAt <= s.syncUpdatedAt) return;
     const st = snap.state ?? {};
+    // sanitation item par item du snapshot distant (M-08) : mêmes sanitizers que
+    // la sauvegarde locale ; un champ absent/non tableau conserve l'état local
     useStore.setState((state) => ({
-      events: Array.isArray(st.events) ? (st.events as typeof state.events) : state.events,
-      tasks: Array.isArray(st.tasks) ? (st.tasks as typeof state.tasks) : state.tasks,
-      settings: { ...defaultSettings, ...(st.settings as Partial<typeof state.settings> | undefined) },
+      events: Array.isArray(st.events) ? sanitizeEvents(st.events) : state.events,
+      tasks: Array.isArray(st.tasks) ? sanitizeTasks(st.tasks) : state.tasks,
+      settings: sanitizeSettings(st.settings),
       syncUpdatedAt: snap.updatedAt,
     }));
   } catch {

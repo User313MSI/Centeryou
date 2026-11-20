@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
 
+import { supabaseServerConfig, verifySessionUser } from '../../../../lib/server/auth';
+
+/**
+ * POST /api/compte/suppression
+ *
+ * Suppression du compte serveur (table `comptes` Supabase) : UNIQUEMENT pour
+ * la session authentifiée correspondante (M-08, audit Sentinelle n°2). Le
+ * navigateur envoie « Authorization: Bearer <access_token> » de sa session
+ * Supabase ; l'e-mail supprimé est celui de la session — jamais une adresse
+ * fournie dans le corps de la requête. Sans session valide → 401, aucun
+ * DELETE n'est exécuté. Si aucun compte serveur n'est configuré → accusé de
+ * réception sans effet de bord (comportement inchangé).
+ */
 export async function POST(req: Request) {
   let email: string | undefined;
   try {
@@ -9,18 +22,31 @@ export async function POST(req: Request) {
     email = undefined;
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL ?? '';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  const cfg = supabaseServerConfig();
 
-  if (supabaseUrl && serviceKey && email) {
-    const base = supabaseUrl.replace(/\/$/, '');
-    const query = `?select=id&email=eq.${encodeURIComponent(email)}`;
+  if (cfg) {
+    const user = await verifySessionUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { ok: false, serverDeleted: false, error: 'session_requise' },
+        { status: 401 },
+      );
+    }
+    // l'e-mail supprimé est celui de la session authentifiée
+    const target = user.email;
+    if (email && email.trim().toLowerCase() !== target.trim().toLowerCase()) {
+      return NextResponse.json(
+        { ok: false, serverDeleted: false, error: 'compte_different_de_la_session' },
+        { status: 403 },
+      );
+    }
+    const query = `?select=id&email=eq.${encodeURIComponent(target)}`;
     try {
-      const res = await fetch(`${base}/rest/v1/comptes${query}`, {
+      const res = await fetch(`${cfg.url}/rest/v1/comptes${query}`, {
         method: 'DELETE',
         headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
+          apikey: cfg.key,
+          Authorization: `Bearer ${cfg.key}`,
           Prefer: 'return=representation',
         },
       });
@@ -42,8 +68,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     serverDeleted: false,
-    reason: supabaseUrl && serviceKey
-      ? 'aucune adresse e-mail fournie : aucune donnée serveur identifiée'
-      : 'aucun compte serveur configure a ce jour',
+    reason: 'aucun compte serveur configure a ce jour',
   });
 }
