@@ -10,6 +10,9 @@ export const defaultSettings: Settings = {
   briefShownDate: '',
   welcomeSequence: 'daily',
   welcomeShownDate: '',
+  launchFilm: 'daily',
+  launchFilmShownDate: '',
+  launchFilmVoice: true,
   darkMode: false,
   animations: true,
 };

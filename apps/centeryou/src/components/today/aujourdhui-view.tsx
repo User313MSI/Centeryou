@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ArrowRight, CalendarHeart, ChartLine, ChartPie, ListChecks } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../ui/card';
@@ -11,7 +13,8 @@ import { QuickAdd } from '../tasks/quick-add';
 import { TaskItemRow } from '../tasks/task-item';
 import { BriefCard } from './brief-card';
 import { ProgressBar } from './progress-bar';
-import { WelcomeSequence } from './welcome-sequence';
+// film de lancement chargé avec la page Aujourd'hui, en lazy (chunk séparé, zéro régression de First Load JS)
+const WelcomeSequence = dynamic(() => import('./welcome-sequence').then((m) => m.WelcomeSequence), { ssr: false });
 import { formatDayLong, greetingFor, todayISO } from '../../lib/dates';
 import { calendarOnDate } from '../../lib/events';
 import { formatHoursFr, statsWeeks } from '../../lib/stats';
