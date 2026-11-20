@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Download, Moon, Sparkles, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, Download, Moon, Sparkles, Trash2, Upload, Volume2 } from 'lucide-react';
 import Link from 'next/link';
 import { AccountSection } from '../../components/account/account-section';
 import { Button } from '../../components/ui/button';
@@ -13,7 +13,7 @@ import { BackupError, downloadBackup, parseBackup, readBackupFile, serializeBack
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { SubscriptionCard } from '../../components/settings/subscription-card';
-import type { WelcomeSequenceMode } from '../../types';
+import type { LaunchFilmMode, WelcomeSequenceMode } from '../../types';
 
 const selectClass =
   'w-full min-h-11 rounded-card border border-line bg-surface px-4 text-base text-ink transition-colors duration-fast ease-out focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
@@ -203,7 +203,11 @@ export default function ReglagesPage() {
             <select
               id="reglage-welcome"
               value={settings.welcomeSequence ?? 'daily'}
-              onChange={(e) => updateSettings({ welcomeSequence: e.target.value as WelcomeSequenceMode })}
+              onChange={(e) => {
+                const v = e.target.value as WelcomeSequenceMode;
+                // le réglage historique reste synchronisé avec le film de lancement (même fréquence)
+                updateSettings({ welcomeSequence: v, launchFilm: v as LaunchFilmMode });
+              }}
               className={selectClass}
             >
               <option value="always">À chaque ouverture</option>
@@ -212,9 +216,58 @@ export default function ReglagesPage() {
             </select>
           </Field>
           <p className="mt-2 text-xs text-muted">
-            Plein écran animé qui résume ta journée à l’arrivée. La voix ne se lance jamais toute seule : bouton
-            « Écouter le résumé » uniquement.
+            Réglage historique de la séquence d’accueil, repris par le film de lancement ci-dessus : « Désactivée »
+            coupe aussi le film. La voix du film se règle avec la bascule « Voix du film ».
           </p>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Sparkles size={16} aria-hidden className="text-primary" /> Film de lancement
+          </h2>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-4">
+          <Field label="Film de lancement (page Aujourd’hui)" htmlFor="reglage-film-lancement">
+            <select
+              id="reglage-film-lancement"
+              value={settings.launchFilm ?? 'daily'}
+              onChange={(e) => {
+                const v = e.target.value as LaunchFilmMode;
+                // la fréquence historique de la séquence d'accueil suit le même réglage
+                updateSettings({ launchFilm: v, welcomeSequence: v });
+              }}
+              className={selectClass}
+            >
+              <option value="always">À chaque ouverture</option>
+              <option value="daily">Une fois par jour (défaut)</option>
+              <option value="off">Jamais</option>
+            </select>
+          </Field>
+          <p className="text-xs text-muted">
+            Le film cinématique d’arrivée sur la page Aujourd’hui : tes vrais chiffres du jour, ta prochaine étape, ta
+            progression et la voix qui raconte ton brief du matin. « Jamais » coupe aussi la séquence d’accueil. Le film
+            n’est jamais bloquant : « Passer », Échap ou un clic à côté suffisent.
+          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <Volume2 size={16} aria-hidden className="text-voice" /> Voix du film
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                La narration du film lit ton brief du matin (texte déjà calculé, aucun coût supplémentaire). Voix de ton
+                navigateur par défaut ; voix premium si ton offre y donne droit et si le quota le permet, sinon bascule
+                silencieuse. Sans interaction préalable, un bouton « Lancer le film » débloque le son.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.launchFilmVoice}
+              onChange={(v) => updateSettings({ launchFilmVoice: v })}
+              label="Voix du film"
+              id="toggle-film-voix"
+            />
+          </div>
         </CardBody>
       </Card>
 

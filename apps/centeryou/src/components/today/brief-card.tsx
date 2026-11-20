@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Square, Sun } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardBody } from '../ui/card';
-import { eventsOnDate } from '../../lib/events';
-import { formatTimeFr, greetingFor, todayISO } from '../../lib/dates';
+import { buildBriefText } from '../../lib/brief';
+import { todayISO } from '../../lib/dates';
 import { useStore } from '../../lib/store';
 import { speak, stopSpeaking } from '../../lib/voice';
 
@@ -31,22 +31,8 @@ export function BriefCard() {
   const listen = async () => {
     const s = useStore.getState();
     const today = todayISO();
-    const evs = eventsOnDate(s.events, today);
-    const dayTasks = s.tasks.filter((t) => t.date === today);
-    const done = dayTasks.filter((t) => t.done).length;
-    const prenom = s.settings.prenom.trim();
-    const phrases = [
-      `${greetingFor()}${prenom ? ` ${prenom}` : ''}.`,
-      evs.length > 0
-        ? `Aujourd’hui, tu as ${evs.length} événement${evs.length > 1 ? 's' : ''}${
-            evs[0] ? ` — le premier à ${formatTimeFr(evs[0].start)} : ${evs[0].event.title}` : ''
-          }.`
-        : "Côté agenda, ta journée est libre aujourd’hui.",
-      dayTasks.length > 0
-        ? `${done} tâche${done > 1 ? 's' : ''} sur ${dayTasks.length} déjà accomplie${done > 1 ? 's' : ''}.`
-        : "Aucune tâche n’est prévue aujourd’hui.",
-    ];
-    const text = phrases.join(' ');
+    // texte du brief du matin — source unique partagée avec la voix du film de lancement
+    const text = buildBriefText(s.settings.prenom, s.events, s.tasks, today);
     setBriefText(text);
     if (s.settings.voice) {
       setSpeaking(true);

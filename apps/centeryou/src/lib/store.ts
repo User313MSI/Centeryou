@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Category, EventItem, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
+import type { Category, EventItem, LaunchFilmMode, Priority, Repeat, Settings, TaskItem, Theme, WelcomeSequenceMode } from '../types';
 import type { BackupPayload } from './backup';
 import { endMinutesOf, minutesOf, timeOf, todayISO } from './dates';
 import { defaultSettings } from './defaults';
@@ -39,6 +39,7 @@ interface CenteryouState {
   updateSettings: (patch: Partial<Settings>) => void;
   markBriefShown: () => void;
   markWelcomeShown: () => void;
+  markLaunchFilmShown: () => void;
   resetAll: () => void;
   /** applique une sauvegarde importée (déjà validée/sanitisée) */
   restoreBackup: (payload: BackupPayload) => void;
@@ -102,6 +103,8 @@ export const useStore = create<CenteryouState>()(
         set((s) => ({ settings: { ...s.settings, briefShownDate: todayISO() } })),
       markWelcomeShown: () =>
         set((s) => ({ settings: { ...s.settings, welcomeShownDate: todayISO() } })),
+      markLaunchFilmShown: () =>
+        set((s) => ({ settings: { ...s.settings, launchFilmShownDate: todayISO() } })),
       resetAll: () =>
         set({
           events: [],
@@ -110,6 +113,7 @@ export const useStore = create<CenteryouState>()(
             ...defaultSettings,
             briefShownDate: get().settings.briefShownDate,
             welcomeShownDate: get().settings.welcomeShownDate,
+            launchFilmShownDate: get().settings.launchFilmShownDate,
             onboarded: get().settings.onboarded,
           },
         }),
@@ -187,4 +191,4 @@ export const useStore = create<CenteryouState>()(
   ),
 );
 
-export type { Category, Priority, Repeat, Theme, WelcomeSequenceMode };
+export type { Category, LaunchFilmMode, Priority, Repeat, Theme, WelcomeSequenceMode };

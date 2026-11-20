@@ -86,6 +86,12 @@ export function sanitizeSettings(input: unknown): Settings {
     base.welcomeSequence = input.welcomeSequence;
   }
   if (typeof input.welcomeShownDate === 'string') base.welcomeShownDate = input.welcomeShownDate;
+  // champs ajoutés ensuite (Réalisateur : film de lancement) : valeurs sûres garanties
+  if (input.launchFilm === 'always' || input.launchFilm === 'daily' || input.launchFilm === 'off') {
+    base.launchFilm = input.launchFilm;
+  }
+  if (typeof input.launchFilmShownDate === 'string') base.launchFilmShownDate = input.launchFilmShownDate;
+  if (typeof input.launchFilmVoice === 'boolean') base.launchFilmVoice = input.launchFilmVoice;
   // champs ajoutés ensuite (Dario : theme/onboarded, Elena : darkMode) : valeurs sûres garanties
   if (input.theme === 'sombre' || input.theme === 'clair') base.theme = input.theme;
   if (typeof input.onboarded === 'boolean') base.onboarded = input.onboarded;

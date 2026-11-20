@@ -2,7 +2,7 @@
 
 ## Mission M-06 — Film de lancement cinématique personnalisé (avec voix)
 
-Branche : `vibe/realisateur-film` (base `origin/main`). PR : https://github.com/User313MSI/Centeryou/pull/26 (brouillon, base `main`).
+Branche : `vibe/realisateur-film` (base `origin/main`). PR : https://github.com/User313MSI/Centeryou/pull/26 (brouillon, base `main`, ouverte le 2026-11-20 ~13:25 UTC).
 
 ### Références lues avant de coder
 - `AGENTS.md`, `docs/MISSIONS.md`, journaux `dario` (onboarding + séquence d'accueil), `celeste` (voix sécurisée `/api/voix` + quota), `alpha` (sanitation store), `lynx` (fluidité, contraste, accessibilité séquence d'accueil), `paillette` (M-05 : `motion.ts`, `use-motion.ts`, `celebrate.ts`, classe `html.animations-off`).
