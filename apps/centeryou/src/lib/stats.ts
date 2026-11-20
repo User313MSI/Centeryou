@@ -220,7 +220,7 @@ export function buildInsight(events: EventItem[], tasks: TaskItem[], today: stri
   if (completion7.total > 0) {
     phrases.push(`Sur les 7 derniers jours, ${completion7.percent ?? 0} % de tes tâches sont accomplies.`);
   } else if (streak > 0) {
-    phrases.push(`Série en cours : ${streak} jour${streak > 1 ? 's' : ''} organisés d'affilée.`);
+    phrases.push(streak > 1 ? `Série en cours : ${streak} jours organisés d'affilée.` : "Série en cours : 1 jour organisé d'affilée.");
   } else {
     phrases.push('Aucune tâche sur les 7 derniers jours.');
   }
