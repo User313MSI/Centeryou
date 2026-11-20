@@ -3,15 +3,15 @@
   "productName": "Centeryou",
   "version": "1.0.0",
   "private": true,
-  "description": "Centeryou — application bureau Windows (Electron) chargeant la version en ligne sur Vercel, avec repli hors-ligne sur la PWA.",
+  "description": "Centeryou — ton planning, ta voix : agenda, tâches et assistant vocal en français. Application bureau Windows (Electron) chargeant la version en ligne sur Vercel, avec repli hors-ligne sur la PWA.",
   "main": "main.js",
-  "author": "NovaLoom",
+  "author": "Origine",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/make-icons.mjs",
     "check-build": "node scripts/check-build.mjs",
-    "dist": "npm run icons && npm run check-build && electron-builder --win --mac --linux",
+    "dist": "npm run dist:win",
     "dist:win": "npm run icons && npm run check-build && electron-builder --win --x64",
     "pack": "electron-builder --dir"
   },
@@ -20,8 +20,9 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.novaloom.centeryou",
+    "appId": "com.centeryou.app",
     "productName": "Centeryou",
+    "copyright": "© 2026 Origine",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -45,33 +46,27 @@
         }
       ],
       "icon": "build/icon.ico",
+      "publisherName": "Origine",
       "artifactName": "Centeryou-Setup-${version}.${ext}"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
       "perMachine": false,
+      "installerLanguages": [
+        "fr"
+      ],
+      "displayLanguageSelector": false,
+      "unicode": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Centeryou",
+      "menuCategory": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico",
-      "menuCategory": true,
-      "deleteAppDataOnUninstall": false
-    },
-    "mac": {
-      "target": [
-        "dmg"
-      ],
-      "icon": "build/icon.png",
-      "category": "public.app-category.productivity"
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "icon": "build/icon.png",
-      "category": "Utility"
+      "installerHeaderIcon": "build/icon.ico"
     }
   }
 }

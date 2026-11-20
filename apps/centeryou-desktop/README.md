@@ -19,7 +19,7 @@ npm install
 npm run dist:win
 ```
 
-L'installateur est produit dans `dist\Centeryou-Setup-<version>.exe` (ex. `dist\Centeryou-Setup-1.0.0.exe`).
+L'installateur est produit dans `dist\Centeryou-Setup-<version>.exe` (ex. `dist\Centeryou-Setup-1.0.0.exe`) : **assistant NSIS 100 % français**, installation guidée (dossier modifiable, par défaut dans les données locales de l'utilisateur, aucune élévation de droits requise), raccourci **menu Démarrer obligatoire** + raccourci bureau proposé, case « Lancer Centeryou » en fin d'installation, et désinstallation propre qui **conserve les données utilisateur** (dossier `AppData` de l'application).
 
 La commande `npm run dist:win` enchaîne automatiquement :
 
@@ -27,7 +27,7 @@ La commande `npm run dist:win` enchaîne automatiquement :
 2. `npm run check-build` — interroge l'URL de production et écrit `build-info.json` (identifiant du déploiement Vercel courant, embarqué dans l'installateur) ;
 3. `electron-builder --win --x64` — produit l'installateur NSIS `.exe`.
 
-Double-clique sur le `.exe` pour installer : icône Centeryou sur le bureau et dans le menu Démarrer (`Centeryou`), désinstallation propre via « Paramètres > Applications ».
+Double-clique sur le `.exe` pour installer : assistant en français, raccourci « Centeryou » dans le menu Démarrer (et sur le bureau si coché), lancement possible en fin d'installation. Désinstallation propre via « Paramètres > Applications » ou l'entrée « Centeryou » de la liste des programmes : les programmes sont supprimés mais **les données utilisateur (`%APPDATA%\Centeryou` : réglages, état de la fenêtre, cache local) sont conservées** (`deleteAppDataOnUninstall: false`). Métadonnées : appId `com.centeryou.app`, éditeur « Origine », version 1.0.0, description en français.
 
 ## Comportement de l'application
 
@@ -56,7 +56,7 @@ La version en ligne étant toujours la source de vérité, **le contenu de l'app
 4. (Optionnel) Monter la version dans `package.json` (`"version": "1.0.1"`) — le nom du fichier suivra automatiquement.
 5. Générer l'installateur : `npm run dist:win`.
 6. Tester le `.exe` généré dans `dist\` sur une machine Windows propre (installation, lancement, voix, lien externe, mode hors-ligne en coupant le réseau).
-7. Publier `dist\Centeryou-Setup-<version>.exe` (par ex. dans les *Releases* GitHub du dépôt `User313MSI/Dev-Apps`, ou à l'URL de votre choix via `CENTERYOU_DOWNLOAD_URL` à la build).
+7. Publier `dist\Centeryou-Setup-<version>.exe` dans les *Releases* GitHub du dépôt `User313MSI/Centeryou` (tag `bureau-v1.0`, release « Centeryou Bureau v1.0 »), ou à l'URL de votre choix via `CENTERYOU_DOWNLOAD_URL` à la build.
 8. C'est tout : au prochain lancement, les utilisateurs ayant un ancien installateur voient la notification de mise à jour (comparaison du `buildId` Vercel) et le contenu de l'app est de toute façon déjà à jour puisqu'il est chargé en ligne.
 
 ## Structure
