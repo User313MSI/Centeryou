@@ -16,10 +16,10 @@
 ## Missions en cours
 
 ### M-03 — Sentinelle · Audit technique complet (lecture seule, rapport)
-- **État : À LANCER** (inscrite par Vibe Work le 20/11 après l'étude produit/marché — l'utilisateur va dire « on y go » à l'Adjudant)
+- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 07:33 UTC, après « on y go » de l'utilisateur — M-01 et M-02 sont ✅ fusionnées)
 - Objectif : audit technique complet SANS aucun correctif de code, sur 7 axes (sécurité, robustesse métier/parseur/récurrences/fuseaux, performance, dette code, accessibilité, tests/CI, cohérence des données), chaque axe noté 0-5 avec preuves. Livrable : journal `docs/journal/sentinelle.md` (contrat + top 15 des risques restants classés impact/effort + verdict « prêt pour le lancement du 1/01/2027 ? ») + PR base main contenant uniquement le rapport. Le prompt complet est fourni dans la session de l'Adjudant.
 - Contexte venant de l'étude (Vibe Work, 20/11) : à confirmer précisément pendant l'audit — niveau exact du champ `repeat` (récurrences), comportement des fuseaux horaires, ce que les 176 tests ne couvrent pas (restore corrompu, offline, webhook Stripe), vulnérabilités next 14.2.35 / vitest 2.x (CVE réelles), contraste token voix en mode sombre.
-- PR : — · Dernière nouvelle : attente de lancement. Ordre pressenti après M-03 (demandes utilisateur du 20/11, sauf alerte grave dans le rapport Sentinelle) : **M-05 Paillette** (animations & célébrations), puis **M-06 Réalisateur** (film de lancement cinématique personnalisé, avec voix), puis **M-04 rappels + notifications** (priorité n°1 de l'étude marché), puis M-07 export/import ICS.
+- PR : — · Dernière nouvelle : 2026-11-20 07:33 UTC — mission déléguée à l'agent Sentinelle (branche `vibe/sentinelle-audit-complet`) : audit EN LECTURE SEULE sur 7 axes notés 0-5 avec preuves, top 15 des risques, verdict lancement 01/01/2027, puis PR base `main` contenant UNIQUEMENT le rapport (`docs/journal/sentinelle.md`). En attente de sa PR. Ordre après M-03 (demandes utilisateur du 20/11, sauf alerte grave dans le rapport Sentinelle) : **M-05 Paillette** (animations & célébrations), puis **M-06 Réalisateur** (film de lancement cinématique personnalisé, avec voix), puis **M-04 rappels + notifications** (priorité n°1 de l'étude marché), puis **M-07 export/import ICS**.
 
 ### M-05 — Paillette · Animations & célébrations (demande utilisateur du 20/11)
 - **État : À LANCER juste après M-03** (l'utilisateur a demandé : « animations quand un événement se crée » + petites joies d'usage ; le prompt complet est fourni dans la session de l'Adjudant)
@@ -34,6 +34,10 @@
 
 ### M-04 — Rappels & notifications (pressenti, après M-06)
 - **État : EN ATTENTE** — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2) ; à lancer après Paillette et Réalisateur, sauf alerte grave dans le rapport Sentinelle qui passerait avant.
+- PR : — · Dernière nouvelle : —.
+
+### M-07 — Export / import ICS
+- **État : EN ATTENTE** (inscrite le 20/11 — à lancer après M-04 ; le prompt sera fourni par l'utilisateur le moment venu).
 - PR : — · Dernière nouvelle : —.
 
 ## Missions terminées (mémoire)
