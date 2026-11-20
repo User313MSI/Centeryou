@@ -93,14 +93,14 @@ describe('StatsView', () => {
   });
 });
 
-describe('Carte d’entrée « Tes stats » dans Aujourd’hui', () => {
+describe('Carte d’entrée « Tes statistiques » dans Aujourd’hui', () => {
   it('précise le lien vers /stats (pas de nouvel onglet de navigation)', () => {
     useStore.setState({
       events: [ev({ title: 'sport', date: TODAY, start: '18:00', end: '19:00', repeat: 'jamais', category: 'sante' })],
       tasks: [],
     });
     render(<AujourdhuiView />);
-    const link = screen.getByRole('link', { name: /voir mes stats/i });
+    const link = screen.getByRole('link', { name: /voir mes statistiques/i });
     expect(link).toHaveAttribute('href', '/stats');
     expect(screen.getByText('Ton temps, en clair')).toBeInTheDocument();
     // la semaine en cours affiche ses heures sur la carte (1 h planifiée)

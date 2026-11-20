@@ -23,6 +23,7 @@ import {
 } from '../../lib/dates';
 import { calendarOnDate, type CalendarInstance } from '../../lib/events';
 import { useStore } from '../../lib/store';
+import { useUiStore } from '../../lib/ui-store';
 import { speak, stopSpeaking } from '../../lib/voice';
 import { cx } from '../../lib/utils';
 import { shouldShowWelcome } from '../../lib/welcome';
@@ -179,7 +180,14 @@ export function WelcomeSequence() {
     const segs = buildSegments();
     const text = segs.map((s) => s.text).join(' ');
     const voiceOn = useStore.getState().settings.voice;
-    if (!voiceOn) return; // assistant vocal désactivé dans les Réglages : aucun son
+    if (!voiceOn) {
+      // assistant vocal désactivé dans les Réglages : aucun son, mais un retour clair
+      useUiStore.getState().pushToast({
+        message: 'L’assistant vocal est désactivé dans les Réglages — active-le pour entendre le résumé à voix haute.',
+        duration: 6000,
+      });
+      return;
+    }
     setSpeaking(true);
     scheduleHighlights(segs);
     try {
@@ -223,7 +231,7 @@ export function WelcomeSequence() {
 
         <section className={sectionClass(1)} style={{ animationDelay: '360ms' }} aria-label="Progression du jour">
           <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-ink">
-            <ChartLine size={16} aria-hidden className="text-voice" /> Progression du jour
+            <ChartLine size={16} aria-hidden className="text-voicetext" /> Progression du jour
           </h3>
           <div className="flex items-center gap-3">
             <div className="h-2.5 flex-1 overflow-hidden rounded-pill bg-line/70">
@@ -286,11 +294,11 @@ export function WelcomeSequence() {
           )}
           {speaking ? (
             <Button variant="secondary" size="lg" onClick={stop} aria-label="Arrêter la lecture du résumé">
-              <Square size={16} aria-hidden /> Stop
+              <Square size={16} aria-hidden /> Arrêter
             </Button>
           ) : (
             <Button size="lg" onClick={listen} aria-label="Écouter le résumé de la journée">
-              <Play size={16} aria-hidden /> ▶ Écouter le résumé
+              <Play size={16} aria-hidden /> Écouter le résumé
             </Button>
           )}
           <Button variant="secondary" size="lg" onClick={close} className="border-2 font-bold" aria-label="Passer la séquence d’accueil">

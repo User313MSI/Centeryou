@@ -61,7 +61,8 @@ export const useUiStore = create<UiState>()((set, get) => ({
   pushToast: ({ message, actionLabel, onAction, duration = 4000 }) => {
     const id = uid();
     set((s) => ({ toasts: [...s.toasts, { id, message, actionLabel, onAction }] }));
-    window.setTimeout(() => {
+    // globalThis.setTimeout : utilisable aussi hors navigateur (tests node du parseur)
+    globalThis.setTimeout(() => {
       if (get().toasts.some((t) => t.id === id)) set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
     }, duration);
   },

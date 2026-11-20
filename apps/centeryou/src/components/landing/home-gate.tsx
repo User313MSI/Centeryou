@@ -9,6 +9,7 @@ import { LogoWithName } from '../brand/logo';
 import { ProductMock } from './product-mock';
 import { useHydrated } from '../../lib/useHydrated';
 import { useStore } from '../../lib/store';
+import { LEGAL } from '../../lib/legal';
 import { SLOGAN } from '../../lib/site';
 
 const CTA_BASE =
@@ -19,8 +20,8 @@ const CTA_SECONDARY = `${CTA_BASE} border border-line bg-surface text-ink hover:
 const ARGUMENTS = [
   {
     icon: Smartphone,
-    title: 'Mobile-first',
-    text: 'Pensé d’abord pour le téléphone : ajoute, coche et déplace en deux gestes, même depuis le canapé. Installable en app (PWA).',
+    title: 'Le mobile d’abord',
+    text: 'Pensé d’abord pour le téléphone : ajoute, coche et déplace en deux gestes, même depuis le canapé. Installable en application.',
   },
   {
     icon: Mic,
@@ -97,7 +98,7 @@ function LandingPage() {
           <Link href="/presse" className="hover:text-primarydark">Presse</Link>
           <Link href="/legal" className="hover:text-primarydark">Mentions légales & confidentialité</Link>
         </nav>
-        <p className="text-xs text-muted">© 2025 NovaLoom Studio — Centeryou, fait avec soin, en français.</p>
+        <p className="text-xs text-muted">© {LEGAL.copyrightYear} {LEGAL.appName} — fait avec soin, en français.</p>
       </footer>
     </div>
   );

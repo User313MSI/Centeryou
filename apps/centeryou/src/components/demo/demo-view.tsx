@@ -48,7 +48,7 @@ export function DemoView() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-start justify-between gap-3 rounded-card border border-voice/40 bg-voice/5 px-5 py-4 md:flex-row md:items-center" role="status">
         <p className="flex items-start gap-2 text-sm text-ink">
-          <Info size={18} aria-hidden className="mt-0.5 shrink-0 text-voice" />
+          <Info size={18} aria-hidden className="mt-0.5 shrink-0 text-voicetext" />
           <span>
             <strong>Mode démo — lecture seule.</strong> Voici la semaine type de <strong>{DEMO_PROFILE.prenom}</strong>,{' '}
             {DEMO_PROFILE.role}. Données fictives : aucune donnée réelle, aucun compte requis, rien n’est enregistré.
@@ -87,6 +87,7 @@ export function DemoView() {
               onTaskToggle={noop}
               onDropAt={noop}
               onDayClick={noop}
+              readOnly
             />
           ) : (
             <div className="h-[280px] animate-pulse rounded-card bg-bg md:h-[360px]" aria-hidden />

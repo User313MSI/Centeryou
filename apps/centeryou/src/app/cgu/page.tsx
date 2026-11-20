@@ -5,7 +5,7 @@ import { LegalDoc, LegalList, LegalSection } from '../../components/legal/legal-
 
 export const metadata: Metadata = {
   title: `Conditions générales d'utilisation — ${LEGAL.appName}`,
-  description: `Conditions générales d'utilisation de ${LEGAL.appName} (version ${LEGAL.cguVersion}), planning personnel local-first.`,
+  description: `Conditions générales d'utilisation de ${LEGAL.appName} (version ${LEGAL.cguVersion}), planning personnel 100 % local.`,
 };
 
 export default function CguPage() {
@@ -28,7 +28,7 @@ export default function CguPage() {
       <LegalSection title="2. Présentation du service">
         <p>
           {LEGAL.appName} est un planning interactif personnel, 100 % en français : agenda (jour, semaine,
-          mois), tâches, saisie rapide et assistant vocal. L'application fonctionne « local-first » : tes
+          mois), tâches, saisie rapide et assistant vocal. L'application fonctionne « 100 % local » : tes
           données sont enregistrées dans ton navigateur (stockage local) et ne quittent pas ton appareil,
           sauf mention contraire dans la politique de confidentialité.
         </p>
@@ -43,10 +43,10 @@ export default function CguPage() {
 
       <LegalSection title="4. Offres">
         <p>
-          L'application est actuellement proposée gratuitement : l'ensemble des fonctionnalités est accessible
-          sans paiement, sans publicité et sans revente de données. Si une offre payante (Premium) venait à
-          être proposée un jour, elle serait présentée clairement avant tout paiement et ferait l'objet d'une
-          mise à jour des présentes conditions.
+          L'application est gratuite par défaut : agenda, tâches, assistant vocal, mode sombre et application
+          installable sont accessibles sans paiement, sans publicité et sans revente de données. Une offre
+          Premium optionnelle (voix premium illimitée, synchronisation multi-appareils) est proposée contre
+          paiement via Stripe, présentée clairement avant tout paiement, annulable à tout moment.
         </p>
       </LegalSection>
 

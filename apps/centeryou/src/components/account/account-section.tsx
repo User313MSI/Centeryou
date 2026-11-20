@@ -142,7 +142,7 @@ export function AccountSection() {
                 {syncStatus === 'offline' || syncStatus === 'error' ? (
                   <CloudOff size={14} aria-hidden className={syncStatus === 'error' ? 'text-danger' : 'text-warning'} />
                 ) : (
-                  <Cloud size={14} aria-hidden className="text-voice" />
+                  <Cloud size={14} aria-hidden className="text-voicetext" />
                 )}
                 {syncStatusText(syncStatus)}
               </p>

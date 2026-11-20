@@ -56,7 +56,7 @@ export function StatsView() {
   return (
     <div className="flex flex-col gap-5">
       <header className="text-center">
-        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Stats</h1>
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Statistiques</h1>
         <p className="mt-1 text-sm font-semibold text-muted">
           Ton temps, en clair — calculé sur place, à partir de tes événements et de tes tâches. Rien n&rsquo;est envoyé en ligne.
         </p>
@@ -126,7 +126,7 @@ export function StatsView() {
           <Card>
             <CardHeader>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-                <Gauge size={18} aria-hidden className="text-voice" /> Habitudes
+                <Gauge size={18} aria-hidden className="text-voicetext" /> Habitudes
               </h2>
             </CardHeader>
             <CardBody className="flex flex-col gap-6">

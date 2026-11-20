@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 const POINTS = [
-  'Mobile-first : ajoute, coche et déplace en deux gestes, installable en app (PWA).',
+  'Le mobile d’abord : ajoute, coche et déplace en deux gestes, installable en application.',
   'Ta voix te briefe : « ajoute sport demain 14h », « mon programme » — saisie et commandes 100 % en français.',
   'Tes données restent les tiennes : aucun compte serveur, stockage local uniquement, effaçable en un clic.',
 ];
@@ -50,7 +50,7 @@ export default function PressePage() {
             le mobile et fonctionne comme une app installable.
           </p>
           <p className="text-sm text-muted">
-            Centeryou est local-first : aucune donnée ne quitte l’appareil de l’utilisateur (stockage local du navigateur,
+            Centeryou est 100 % local : aucune donnée ne quitte l’appareil de l’utilisateur (stockage local du navigateur,
             aucun compte serveur, aucun pistage). Gratuit, sans publicité.
           </p>
         </CardBody>
@@ -164,12 +164,12 @@ export default function PressePage() {
       <p className="text-xs text-muted">
         Contact presse : dépôt GitHub{' '}
         <a
-          href="https://github.com/User313MSI/Dev-Apps"
+          href="https://github.com/User313MSI/Centeryou"
           target="_blank"
           rel="noreferrer"
           className="font-semibold text-primarydark underline-offset-2 hover:underline"
         >
-          User313MSI/Dev-Apps
+          User313MSI/Centeryou
         </a>
         . Voir aussi :{' '}
         <Link href="/offres" className="font-semibold text-primarydark underline-offset-2 hover:underline">

@@ -53,7 +53,7 @@ export function HelpDialog() {
         </section>
         <p className="text-xs text-muted">
           Astuce : dans le planning, clique sur un créneau pour créer un événement, glisse un événement pour le déplacer.
-          Saisie rapide : « sport demain 14h », « dentist mardi 10h30 santé », « !lundi réunion ».
+          Saisie rapide : « sport demain 14h », « médecin mardi 10h30 santé », « !lundi réunion ».
         </p>
       </div>
     </Dialog>

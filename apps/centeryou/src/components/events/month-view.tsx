@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { categoryColor } from '../../lib/categories';
-import { WEEKDAY_NAMES, formatDayLong, formatDayNumber, isSameMonth, isToday, monthMatrix } from '../../lib/dates';
+import { WEEKDAY_NAMES, formatDayLong, formatDayNumber, formatEndFr, formatTimeFr, isSameMonth, isToday, monthMatrix } from '../../lib/dates';
 import { calendarMonthOnDate } from '../../lib/events';
 import type { EventItem, TaskItem } from '../../types';
 import { cx } from '../../lib/utils';
@@ -63,7 +63,7 @@ export function MonthView({
                     <button
                       key={`${inst.kind}-${inst.id}`}
                       onClick={() => (inst.kind === 'event' && inst.event ? onEventClick(inst.event) : inst.task && onTaskToggle(inst.task))}
-                      title={inst.kind === 'event' ? `${inst.title} — ${inst.start} à ${inst.end}` : `Tâche : ${inst.title}${inst.start ? ` à ${inst.start}` : ''}${inst.done ? ' (faite)' : ''}`}
+                      title={inst.kind === 'event' ? `${inst.title} — de ${formatTimeFr(inst.start)} à ${formatEndFr(inst.end)}` : `Tâche : ${inst.title}${inst.start ? ` à ${formatTimeFr(inst.start)}` : ''}${inst.done ? ' (faite)' : ''}`}
                       className="flex max-w-full items-center gap-1 rounded-card px-1 py-0.5 text-left text-xs font-medium text-ink transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {inst.kind === 'task' ? (

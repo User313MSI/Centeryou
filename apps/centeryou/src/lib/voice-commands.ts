@@ -118,6 +118,9 @@ export async function handleVoiceCommand(raw: string): Promise<string> {
     } catch {
       // aucune erreur bloquante
     }
+  } else {
+    // voix désactivée : la réponse reste visible en texte (toast), jamais muette
+    ui.pushToast({ message: reply, duration: 6000 });
   }
   return reply;
 }

@@ -55,7 +55,7 @@ export function InscriptionCard() {
           </span>
           <div>
             <h2 className="text-base font-bold text-ink">Ton compte, sur cet appareil</h2>
-            <p className="text-xs text-muted">Local-first : aucun serveur, aucun mot de passe à retenir.</p>
+            <p className="text-xs text-muted">100 % local : aucun serveur, aucun mot de passe à retenir.</p>
           </div>
         </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, typ
 import type { EventItem, TaskItem } from '../../types';
 import type { CalendarInstance } from '../../lib/events';
 import { categoryColor } from '../../lib/categories';
-import { endMinutesOf, formatTimeFr, minutesOf } from '../../lib/dates';
+import { DAY_END, endMinutesOf, formatEndFr, formatTimeFr, minutesOf } from '../../lib/dates';
 import { useUiStore } from '../../lib/ui-store';
 import { cx } from '../../lib/utils';
 
@@ -15,6 +15,9 @@ export function EventBlock({
   onEventClick,
   onTaskToggle,
   onDropAt,
+  leftPct = 0,
+  widthPct = 100,
+  readOnly = false,
 }: {
   instance: CalendarInstance;
   pxPerMin: number;
@@ -22,12 +25,26 @@ export function EventBlock({
   onEventClick: (ev: EventItem) => void;
   onTaskToggle: (task: TaskItem) => void;
   onDropAt: (eventId: string, x: number, y: number) => void;
+  /** mise en colonnes des chevauchements (voir lib/overlap.ts) */
+  leftPct?: number;
+  widthPct?: number;
+  /** démo (lecture seule) : aucun comportement interactif, aucun rôle de bouton */
+  readOnly?: boolean;
 }) {
   const isTask = instance.kind === 'task';
   const startMin = minutesOf(instance.start);
   const endMin = endMinutesOf(instance.end); // fin à 00:00 = minuit (24h00)
-  const top = Math.max(0, (startMin - dayStartMin) * pxPerMin);
-  const height = Math.max(22, (endMin - startMin) * pxPerMin);
+  // bornage à la grille affichée [dayStart, DAY_END] : un élément qui déborde est
+  // rogné sur le bord de la grille, et un élément entièrement hors grille n'est pas
+  // dessiné ici (il reste visible en vue Mois) — jamais de rendu hors de la carte
+  const gridHeight = (DAY_END * 60 - dayStartMin) * pxPerMin;
+  const visStart = Math.max(startMin, dayStartMin);
+  const visEnd = Math.min(endMin, DAY_END * 60);
+  if (visEnd <= visStart) return null;
+  const top = (visStart - dayStartMin) * pxPerMin;
+  let height = Math.max(22, (visEnd - visStart) * pxPerMin);
+  if (top + height > gridHeight) height = gridHeight - top;
+  if (height <= 0) return null;
 
   const drag = useRef<{ sx: number; sy: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
@@ -95,23 +112,23 @@ export function EventBlock({
   };
 
   const label = isTask
-    ? `Tâche ${instance.title}, ${formatTimeFr(instance.start)} à ${formatTimeFr(instance.end)}${instance.done ? ', faite' : ''}. Cliquer pour ${instance.done ? 'reprendre' : 'cocher'}.`
-    : `${instance.title}, de ${formatTimeFr(instance.start)} à ${formatTimeFr(instance.end)}. Activer pour modifier, glisser pour déplacer.`;
+    ? `Tâche ${instance.title}, de ${formatTimeFr(instance.start)} à ${formatEndFr(instance.end)}${instance.done ? ', faite' : ''}${readOnly ? '' : `. Cliquer pour ${instance.done ? 'reprendre' : 'cocher'}.`}`
+    : `${instance.title}, de ${formatTimeFr(instance.start)} à ${formatEndFr(instance.end)}${readOnly ? '' : '. Activer pour modifier, glisser pour déplacer.'}`;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      role={readOnly ? undefined : 'button'}
+      tabIndex={readOnly ? undefined : 0}
       aria-label={label}
-      aria-pressed={isTask ? instance.done : undefined}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onKeyDown={onKeyDown}
-      onClick={onClick}
+      aria-pressed={readOnly ? undefined : isTask ? instance.done : undefined}
+      onPointerDown={readOnly ? undefined : onPointerDown}
+      onPointerMove={readOnly ? undefined : onPointerMove}
+      onPointerUp={readOnly ? undefined : onPointerUp}
+      onKeyDown={readOnly ? undefined : onKeyDown}
+      onClick={readOnly ? undefined : onClick}
       className={cx(
-        'absolute left-1 right-1 z-10 select-none overflow-hidden rounded-card border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
-        isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
+        'absolute z-10 select-none overflow-hidden rounded-card border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
+        !readOnly && (isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'),
         dragging && 'z-50 opacity-95 shadow-hover',
         instance.done && 'opacity-70',
         fresh && 'animate-event-in',
@@ -120,9 +137,11 @@ export function EventBlock({
       style={{
         top,
         height,
+        left: `calc(${leftPct}% + 4px)`,
+        width: `calc(${widthPct}% - 8px)`,
         borderLeftColor: categoryColor(instance.category),
         transform: dragging ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
-        touchAction: isTask ? undefined : 'none',
+        touchAction: isTask || readOnly ? undefined : 'none',
         pointerEvents: dragging ? 'none' : undefined,
       }}
     >
@@ -140,7 +159,7 @@ export function EventBlock({
       </p>
       {height >= 36 && (
         <p className="truncate text-xs leading-tight text-muted">
-          {formatTimeFr(instance.start)} – {formatTimeFr(instance.end)}
+          {formatTimeFr(instance.start)} – {formatEndFr(instance.end)}
         </p>
       )}
     </div>

@@ -26,7 +26,7 @@ export function TaskActionsMenu() {
   const onToggle = () => {
     toggleTask(task.id);
     if (sounds) playBlip(task.done ? 520 : 760);
-    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée ✅` });
+    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée.` });
     closeTaskMenu();
   };
 

@@ -110,7 +110,7 @@ export function SubscriptionCard() {
         <ul className="flex flex-col gap-1.5">
           {plan.features.map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-ink">
-              <Check size={15} aria-hidden className="shrink-0 text-voice" />
+              <Check size={15} aria-hidden className="shrink-0 text-voicetext" />
               {f}
             </li>
           ))}
@@ -134,8 +134,10 @@ export function SubscriptionCard() {
 
         {!premium && (
           <p className="text-xs text-muted">
-            Voix premium : {premiumVoiceRemaining(voiceQuota, currentMonth())} essai(s) gratuit(s) restant(s) ce
-            mois-ci (limite {FREE_PREMIUM_VOICE_LIMIT_PER_MONTH}).
+            {(() => {
+              const reste = premiumVoiceRemaining(voiceQuota, currentMonth());
+              return `Voix premium : encore ${reste} essai${reste > 1 ? 's' : ''} gratuit${reste > 1 ? 's' : ''} ce mois-ci (limite ${FREE_PREMIUM_VOICE_LIMIT_PER_MONTH}).`;
+            })()}
           </p>
         )}
 

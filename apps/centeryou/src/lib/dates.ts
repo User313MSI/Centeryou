@@ -72,8 +72,13 @@ export function formatTimeFr(time: string): string {
   return `${h}h${m}`;
 }
 
+/** libellé d'une heure de FIN : « 00:00 » se lit « minuit » (et non « 00h00 ») */
+export function formatEndFr(time: string): string {
+  return time === '00:00' ? 'minuit' : formatTimeFr(time);
+}
+
 export function formatRangeFr(start: string, end: string): string {
-  return `${formatTimeFr(start)} – ${formatTimeFr(end)}`;
+  return `${formatTimeFr(start)} – ${formatEndFr(end)}`;
 }
 
 /** prochaine occurrence du jour de semaine (aujourd'hui inclus) */

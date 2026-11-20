@@ -144,7 +144,7 @@ export function WeekdayBars({ perWeekday, busiestIndex }: { perWeekday: number[]
               height={16}
               rx={8}
               fill="currentColor"
-              className={isBusiest ? 'text-primary' : 'text-voice'}
+              className={isBusiest ? 'text-primary' : 'text-voicetext'}
             >
               <title>{`${weekdayShortLabel(i)} : ${formatHoursFr(m)}`}</title>
             </rect>
