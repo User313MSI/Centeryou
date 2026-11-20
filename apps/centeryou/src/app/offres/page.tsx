@@ -14,7 +14,7 @@ const INCLUDED = [
   'Agenda illimité — vues Jour, Semaine, Mois, glisser-déposer',
   'Tâches en langage naturel (« sport demain 14h », « !lundi réunion »)',
   'Assistant vocal en français + brief du matin à la voix',
-  'Application installable (PWA), utilisable sur téléphone',
+  'Application installable sur téléphone, même hors-ligne',
   'Données 100 % locales : aucun compte serveur, rien d’envoyé',
 ];
 
