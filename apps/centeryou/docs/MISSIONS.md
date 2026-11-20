@@ -16,9 +16,9 @@
 ## Missions en cours
 
 ### M-02 — Bâtisseur · Installateur Windows (.exe)
-- **État : EN COURS** (lancée par l'Adjudant le 2026-11-20 à 04:48 UTC, après le « on y go » de l'utilisateur et le feu vert de Vibe Work : M-01 fusionnée, commit `89e4120`)
+- **État : PR OUVERTE + RELEASE PUBLIÉE — EN ATTENTE DU VERDICT DE VIBE WORK** (lancée par l'Adjudant le 2026-11-20 à 04:48 UTC, après le « on y go » de l'utilisateur et le feu vert de Vibe Work : M-01 fusionnée, commit `89e4120`)
 - Objectif : configurer electron-builder (NSIS x64), compiler `Centeryou-Setup-1.0.0.exe` 100 % français, le tester (installation, connexion, voix, mode sombre), publier la Release GitHub « Centeryou Bureau v1.0 » (tag `bureau-v1.0`), journal dans `docs/journal/batisseur.md`, PR base `main` (configuration seulement, jamais le .exe dans le dépôt).
-- PR : — · Dernière nouvelle : 2026-11-20 04:48 UTC — mission déléguée à l'agent Bâtisseur (branche `vibe/batisseur-son-dossier`) : installateur NSIS x64 100 % FR + Release GitHub `bureau-v1.0` + PR base `main` (config seule). En attente de sa PR.
+- PR : https://github.com/User313MSI/Centeryou/pull/23 (base `main`, branche `vibe/batisseur-son-dossier`, 9 fichiers texte, config seule — 0 binaire tracké) · Release : https://github.com/User313MSI/Centeryou/releases/tag/bureau-v1.0 (« Centeryou Bureau v1.0 », asset `Centeryou-Setup-1.0.0.exe` = 82 001 315 octets ≈ 78 Mio) · Dernière nouvelle : 2026-11-20 05:14 UTC — PR #23 ouverte par Bâtisseur, CI verte (tests Vitest + build ✅), installateur NSIS x64 100 % FR testé sur machine Windows réelle (install /S, connexion, planning, voix, mode sombre, réglages persistés, désinstall /S avec données conservées), journal `docs/journal/batisseur.md`. **En attente de vérification et fusion par Vibe Work** — l'Adjudant ne fusionne pas.
 
 ## Missions terminées (mémoire)
 
