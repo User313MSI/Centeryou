@@ -6,6 +6,7 @@ import type { CalendarInstance } from '../../lib/events';
 import { categoryColor } from '../../lib/categories';
 import { DAY_END, endMinutesOf, formatEndFr, formatTimeFr, minutesOf } from '../../lib/dates';
 import { useUiStore } from '../../lib/ui-store';
+
 import { cx } from '../../lib/utils';
 
 export function EventBlock({
@@ -49,11 +50,36 @@ export function EventBlock({
   const drag = useRef<{ sx: number; sy: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   const dragging = offset !== null;
+  const blockRef = useRef<HTMLDivElement>(null);
 
-  // apparition douce : un événement créé à l'instant (montage initial du bloc) démarre avec un fondu + resserrement
+  // apparition élastique + halo + onde violette : un événement créé à l'instant (montage initial du bloc)
   const [fresh] = useState(
     () => instance.kind === 'event' && !!instance.event && Date.now() - instance.event.createdAt < 2500,
   );
+
+  // onde violette depuis le point de création (centre du bloc apparu) — no-op si animations désactivées.
+  // import dynamique : le chunk des célébrations n'est téléchargé que si un effet se déclenche,
+  // la vitrine / n'en paie pas le poids au premier chargement.
+  useEffect(() => {
+    if (fresh) void import('../../lib/celebrate').then((m) => m.spawnRippleAt(blockRef.current));
+    // une seule fois au montage du bloc
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // coche d'une tâche dans le planning : micro-confettis au niveau du bloc + vibration courte (mobile)
+  const prevDone = useRef(instance.done);
+  useEffect(() => {
+    if (!prevDone.current && instance.done && instance.kind === 'task') {
+      void import('../../lib/celebrate').then((m) => {
+        m.spawnConfetti(blockRef.current);
+        m.vibrateShort();
+      });
+    }
+    prevDone.current = instance.done;
+  }, [instance.done, instance.kind]);
+
+  // sortie douce avant suppression réelle de l'événement
+  const exiting = useUiStore((s) => s.exitingIds.includes(`event:${instance.id}`));
   // rebond de confirmation après un dépôt (drag & drop)
   const lastDrop = useUiStore((s) => s.lastDrop);
   const [bouncing, setBouncing] = useState(false);
@@ -116,35 +142,50 @@ export function EventBlock({
     : `${instance.title}, de ${formatTimeFr(instance.start)} à ${formatEndFr(instance.end)}${readOnly ? '' : '. Activer pour modifier, glisser pour déplacer.'}`;
 
   return (
-    <div
-      role={readOnly ? undefined : 'button'}
-      tabIndex={readOnly ? undefined : 0}
-      aria-label={label}
-      aria-pressed={readOnly ? undefined : isTask ? instance.done : undefined}
-      onPointerDown={readOnly ? undefined : onPointerDown}
-      onPointerMove={readOnly ? undefined : onPointerMove}
-      onPointerUp={readOnly ? undefined : onPointerUp}
-      onKeyDown={readOnly ? undefined : onKeyDown}
-      onClick={readOnly ? undefined : onClick}
-      className={cx(
-        'absolute z-10 select-none overflow-hidden rounded-card border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
-        !readOnly && (isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'),
-        dragging && 'z-50 opacity-95 shadow-hover',
-        instance.done && 'opacity-70',
-        fresh && 'animate-event-in',
-        bouncing && 'animate-drop-settle',
+    <>
+      {fresh && (
+        <div
+          aria-hidden
+          className="celebrate-halo animate-halo"
+          style={{
+            top: top - 6,
+            height: height + 12,
+            left: `calc(${leftPct}% + 4px - 6px)`,
+            width: `calc(${widthPct}% - 8px + 12px)`,
+          }}
+        />
       )}
-      style={{
-        top,
-        height,
-        left: `calc(${leftPct}% + 4px)`,
-        width: `calc(${widthPct}% - 8px)`,
-        borderLeftColor: categoryColor(instance.category),
-        transform: dragging ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
-        touchAction: isTask || readOnly ? undefined : 'none',
-        pointerEvents: dragging ? 'none' : undefined,
-      }}
-    >
+      <div
+        ref={blockRef}
+        role={readOnly ? undefined : 'button'}
+        tabIndex={readOnly ? undefined : 0}
+        aria-label={label}
+        aria-pressed={readOnly ? undefined : isTask ? instance.done : undefined}
+        onPointerDown={readOnly ? undefined : onPointerDown}
+        onPointerMove={readOnly ? undefined : onPointerMove}
+        onPointerUp={readOnly ? undefined : onPointerUp}
+        onKeyDown={readOnly ? undefined : onKeyDown}
+        onClick={readOnly ? undefined : onClick}
+        className={cx(
+          'absolute z-10 select-none overflow-hidden rounded-card border-l-4 bg-surface p-1.5 shadow-card transition-shadow duration-fast ease-out',
+          !readOnly && (isTask ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'),
+          dragging && 'z-50 opacity-95 shadow-hover',
+          instance.done && 'opacity-70',
+          fresh && 'animate-event-celebrate',
+          bouncing && 'animate-drop-settle',
+          exiting && 'animate-exit',
+        )}
+        style={{
+          top,
+          height,
+          left: `calc(${leftPct}% + 4px)`,
+          width: `calc(${widthPct}% - 8px)`,
+          borderLeftColor: categoryColor(instance.category),
+          transform: dragging ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
+          touchAction: isTask || readOnly ? undefined : 'none',
+          pointerEvents: dragging ? 'none' : undefined,
+        }}
+      >
       <p className={cx('flex items-center gap-1 truncate text-[13px] font-semibold leading-tight text-ink', instance.done && 'line-through')}>
         {isTask && (
           <span
@@ -162,6 +203,7 @@ export function EventBlock({
           {formatTimeFr(instance.start)} – {formatEndFr(instance.end)}
         </p>
       )}
-    </div>
+      </div>
+    </>
   );
 }

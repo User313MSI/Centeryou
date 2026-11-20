@@ -1,14 +1,25 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 import { CalendarDays, Check, Clock, Trash2 } from 'lucide-react';
+
 import { Badge } from '../ui/badge';
+
 import { categoryLabel, priorityLabel } from '../../lib/categories';
+
 import { formatDayShort, formatTimeFr } from '../../lib/dates';
+
 import { useStore } from '../../lib/store';
+
 import { useUiStore } from '../../lib/ui-store';
+
 import { useSwipeActions } from '../../lib/use-swipe';
+
 import type { TaskItem } from '../../types';
+
 import { cx } from '../../lib/utils';
+
 import { playBlip } from '../../lib/voice';
 
 const priorityTone = { basse: 'basse', moyenne: 'moyenne', haute: 'haute' } as const;
@@ -20,22 +31,14 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
   const sounds = useStore((s) => s.settings.sounds);
   const pushToast = useUiStore((s) => s.pushToast);
   const openTaskMenu = useUiStore((s) => s.openTaskMenu);
+  const requestExit = useUiStore((s) => s.requestExit);
+  const cancelExit = useUiStore((s) => s.cancelExit);
 
   const onToggle = () => {
     toggleTask(task.id);
     if (sounds) playBlip(task.done ? 520 : 760);
-    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée.` });
-  };
 
-  const onDelete = () => {
-    deleteTask(task.id);
-    pushToast({
-      message: `« ${task.title} » supprimée`,
-      actionLabel: 'Annuler',
-      duration: 5000,
-      onAction: () =>
-        addTask({ title: task.title, date: task.date, time: task.time, category: task.category, priority: task.priority }),
-    });
+    if (!task.done) pushToast({ message: `Bravo ! « ${task.title} » est cochée.` });
   };
 
   // gestes tactiles mobile : glisser vers la droite = terminée, appui long = menu d'actions
@@ -46,10 +49,43 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
     onLongPress: () => openTaskMenu(task.id),
   });
 
+  // coche de la tâche (clic, swipe, voix, menu) : micro-confettis au niveau de la ligne + vibration courte
+  // (mobile). import dynamique : le chunk des célébrations n'est chargé que si un effet se déclenche.
+  const prevDone = useRef(task.done);
+  useEffect(() => {
+    if (!prevDone.current && task.done) {
+      void import('../../lib/celebrate').then((m) => {
+        m.spawnConfetti(swipeRef.current);
+        m.vibrateShort();
+      });
+    }
+    prevDone.current = task.done;
+  }, [task.done, swipeRef]);
+
+  // sortie douce avant suppression réelle (classe animate-exit posée sur la ligne)
+  const exiting = useUiStore((s) => s.exitingIds.includes(`task:${task.id}`));
+
+  const onDelete = () => {
+    // sortie douce avant suppression réelle ; « Annuler » restaure si elle a déjà eu lieu
+    requestExit(`task:${task.id}`, () => deleteTask(task.id));
+    pushToast({
+      message: `« ${task.title} » supprimée`,
+      actionLabel: 'Annuler',
+      duration: 5000,
+      onAction: () => {
+        if (cancelExit(`task:${task.id}`)) return; // sortie annulée à temps : la tâche est toujours là
+        addTask({ title: task.title, date: task.date, time: task.time, category: task.category, priority: task.priority });
+      },
+    });
+  };
+
   return (
     <li
       ref={swipeRef}
-      className="flex touch-pan-y select-none items-center gap-3 rounded-card border border-line/70 bg-surface p-3 shadow-card transition-shadow duration-fast ease-out hover:shadow-hover"
+      className={cx(
+        'relative flex touch-pan-y select-none items-center gap-3 rounded-card border border-line/70 bg-surface p-3 shadow-card transition-shadow duration-fast ease-out hover:shadow-hover',
+        exiting && 'animate-exit',
+      )}
       style={{ WebkitTouchCallout: 'none' }}
       aria-label={`${task.done ? 'Tâche faite' : 'Tâche active'} : ${task.title}. Glisser vers la droite pour la terminer, appui long pour le menu.`}
     >

@@ -20,6 +20,8 @@ export function TaskActionsMenu() {
   const addTask = useStore((s) => s.addTask);
   const sounds = useStore((s) => s.settings.sounds);
   const pushToast = useUiStore((s) => s.pushToast);
+  const requestExit = useUiStore((s) => s.requestExit);
+  const cancelExit = useUiStore((s) => s.cancelExit);
 
   if (!task) return null;
 
@@ -31,14 +33,17 @@ export function TaskActionsMenu() {
   };
 
   const onDelete = () => {
-    deleteTask(task.id);
+    // sortie douce avant suppression réelle ; « Annuler » restaure si la suppression a déjà eu lieu
+    requestExit(`task:${task.id}`, () => deleteTask(task.id));
     closeTaskMenu();
     pushToast({
       message: `« ${task.title} » supprimée`,
       actionLabel: 'Annuler',
       duration: 5000,
-      onAction: () =>
-        addTask({ title: task.title, date: task.date, time: task.time, category: task.category, priority: task.priority }),
+      onAction: () => {
+        if (cancelExit(`task:${task.id}`)) return; // sortie annulée à temps : la tâche est toujours là
+        addTask({ title: task.title, date: task.date, time: task.time, category: task.category, priority: task.priority });
+      },
     });
   };
 

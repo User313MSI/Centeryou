@@ -1,13 +1,18 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDownRight, ArrowUpRight, ChartColumn, ChartPie, Flame, Gauge, Minus, Sparkles } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
 import { CATEGORY_BG_CLASS, CategoryDonut, WeekdayBars, WeekBars } from './charts';
 import { categoryLabel } from '../../lib/categories';
+
 import { todayISO } from '../../lib/dates';
+
+import { isNewRecord, readRecord, writeRecord } from '../../lib/motion';
+
+import { useMotionEnabled } from '../../lib/use-motion';
 import { computeStats, formatDeltaFr, formatHoursFr, type CompletionStats } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 import { cx } from '../../lib/utils';
@@ -45,6 +50,23 @@ export function StatsView() {
   const tasks = useStore((s) => s.tasks);
   const today = todayISO();
   const stats = useMemo(() => computeStats(events, tasks, today), [events, tasks, today]);
+
+  // célébrations actives ? (réglage + prefers-reduced-motion) — tout redevient statique sinon
+  const motionOn = useMotionEnabled();
+  const serieRef = useRef<HTMLParagraphElement>(null);
+
+  // nouveau record (série de jours organisés battue) : un petit feu d'artifice discret, une seule fois
+  // (import dynamique : le chunk des célébrations n'est chargé que si un record est battu)
+  useEffect(() => {
+    if (!motionOn || !stats.hasData) return;
+    const KEY = 'centeryou-record-serie';
+    const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
+    const prev = readRecord(storage, KEY);
+    if (isNewRecord(prev, stats.streak)) {
+      writeRecord(storage, KEY, stats.streak);
+      void import('../../lib/celebrate').then((m) => m.spawnFireworkAt(serieRef.current));
+    }
+  }, [motionOn, stats.hasData, stats.streak]);
 
   const currentWeek = stats.weeks[stats.weeks.length - 1];
   const legendCategories = stats.weeks
@@ -177,7 +199,7 @@ export function StatsView() {
                 </h3>
                 <CompletionRow label="Complétion sur 7 jours" stats={stats.completion7} />
                 <CompletionRow label="Complétion sur 30 jours" stats={stats.completion30} />
-                <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <p ref={serieRef} id="stats-serie" className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Flame size={16} aria-hidden className="text-warning" />
                   {stats.streak > 0
                     ? stats.streak > 1

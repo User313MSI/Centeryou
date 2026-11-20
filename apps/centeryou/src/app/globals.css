@@ -118,6 +118,64 @@
   }
 }
 
+/*
+ * Paillette — célébrations sobres (transform/opacity UNIQUEMENT, aucun re-layout).
+ * Toutes ces animations sont tuées instantanément par le bloc prefers-reduced-motion
+ * global ci-dessous, et par le bloc html.animations-off quand le réglage
+ * « Animations & célébrations » est désactivé.
+ */
+
+/* apparition élastique d'un événement créé (léger overshoot) */
+@keyframes event-celebrate-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  78% {
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* halo doux autour du bloc qui vient d'apparaître */
+@keyframes halo-out {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+/* onde violette qui part du point de création */
+@keyframes ripple-out {
+  from {
+    opacity: 0.8;
+    transform: scale(0.15);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* sortie douce à la suppression (rétrécissement + fondu) */
+@keyframes exit-out {
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 240ms ease-out both;
 }
@@ -135,6 +193,87 @@
 }
 .animate-view-in {
   animation: view-in 260ms ease-out both;
+}
+
+.animate-event-celebrate {
+  animation: event-celebrate-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.animate-halo {
+  animation: halo-out 620ms ease-out both;
+}
+
+.animate-exit {
+  animation: exit-out 200ms ease-in both;
+}
+
+/* halo posé à côté du bloc (mêmes coordonnées, débord de 6 px) — derrière le bloc */
+.celebrate-halo {
+  position: absolute;
+  border-radius: 18px;
+  background: rgb(var(--c-primary) / 0.22);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+/* onde violette depuis le point de création (créée en JS, position fixed) */
+.celebrate-ripple {
+  position: fixed;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border-radius: 9999px;
+  border: 2px solid rgb(var(--c-primary) / 0.55);
+  background: rgb(var(--c-primary) / 0.1);
+  pointer-events: none;
+  z-index: 30;
+  animation: ripple-out 560ms ease-out both;
+  will-change: transform, opacity;
+}
+
+/* surcouche de micro-confettis contenue DANS le bloc hôte (jamais plein écran) */
+.celebrate-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.celebrate-confetti > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+}
+
+/* petit feu d'artifice discret (créé en JS, ancré sur un point fixe) */
+.celebrate-firework {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 45;
+}
+
+.celebrate-firework > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+}
+
+.celebrate-firework-flash {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: rgb(var(--c-primary) / 0.5);
+  will-change: transform, opacity;
 }
 
 .waves > span:not(:last-child) {
@@ -156,4 +295,15 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* réglage « Animations & célébrations » désactivé (classe posée sur <html>) :
+   tout redevient statique instantanément, comme avec prefers-reduced-motion */
+html.animations-off *,
+html.animations-off *::before,
+html.animations-off *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
