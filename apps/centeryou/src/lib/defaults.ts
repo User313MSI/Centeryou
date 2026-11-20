@@ -11,4 +11,5 @@ export const defaultSettings: Settings = {
   welcomeSequence: 'daily',
   welcomeShownDate: '',
   darkMode: false,
+  animations: true,
 };

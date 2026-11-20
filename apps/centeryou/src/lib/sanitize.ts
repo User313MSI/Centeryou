@@ -90,5 +90,7 @@ export function sanitizeSettings(input: unknown): Settings {
   if (input.theme === 'sombre' || input.theme === 'clair') base.theme = input.theme;
   if (typeof input.onboarded === 'boolean') base.onboarded = input.onboarded;
   if (typeof input.darkMode === 'boolean') base.darkMode = input.darkMode;
+  // champ ajouté ensuite (Paillette : animations & célébrations) : valeur sûre garantie
+  if (typeof input.animations === 'boolean') base.animations = input.animations;
   return base;
 }
