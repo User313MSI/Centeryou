@@ -18,7 +18,7 @@
 Ordre décidé par Vibe Work le 2026-11-20, après fusion de l'audit (M-03 ✅), du film (M-06 ✅) et des correctifs (M-08 ✅) : **M-04 rappels + notifications → M-07 export/import ICS**.
 
 ### M-04 — Rappels & notifications (prochaine mission)
-- **État : À LANCER MAINTENANT** — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2). Les 6 idées du brainstorming de Vibe Work et l'utilisateur (rappels navigateur 10 min avant avec snooze, push PWA, rappel échéance tâches 9h, badges, relance du soir, e-mail hebdo hold-up si comptes actifs) sont jetables en une seule mission. Le prompt complet est remis à l'utilisateur (coller dans la session de l'Adjudant).
+- **État : À LANCER MAINTENANT** — mission prioritaire n°1 de l'étude marché (chaînon manquant de l'app, notifications = rétention ×2). Rappels avant les événements (notification navigateur, avec report), rappel des tâches du jour, demande de permission propre, réglages dédiés. Périmètre exact et priorités détaillés dans le prompt de Vibe Work, rédigé sur mesure après lecture du rapport Sentinelle et de l'étude marché — l'utilisateur le colle dans la session de l'Adjudant.
 - PR : — · Dernière nouvelle : —.
 
 ### M-07 — Export / import ICS
