@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CalendarHeart, ChartLine, ListChecks } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, CalendarHeart, ChartLine, ChartPie, ListChecks } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
 import { DayView } from '../events/day-view';
@@ -13,6 +14,7 @@ import { ProgressBar } from './progress-bar';
 import { WelcomeSequence } from './welcome-sequence';
 import { formatDayLong, greetingFor, todayISO } from '../../lib/dates';
 import { calendarOnDate } from '../../lib/events';
+import { formatHoursFr, statsWeeks } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 
 const SUGGESTIONS = ['sport demain 14h', 'dentist mardi 10h30 santé', '!lundi réunion', 'rapport vendredi'];
@@ -31,6 +33,11 @@ export function AujourdhuiView() {
   );
   const doneCount = todayTasks.filter((t) => t.done).length;
   const todayItems = useMemo(() => calendarOnDate(events, tasks, today), [events, tasks, today]);
+  // heures planifiées cette semaine (pour la carte d'entrée « Tes stats »)
+  const weekMinutes = useMemo(() => {
+    const weeks = statsWeeks(events, today);
+    return weeks[weeks.length - 1]?.totalMinutes ?? 0;
+  }, [events, today]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -73,6 +80,28 @@ export function AujourdhuiView() {
         </CardHeader>
         <CardBody>
           <ProgressBar done={doneCount} total={todayTasks.length} />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <Link
+            href="/stats"
+            aria-label="Voir mes stats — ton temps, en clair"
+            className="group flex min-h-11 items-center justify-between gap-3 rounded-card px-2 transition-colors duration-fast ease-out hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <span className="flex items-center gap-2.5">
+              <ChartPie size={18} aria-hidden className="text-primary" />
+              <span>
+                <span className="block text-sm font-bold text-ink">Tes stats</span>
+                <span className="block text-xs text-muted">Ton temps, en clair</span>
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
+              {weekMinutes > 0 && <span className="font-bold text-voicetext">{formatHoursFr(weekMinutes)} cette semaine</span>}
+              <ArrowRight size={16} aria-hidden className="transition-transform duration-fast ease-out group-hover:translate-x-0.5" />
+            </span>
+          </Link>
         </CardBody>
       </Card>
 
