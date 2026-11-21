@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { CalendarClock, Trash2 } from 'lucide-react';
 import { CATEGORY_LIST } from '../../lib/categories';
-import { DAY_END, DAY_START, endMinutesOf, formatRangeFr, minutesOf, timeOf, todayISO } from '../../lib/dates';
+import { DAY_END, DAY_START, endMinutesOf, formatRangeFr, minutesOf, nowMinutes, timeOf, todayISO } from '../../lib/dates';
 import { findConflict } from '../../lib/events';
+
+import { slotLabel, suggestSlots, type SlotSuggestion } from '../../lib/radar';
 
 import { REMINDER_LEADS, REMINDER_LEAD_LABELS } from '../../lib/rappel-leads';
 
@@ -56,9 +58,33 @@ export function EventDialog() {
   const [error, setError] = useState<string | null>(null);
   const reminderDefault = useStore((s) => s.settings.reminderDefaultMinutes);
 
+  // Radar (M-12) : jusqu'à 3 créneaux libres proposés en pastilles, 100 % local
+  const [suggestions, setSuggestions] = useState<SlotSuggestion[] | null>(null);
+
+  const computeSuggestions = (): SlotSuggestion[] => {
+    const duration = endMinutesOf(end) - minutesOf(start);
+    return suggestSlots({
+      events,
+      date: date || todayISO(),
+      durationMinutes: duration > 0 ? duration : 60,
+      category,
+      ignoreId: editing?.id,
+      now: { date: todayISO(), minutes: nowMinutes() },
+    });
+  };
+
+  const applySlot = (slot: SlotSuggestion) => {
+    // un clic remplit le formulaire : JAMAIS de création automatique
+    setDate(slot.date);
+    setStart(slot.start);
+    setEnd(slot.end);
+    setError(null);
+  };
+
   useEffect(() => {
     if (!eventDialog.open) return;
     setError(null);
+    setSuggestions(null);
     if (editing) {
       setTitle(editing.title);
       setDate(editing.date);
@@ -87,6 +113,15 @@ export function EventDialog() {
     if (endMinutesOf(end) <= minutesOf(start)) return null;
     return findConflict(events, { date, start, end }, editing?.id);
   }, [events, date, start, end, editing?.id]);
+
+  // Radar : suggestion automatique et gentle quand un chevauchement est détecté,
+  // et recalcul tant que les pastilles sont visibles (date/horaires modifiés)
+  const suggestionsOpen = suggestions !== null;
+  useEffect(() => {
+    if (!conflict && !suggestionsOpen) return;
+    setSuggestions(computeSuggestions());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conflict?.other.id, conflict?.exact, suggestionsOpen, date, start, end, category, events, editing?.id]);
 
   const save = () => {
     const t = title.trim();
@@ -191,6 +226,36 @@ export function EventDialog() {
           <Field label="Fin" htmlFor="ev-end">
             <Input id="ev-end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
           </Field>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            onClick={() => setSuggestions(computeSuggestions())}
+            aria-expanded={suggestionsOpen}
+          >
+            <CalendarClock size={15} aria-hidden /> Suggérer un créneau
+          </Button>
+          {suggestions?.map((slot) => {
+            const label = slotLabel(slot, todayISO());
+            return (
+              <button
+                key={`${slot.date}|${slot.start}`}
+                type="button"
+                data-testid="radar-suggestion"
+                onClick={() => applySlot(slot)}
+                title={`Remplir le formulaire avec : ${label}`}
+                className="flex min-h-11 items-center gap-1.5 rounded-pill border border-line bg-surface px-3.5 text-sm text-muted transition-all duration-fast ease-out hover:border-primary/60 hover:bg-primary/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <span aria-hidden className="h-2 w-2 rounded-full bg-primary" />
+                {label}
+              </button>
+            );
+          })}
+          {suggestions && suggestions.length === 0 && (
+            <span className="text-xs text-muted">Aucun créneau libre trouvé dans les 7 prochains jours.</span>
+          )}
         </div>
         <fieldset>
           <legend className="mb-1.5 block text-sm font-semibold text-ink">Catégorie</legend>
