@@ -2,7 +2,7 @@
 
 ## Mission M-16 — Design sonore (campagne « Grand V », VAGUE 2)
 
-Agent : **Diapason** (design sonore). Branche : `vibe/diapason-son` (base `origin/main` = `da7954a` « Vague 1 fusionnée à 100 % + feu vert vague 2 », inscription MISSIONS.md publiée sur main à `4ebc93b` à 05:30 UTC, branche rebasée dessus).
+Agent : **Diapason** (design sonore). Branche : `vibe/diapason-son` (base `origin/main` = `da7954a` « Vague 1 fusionnée à 100 % + feu vert vague 2 », inscription MISSIONS.md publiée sur main à `4ebc93b` à 05:30 UTC, branche rebasée dessus). PR : https://github.com/User313MSI/Centeryou/pull/38 (brouillon, base `main`).
 
 Mission : la musique et les sons de Centeryou, **100 % synthétisés en direct par le moteur audio du navigateur** (Web Audio API : oscillateurs + enveloppes). Zéro fichier binaire audio dans le dépôt, zéro nouvelle dépendance, interface 100 % FR.
 
@@ -45,4 +45,4 @@ Mission : la musique et les sons de Centeryou, **100 % synthétisés en direct p
 
 ### Validation finale
 - **495/495 tests** (457 intacts + 38 nouveaux) ✅ · `tsc --noEmit` ✅ · `build` ✅ 23 routes · smoke 6 routes en 200 ✅ · zéro dépendance ajoutée · zéro binaire audio · interface 100 % FR · First Load JS `/` inchangé (114 kB).
-- PR : voir MISSIONS.md (branche `vibe/diapason-son`, base `main`, brouillon).
+- PR : **https://github.com/User313MSI/Centeryou/pull/38** (brouillon, base `main`, ouverte le 2026-11-21 ~06:50 UTC, commit `b6e33c6`). MISSIONS.md publié sur `main` à l'inscription (`4ebc93b`, 05:30 UTC) et à la PR (`5d35f87`, ~06:52 UTC).
