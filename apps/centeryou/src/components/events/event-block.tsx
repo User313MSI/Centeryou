@@ -202,7 +202,7 @@ export function EventBlock({
           pointerEvents: dragging ? 'none' : undefined,
         }}
       >
-      <p className={cx('flex items-center gap-1 truncate text-[13px] font-semibold leading-tight text-ink', instance.done && 'line-through')}>
+      <p className={cx('flex items-center gap-1 truncate text-sm font-semibold leading-tight text-ink', instance.done && 'line-through')}>
         {isTask && (
           <span
             aria-hidden

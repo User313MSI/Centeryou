@@ -56,7 +56,7 @@ export function DayView({
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex min-w-[300px]">
+      <div className="flex min-w-0">
         <div className="w-12 shrink-0" aria-hidden>
           <div className="h-9" />
           {hours.map((h) => (
