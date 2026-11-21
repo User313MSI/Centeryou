@@ -2,6 +2,19 @@ import { NextResponse } from 'next/server';
 
 import { supabaseServerConfig, verifySessionUser } from '../../../../lib/server/auth';
 
+import {
+  isValidEmail,
+  json,
+  rateLimitOrNull,
+  readJsonBody,
+  unknownFields,
+} from '../../../../lib/server/http';
+
+/** M-13 Verrou : action rare et sensible — plafond par IP, modèle /api/voix. */
+const RATE_LIMIT_PER_HOUR = 10;
+
+const MAX_BODY_BYTES = 4 * 1024;
+
 /**
  * POST /api/compte/suppression
  *
@@ -12,14 +25,25 @@ import { supabaseServerConfig, verifySessionUser } from '../../../../lib/server/
  * fournie dans le corps de la requête. Sans session valide → 401, aucun
  * DELETE n'est exécuté. Si aucun compte serveur n'est configuré → accusé de
  * réception sans effet de bord (comportement inchangé).
+ *
+ * Sécurité (M-13) : rate-limit par IP (429 + Retry-After, FR) ; corps plafonné
+ * (4 Ko), champs inattendus rejetés, e-mail du corps validé s'il est présent.
  */
 export async function POST(req: Request) {
+  const limited = rateLimitOrNull(req, 'suppression', RATE_LIMIT_PER_HOUR);
+  if (limited) return limited;
+
+  const parsed = await readJsonBody(req, MAX_BODY_BYTES);
+  if (!parsed.ok) return parsed.response;
+  if (unknownFields(parsed.body, ['email']).length > 0) {
+    return json({ ok: false, serverDeleted: false, error: 'champ_inattendu' }, 400);
+  }
   let email: string | undefined;
-  try {
-    const body = await req.json();
-    if (body && typeof body.email === 'string') email = body.email;
-  } catch {
-    email = undefined;
+  if (parsed.body.email !== undefined) {
+    if (!isValidEmail(parsed.body.email)) {
+      return json({ ok: false, serverDeleted: false, error: 'email_invalide' }, 400);
+    }
+    email = parsed.body.email;
   }
 
   const cfg = supabaseServerConfig();

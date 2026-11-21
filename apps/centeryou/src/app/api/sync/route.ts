@@ -8,6 +8,8 @@ import { supabaseServerConfig, verifySessionUser } from '../../../lib/server/aut
 
 import { isStripeConfigured, retrieveCustomer } from '../../../lib/server/stripe';
 
+import { isValidCustomerId, json, unknownFields } from '../../../lib/server/http';
+
 export const runtime = 'nodejs';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +20,7 @@ export const dynamic = 'force-dynamic';
  * Synchronisation multi-appareils de l'offre Premium (dernier écrivain gagne,
  * horodatage updatedAt). Sans customerId → 400. Aucune donnée de carte ici.
  *
- * Sécurité (M-08, audit Sentinelle n°1) :
+ * Sécurité (M-08, audit Sentinelle n°1 + M-13 Verrou) :
  * - limiteur de débit par IP, comme /api/voix (20 appels/heure, 429 + Retry-After) ;
  * - authentification avant toute lecture ou écriture : si Supabase est configuré,
  *   une session Supabase valide (Bearer) correspondant au compte est exigée —
@@ -27,12 +29,18 @@ export const dynamic = 'force-dynamic';
  *   propriété ne peut pas être prouvée → refus propre (503). Le point d'entrée
  *   n'est jamais laissé ouvert là où des données de compte peuvent exister.
  *   Sans aucun backend configuré (dev local), le repli mémoire est inchangé.
+ * - validation d'entrées (M-13) : corps ≤ 1 Mo (413), JSON invalide → 400,
+ *   champs inattendus rejetés (400), customerId au format Stripe `cus_…`,
+ *   updatedAt nombre fini borné, state objet JSON obligatoire.
  */
 const MAX_CUSTOMER_ID_LENGTH = 100;
 
 const MAX_BODY_CHARS = 1_000_000;
 
 const RATE_LIMIT_PER_HOUR = 20;
+
+/** Borne supérieure d'un horodatage milliseconde crédible (≈ année 33658). */
+const MAX_UPDATED_AT = 1e15;
 
 const NO_STORE: Record<string, string> = { 'Cache-Control': 'no-store' };
 
@@ -55,6 +63,16 @@ function rateLimited(req: Request): NextResponse | null {
     },
     { status: 429, headers: { ...NO_STORE, 'Retry-After': String(hit.retryAfter) } },
   );
+}
+
+function badRequest(message: string): NextResponse {
+  return json({ error: message }, 400);
+}
+
+function validCustomerId(raw: string | undefined): string | null {
+  const id = raw?.trim() ?? '';
+  if (!id || id.length > MAX_CUSTOMER_ID_LENGTH || !isValidCustomerId(id)) return null;
+  return id;
 }
 
 /**
@@ -105,9 +123,9 @@ async function authorize(req: Request, customerId: string): Promise<NextResponse
 export async function GET(req: Request) {
   const limited = rateLimited(req);
   if (limited) return limited;
-  const customerId = new URL(req.url).searchParams.get('customerId')?.trim();
-  if (!customerId || customerId.length > MAX_CUSTOMER_ID_LENGTH) {
-    return NextResponse.json({ error: 'customerId requis' }, { status: 400, headers: NO_STORE });
+  const customerId = validCustomerId(new URL(req.url).searchParams.get('customerId') ?? undefined);
+  if (!customerId) {
+    return badRequest('customerId requis');
   }
   const denied = await authorize(req, customerId);
   if (denied) return denied;
@@ -129,13 +147,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Corps de requête trop volumineux' }, { status: 413, headers: NO_STORE });
     }
     const body = (JSON.parse(raw || '{}') as Partial<SyncSnapshot>) ?? {};
-    const customerId = body.customerId?.trim();
-    if (!customerId || customerId.length > MAX_CUSTOMER_ID_LENGTH || typeof body.updatedAt !== 'number' || body.state === undefined) {
-      return NextResponse.json({ error: 'customerId, updatedAt et state requis' }, { status: 400, headers: NO_STORE });
+    if (unknownFields(body as Record<string, unknown>, ['customerId', 'updatedAt', 'state']).length > 0) {
+      return badRequest('Champ inattendu dans la requête');
+    }
+    const customerId = validCustomerId(typeof body.customerId === 'string' ? body.customerId : undefined);
+    const updatedAt = body.updatedAt;
+    const state = body.state;
+    if (
+      !customerId ||
+      typeof updatedAt !== 'number' ||
+      !Number.isFinite(updatedAt) ||
+      Math.abs(updatedAt) > MAX_UPDATED_AT ||
+      !state ||
+      typeof state !== 'object' ||
+      Array.isArray(state)
+    ) {
+      return badRequest('customerId, updatedAt et state requis');
     }
     const denied = await authorize(req, customerId);
     if (denied) return denied;
-    const snap: SyncSnapshot = { customerId, updatedAt: body.updatedAt, state: body.state };
+    const snap: SyncSnapshot = { customerId, updatedAt, state };
     await putSnapshot(snap);
     return NextResponse.json({ ok: true }, { headers: NO_STORE });
   } catch (err) {
