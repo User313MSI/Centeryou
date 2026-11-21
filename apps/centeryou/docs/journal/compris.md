@@ -3,7 +3,7 @@
 ## Mission M-19 — Saisie vocale & rapide VRAIMENT naturelle (dictée en production)
 
 - **Agent** : Compris (session Vibe Code dédiée). Branche : `vibe/compris-voix-naturelle` (base `main` 68d8a4d, après inscription M-19 dans MISSIONS.md poussée sur main le 2026-11-21 à 22:38 UTC).
-- **PR** : en cours d’ouverture (brouillon, base `main`) — voir MISSIONS.md.
+- **PR** : **https://github.com/User313MSI/Centeryou/pull/39** (brouillon, base `main`, commit `c677dd0`, ouvert le 2026-11-21 à ~23:55 UTC) — voir MISSIONS.md.
 - **Zone étanche tenue** : `src/lib/voice-commands.ts`, `src/lib/parser.ts`, `tests/parser.test.ts`, `tests/voice-commands.test.ts`, ce journal. **Aucun autre fichier touché** (`git diff --name-only` à la livraison = ces 5 fichiers). INTERDIT respecté : pas de `src/lib/sons.ts`, `launch-film.tsx`, `globals.css`, `src/app/api/**`, `src/app/stats/**`, `package.json`, aucun fichier ICS. Zéro nouvelle dépendance. Interface 100 % FR. Aucune fusion (réservé à Vibe Work).
 - **Références lues avant de coder** : `AGENTS.md`, `docs/MISSIONS.md` (règles 1–8, notamment règle 8 sur les dates de test), tout `docs/journal/` (rien de refait : M-08 Bouclier a déjà sécurisé le parseur, M-07 Pont les ICS — zones voisines non touchées).
 
