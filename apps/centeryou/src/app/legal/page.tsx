@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
+
 import Link from 'next/link';
+
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
+
 import { LEGAL } from '../../lib/legal';
+
+import { formatPriceMonthly, PLANS } from '../../lib/plans';
 
 export const metadata: Metadata = {
   title: 'Mentions légales & confidentialité',
   description:
-    'Mentions légales, politique de confidentialité et conditions d’utilisation de Centeryou : données stockées uniquement dans votre navigateur (localStorage), aucune collecte côté serveur.',
+    'Mentions légales de Centeryou : données stockées uniquement dans votre navigateur (localStorage), aucun cookie ni traceur, compte et offre Premium facultatifs, droits RGPD expliqués simplement.',
   alternates: { canonical: '/legal' },
 };
 
@@ -15,7 +20,9 @@ export default function LegalPage() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Mentions légales & confidentialité</h1>
-        <p className="mt-1 text-sm font-semibold text-muted">Dernière mise à jour : {LEGAL.cguUpdated}.</p>
+        <p className="mt-1 text-sm font-semibold text-muted">
+          Dernière mise à jour : {LEGAL.cguUpdated} — version {LEGAL.privacyVersion} de la politique de confidentialité.
+        </p>
       </header>
 
       <Card>
@@ -37,7 +44,7 @@ export default function LegalPage() {
             >
               User313MSI/Centeryou
             </a>
-            .
+            — le code est public, la liste des destinataires de données y est vérifiable.
           </p>
         </CardBody>
       </Card>
@@ -47,8 +54,9 @@ export default function LegalPage() {
           <h2 className="text-base font-bold text-ink">Hébergement</h2>
         </CardHeader>
         <CardBody className="text-sm text-muted">
-          L’application est une application web statique servie par Vercel. Aucune donnée personnelle n’est transmise à
-          l’hébergeur : le planning, les tâches et les réglages restent dans le navigateur de l’utilisateur.
+          L’application est servie par Vercel (HTTPS, en-têtes de sécurité stricts). Comme tout site web, Vercel
+          enregistre des journaux techniques (adresse IP, date et heure, page demandée) pour la sécurité du service :
+          ils ne contiennent aucune donnée de planning.
         </CardBody>
       </Card>
 
@@ -58,21 +66,29 @@ export default function LegalPage() {
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-muted">
           <p>
-            Centeryou est <strong className="text-ink">100 % local par défaut</strong> : toutes les données (événements, tâches,
-            prénom, réglages) sont stockées uniquement dans le <code>localStorage</code> de votre navigateur (clé{' '}
-            <code>centeryou-v1</code>). Aucune donnée n’est envoyée, collectée, vendue ou partagée. Un compte en ligne
-            facultatif (sauvegarde chiffrée chez notre hébergeur) et un paiement facultatif (offre Premium) peuvent
-            être activés ponctuellement : voir la <Link href="/confidentialite" className="font-semibold text-primarydark underline-offset-2 hover:underline">politique de confidentialité</Link>.
+            Centeryou est <strong className="text-ink">100 % local par défaut</strong> : événements, tâches, prénom et
+            réglages sont stockés uniquement dans le <code>localStorage</code> de votre navigateur (clé{' '}
+            <code>centeryou-v1</code>). Aucune donnée n’est envoyée, collectée, vendue ou partagée sans action de
+            l’utilisateur.
           </p>
           <p>
-            Aucun cookie de pistage ni outil de mesure d’audience externe n’est utilisé. Vous pouvez effacer toutes vos
-            données à tout moment via <Link href="/reglages" className="font-semibold text-primarydark underline-offset-2 hover:underline">Réglages → « Effacer toutes mes données »</Link>{' '}
-            ou en vidant les données du site dans votre navigateur.
+            Trois options facultatives peuvent envoyer des données, et uniquement si vous les activez : la{' '}
+            <strong className="text-ink">voix premium</strong> (le texte lu à voix haute — par exemple le brief du
+            matin — passe par notre serveur puis par le service de synthèse vocale ElevenLabs ; la clé du service
+            reste côté serveur), le <strong className="text-ink">compte en ligne</strong> (e-mail, mot de passe et
+            prénom chez Supabase, dans l’UE, plus une sauvegarde de vos données), et l’<strong className="text-ink">offre
+            Premium ({formatPriceMonthly(PLANS.premium.priceMonthlyEur)})</strong> (paiement via Stripe — votre carte ne
+            passe jamais par nous — et synchronisation multi-appareils via notre serveur). Les rappels sont des
+            notifications <strong className="text-ink">100 % locales</strong> envoyées par votre navigateur.
           </p>
           <p>
-            La reconnaissance vocale et la synthèse vocale utilisent, par défaut, les API du navigateur (Web Speech API) ;
-            si une clé ElevenLabs optionnelle est configurée par l’exploitant, le texte dicté peut transiter par ce service
-            tiers — sans cela, aucune donnée vocale ne quitte l’appareil.
+            Aucun cookie, aucun traceur, aucune publicité, aucune mesure d’audience : c’est pourquoi aucun bandeau
+            cookies n’apparaît (le stockage local strictement nécessaire n’en requiert pas). Vous pouvez{' '}
+            <strong className="text-ink">récupérer toutes vos données</strong> (Réglages → « Sauvegarder mes données » :
+            fichier JSON complet) et <strong className="text-ink">tout effacer définitivement</strong> (Réglages →
+            « Supprimer mon compte et mes données » : effacement local immédiat + compte serveur si vous en avez un),
+            en moins de 30 secondes. Détails et délais :{' '}
+            <Link href="/confidentialite" className="font-semibold text-primarydark underline-offset-2 hover:underline">politique de confidentialité</Link>.
           </p>
         </CardBody>
       </Card>
@@ -83,13 +99,18 @@ export default function LegalPage() {
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-muted">
           <p>
-            Centeryou est proposé gratuitement, pour un usage personnel, « tel quel » et sans garantie de disponibilité.
-            Les données étant stockées localement, leur perte (appareil perdu, navigateur vidé) n’engage pas l’éditeur.
+            Centeryou est proposé « tel quel », pour un usage personnel, sans garantie de disponibilité. L’offre de
+            base est gratuite ; l’offre Premium ({formatPriceMonthly(PLANS.premium.priceMonthlyEur)}, annulable à tout
+            moment) ajoute la voix premium illimitée, la sauvegarde en ligne et la synchro multi-appareils. Les données
+            étant locales, leur perte (appareil perdu, navigateur vidé) n’engage pas l’éditeur — d’où le bouton de
+            sauvegarde. Voir les{' '}
+            <Link href="/cgu" className="font-semibold text-primarydark underline-offset-2 hover:underline">CGU</Link>.
           </p>
           <p>
             Voir aussi : <Link href="/offres" className="font-semibold text-primarydark underline-offset-2 hover:underline">offres</Link> ·{' '}
             <Link href="/presse" className="font-semibold text-primarydark underline-offset-2 hover:underline">fiche de presse</Link> ·{' '}
-            <Link href="/demo" className="font-semibold text-primarydark underline-offset-2 hover:underline">démo</Link>.
+            <Link href="/demo" className="font-semibold text-primarydark underline-offset-2 hover:underline">démo</Link> ·{' '}
+            <Link href="/contact" className="font-semibold text-primarydark underline-offset-2 hover:underline">contact</Link>.
           </p>
         </CardBody>
       </Card>
