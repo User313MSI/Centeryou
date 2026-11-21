@@ -266,14 +266,16 @@ describe('Rappels — rappel des tâches du jour', () => {
 
 describe('Rappels — contenu des notifications (100 % FR)', () => {
   it('événement : titre = nom de l’événement, texte = heure + catégorie', () => {
-    const r: DueEventReminder = { kind: 'event', event: ev(), occurrence: TODAY, key: occurrenceKey('e1', TODAY), genKey: occurrenceKey('e1', TODAY), snoozed: false };
+    // occurrence = le jour réel de l’exécution (le préfixe « À » dépend de la vraie date, le test doit rester vert tous les jours)
+    const JOUR_REEL = toISODate(new Date());
+    const r: DueEventReminder = { kind: 'event', event: ev({ date: JOUR_REEL }), occurrence: JOUR_REEL, key: occurrenceKey('e1', JOUR_REEL), genKey: occurrenceKey('e1', JOUR_REEL), snoozed: false };
     const n = buildEventNotification(r, true);
     expect(n.title).toBe('Réunion équipe');
     expect(n.body).toContain('10h00');
     expect(n.body).toContain('Travail');
-    expect(n.tag).toBe('e1@2026-11-20');
+    expect(n.tag).toBe(`e1@${JOUR_REEL}`);
     expect(n.icon).toBe('/icons/icon-192.png');
-    expect(n.data).toEqual({ key: 'e1@2026-11-20', eventId: 'e1' });
+    expect(n.data).toEqual({ key: `e1@${JOUR_REEL}`, eventId: 'e1' });
     expect(n.actions).toEqual([
       { action: 'done', title: 'Terminé' },
       { action: 'snooze', title: 'Reporter de 5 min' },
@@ -286,7 +288,9 @@ describe('Rappels — contenu des notifications (100 % FR)', () => {
   });
 
   it('occurrence d’un autre jour : le jour est ajouté au texte', () => {
-    const r: DueEventReminder = { kind: 'event', event: ev({ date: '2026-11-21' }), occurrence: '2026-11-21', key: 'k2', genKey: 'k2', snoozed: true };
+    // « autre jour » recalculé à chaque exécution (la veille) : jamais égal à aujourd’hui, quel que soit le jour où la CI tourne
+    const AUTRE_JOUR = toISODate(new Date(Date.now() - 24 * 3600 * 1000));
+    const r: DueEventReminder = { kind: 'event', event: ev({ date: AUTRE_JOUR }), occurrence: AUTRE_JOUR, key: 'k2', genKey: 'k2', snoozed: true };
     const n = buildEventNotification(r, false);
     expect(n.body).toContain('10h00');
     expect(n.body).toContain('Travail');

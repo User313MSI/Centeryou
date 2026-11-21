@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, Bell, Download, Moon, Sparkles, Trash2, Upload, Volume2 } from 'lucide-react';
 import Link from 'next/link';
 import { AccountSection } from '../../components/account/account-section';
+import { AgendasCard } from '../../components/settings/agendas-card';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { Field, Input } from '../../components/ui/input';
@@ -479,6 +480,8 @@ export default function ReglagesPage() {
           </div>
         </CardBody>
       </Card>
+
+      <AgendasCard />
 
       <Card>
         <CardHeader>
