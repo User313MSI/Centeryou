@@ -39,9 +39,9 @@ Campagne « Grand V » (21/11), **vague 1** : M-07 Pont + M-10 Sourire + M-11 So
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ### M-12 — Radar · Créneaux suggérés (campagne Grand V)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
+- **État : EN COURS, EN PARALLÈLE** — branche `vibe/radar-creneaux` ouverte par Radar le 21/11 à 03:19 UTC (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
 - **Zone étanche** : src/components/events/event-dialog.tsx, nouveau src/lib/radar.ts, composants planning si besoin. INTERDIT : reglages/page.tsx, globals.css, sw.js, tout fichier ICS (zone Pont), src/lib/sync.ts.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- PR : — · Dernière nouvelle : branche `vibe/radar-creneaux` ouverte le 21/11 à 03:19 UTC, MISSIONS.md publié sur main à l'ouverture (Radar).
 
 ### M-13 — Verrou · Sécurité offensive pré-lancement (campaign Grand V, vague 1)
 - **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapports sentinelle.md (15 attaques pentest) + bouclier.md (ce qui est déjà corrigé).
