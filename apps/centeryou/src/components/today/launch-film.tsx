@@ -158,8 +158,8 @@ function SceneOpen({ film }: { film: FilmData }) {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="film-card flex flex-col items-center gap-1 rounded-card px-2 py-4 md:py-5">
-      <span className="film-title text-3xl font-extrabold tabular-nums md:text-4xl">{value}</span>
-      <span className="film-faint px-1 text-center text-[11px] font-semibold uppercase tracking-wide md:text-xs">{label}</span>
+      <span className="film-title text-2xl font-extrabold tabular-nums md:text-4xl">{value}</span>
+      <span className="film-faint px-1 text-center text-xs font-semibold uppercase tracking-wide md:text-xs">{label}</span>
     </div>
   );
 }
@@ -171,7 +171,7 @@ function SceneDay({ film }: { film: FilmData }) {
   const minutes = useAnimatedNumber(film.plannedMinutes, true, 1500);
   return (
     <>
-      <h2 className="film-title text-3xl font-extrabold md:text-5xl">Ta journée</h2>
+      <h2 className="film-title text-2xl font-extrabold md:text-4xl">Ta journée</h2>
       <div className="grid w-full max-w-lg grid-cols-3 gap-2.5 md:gap-4">
         <Stat value={String(ev)} label={film.eventCount > 1 ? 'événements' : 'événement'} />
         <Stat value={String(tk)} label={film.taskOpen > 1 ? 'tâches à faire' : 'tâche à faire'} />
@@ -181,7 +181,7 @@ function SceneDay({ film }: { film: FilmData }) {
         <div data-film-keep className="film-card film-halo-pulse flex w-full max-w-md items-center gap-3 rounded-tile p-4 text-left">
           <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(film.next.category) }} />
           <span className="min-w-0">
-            <span className="film-faint block text-[11px] font-bold uppercase tracking-wide">Prochaine étape</span>
+            <span className="film-faint block text-xs font-bold uppercase tracking-wide">Prochaine étape</span>
             <span className="film-title block truncate text-base font-bold md:text-lg">{film.next.title}</span>
             <span className="film-sub block text-xs font-semibold md:text-sm">
               {formatRangeFr(film.next.start, film.next.end)} · {categoryLabel(film.next.category)}
@@ -251,7 +251,7 @@ function SceneProgress({ film }: { film: FilmData }) {
   const pct = film.weekPercent ?? 0;
   return (
     <>
-      <h2 className="film-title text-3xl font-extrabold md:text-5xl">Ta progression</h2>
+      <h2 className="film-title text-2xl font-extrabold md:text-4xl">Ta progression</h2>
       <AnimatedRing percent={pct} />
       <div className="flex items-center gap-2" aria-label={`Série de ${film.streak} jour${film.streak > 1 ? 's' : ''} organisés d’affilée`}>
         {film.weekDays.map((d) => (
@@ -301,13 +301,13 @@ function SceneMagic({ film }: { film: FilmData }) {
   const category = film.next?.category ?? 'perso';
   return (
     <>
-      <h2 className="film-title text-3xl font-extrabold md:text-5xl">La magie</h2>
+      <h2 className="film-title text-2xl font-extrabold md:text-4xl">La magie</h2>
       {card ? (
         <div key="card" className="film-scene flex flex-col items-center gap-5">
           <div data-film-keep className="film-card film-halo-pulse flex w-full max-w-md items-center gap-3 rounded-tile p-4 text-left">
             <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(category) }} />
             <span className="min-w-0">
-              <span className="film-faint block text-[11px] font-bold uppercase tracking-wide">Carte créée</span>
+              <span className="film-faint block text-xs font-bold uppercase tracking-wide">Carte créée</span>
               <span className="film-title block truncate text-base font-bold md:text-lg">{film.magicTitle}</span>
               <span className="film-sub block text-xs font-semibold md:text-sm">
                 {film.magicTimeLabel} · {categoryLabel(category)}
@@ -333,7 +333,7 @@ function SceneSignature({ film }: { film: FilmData }) {
   return (
     <>
       <VoiceMonogram size={88} />
-      <h2 className="film-title text-3xl font-extrabold md:text-5xl">Ton planning qui te parle.</h2>
+      <h2 className="film-title text-2xl font-extrabold md:text-4xl">Ton planning qui te parle.</h2>
       <p className="film-sub text-xl font-bold md:text-2xl">Bonne journée{film.prenom ? `, ${film.prenom}` : ''}.</p>
     </>
   );
@@ -355,7 +355,7 @@ function SceneView({ scene, film }: { scene: number; film: FilmData }) {
 function StaticPanel({ film }: { film: FilmData }) {
   return (
     <div data-testid="film-static" data-film-keep className="film-card mx-auto w-full max-w-xl rounded-tile p-6 text-left md:p-8">
-      <h1 className="film-title text-2xl font-extrabold md:text-3xl">
+      <h1 className="film-title text-2xl font-extrabold md:text-4xl">
         {film.greeting}
         {film.prenom ? `, ${film.prenom}` : ''}
       </h1>
@@ -591,7 +591,7 @@ export function LaunchFilm() {
           {needsGesture && !started ? (
             <div className="film-scene flex w-full flex-col items-center gap-6 text-center">
               <VoiceMonogram />
-              <h1 className="film-title text-3xl font-extrabold md:text-5xl">
+              <h1 className="film-title text-2xl font-extrabold md:text-4xl">
                 {film.greeting}
                 {film.prenom ? `, ${film.prenom}` : ''}
               </h1>

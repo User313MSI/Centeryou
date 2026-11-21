@@ -51,7 +51,7 @@ export default function ReglagesPage() {
     try {
       json = await readBackupFile(file);
     } catch {
-      pushToast({ message: 'Impossible de lire ce fichier.' });
+      pushToast({ message: 'Impossible de lire ce fichier — choisis le fichier .json téléchargé depuis Centeryou (« Sauvegarder mes données »). Rien n’a été modifié.' });
       return;
     }
     try {
@@ -63,7 +63,7 @@ export default function ReglagesPage() {
         setPendingRestore(null);
       }, 8000);
     } catch (err) {
-      pushToast({ message: err instanceof BackupError ? err.message : 'Fichier de sauvegarde invalide.' });
+      pushToast({ message: err instanceof BackupError ? err.message : 'Ce fichier ne ressemble pas à une sauvegarde Centeryou — rien n’a été modifié. Choisis le fichier .json téléchargé depuis Centeryou.' });
     }
   };
 
@@ -130,7 +130,7 @@ export default function ReglagesPage() {
     }
     deleteAccount();
     setConfirmDelete(false);
-    pushToast({ message: 'Ton compte et tes données ont été supprimés' });
+    pushToast({ message: 'Ton compte et tes données ont été supprimés.' });
     router.push('/');
   };
 
@@ -252,12 +252,12 @@ export default function ReglagesPage() {
             >
               <option value="always">À chaque ouverture</option>
               <option value="daily">Une fois par jour (défaut)</option>
-              <option value="off">Désactivée</option>
+              <option value="off">Jamais</option>
             </select>
           </Field>
           <p className="mt-2 text-xs text-muted">
-            Réglage historique de la séquence d’accueil, repris par le film de lancement ci-dessus : « Désactivée »
-            coupe aussi le film. La voix du film se règle avec la bascule « Voix du film ».
+            La séquence d’accueil est devenue le film de lancement (carte ci-dessous) : les deux réglages restent
+            synchronisés, choisis l’un ou l’autre. La voix se règle avec la bascule « Voix du film ».
           </p>
         </CardBody>
       </Card>
@@ -481,20 +481,28 @@ export default function ReglagesPage() {
             />
           </div>
           {confirmRestore && pendingRestore && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="danger" size="sm" onClick={applyRestore}>
-                Confirmer la restauration ({pendingRestore.events.length} événement{pendingRestore.events.length > 1 ? 's' : ''}, {pendingRestore.tasks.length} tâche{pendingRestore.tasks.length > 1 ? 's' : ''})
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setConfirmRestore(false);
-                  setPendingRestore(null);
-                }}
-              >
-                Annuler
-              </Button>
+            <div className="flex flex-col gap-2 rounded-card border border-warning/40 bg-warning/10 px-4 py-3">
+              <p className="text-sm text-ink">
+                <strong>Attention :</strong> tes événements, tâches et réglages actuels seront{' '}
+                <strong>remplacés</strong> par ceux du fichier ({pendingRestore.events.length} événement
+                {pendingRestore.events.length > 1 ? 's' : ''}, {pendingRestore.tasks.length} tâche
+                {pendingRestore.tasks.length > 1 ? 's' : ''}).
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="danger" size="sm" onClick={applyRestore}>
+                  Confirmer la restauration
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setConfirmRestore(false);
+                    setPendingRestore(null);
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
             </div>
           )}
           <div>
@@ -509,7 +517,7 @@ export default function ReglagesPage() {
                 }
                 resetAll();
                 setConfirmReset(false);
-                pushToast({ message: 'Toutes les données ont été effacées' });
+                pushToast({ message: 'Toutes les données ont été effacées.' });
               }}
             >
               {confirmReset ? 'Cliquer encore pour confirmer la suppression' : 'Effacer toutes mes données'}

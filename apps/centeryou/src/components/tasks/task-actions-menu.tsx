@@ -37,7 +37,7 @@ export function TaskActionsMenu() {
     requestExit(`task:${task.id}`, () => deleteTask(task.id));
     closeTaskMenu();
     pushToast({
-      message: `« ${task.title} » supprimée`,
+      message: `« ${task.title} » supprimée.`,
       actionLabel: 'Annuler',
       duration: 5000,
       onAction: () => {

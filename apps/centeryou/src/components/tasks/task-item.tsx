@@ -69,7 +69,7 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
     // sortie douce avant suppression réelle ; « Annuler » restaure si elle a déjà eu lieu
     requestExit(`task:${task.id}`, () => deleteTask(task.id));
     pushToast({
-      message: `« ${task.title} » supprimée`,
+      message: `« ${task.title} » supprimée.`,
       actionLabel: 'Annuler',
       duration: 5000,
       onAction: () => {

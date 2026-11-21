@@ -121,7 +121,12 @@ export function AujourdhuiView() {
           {todayTasks.length === 0 ? (
             <EmptyState
               title="Aucune tâche pour aujourd’hui"
-              description="Ajoute une tâche avec la grande barre ci-dessus, par exemple « sport demain 14h » ou « !lundi réunion »."
+              description="Ajoute ta première tâche avec la grande barre ci-dessus, en langage naturel."
+              example="!lundi réunion"
+              action={{
+                label: 'Ajouter une tâche',
+                onClick: () => document.getElementById('quick-add-input')?.focus(),
+              }}
             />
           ) : (
             <ul className="flex flex-col gap-2.5">

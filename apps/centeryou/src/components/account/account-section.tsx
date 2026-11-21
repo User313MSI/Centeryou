@@ -54,7 +54,7 @@ export function AccountSection() {
     try {
       const outcome = await pushNow();
       pushToast({
-        message: outcome === 'saved' ? 'Données enregistrées en ligne ✓' : outcome === 'offline' ? 'Hors ligne — réessayé à la reconnexion' : 'Enregistrement en ligne impossible pour le moment',
+        message: outcome === 'saved' ? 'Données enregistrées en ligne ✓' : outcome === 'offline' ? 'Hors ligne — réessayé à la reconnexion.' : 'Enregistrement en ligne impossible pour le moment — tes données restent dans ce navigateur.'
       });
     } finally {
       setBusy(false);
@@ -78,7 +78,7 @@ export function AccountSection() {
 
   const onSignOut = async () => {
     await signOut();
-    pushToast({ message: 'Déconnecté — tes données restent dans ce navigateur' });
+    pushToast({ message: 'Déconnecté — tes données restent dans ce navigateur.' });
   };
 
   return (
@@ -104,15 +104,15 @@ export function AccountSection() {
           {configured && status === 'ready' && !user && (
             <>
               <p className="text-sm text-muted">
-                Sans compte, tout reste dans ce navigateur. Avec un compte gratuit, tes données sont aussi enregistrées en
-                ligne et retrouvées sur un autre appareil.
+                Sans compte en ligne, tout reste dans ce navigateur. Avec un compte en ligne gratuit (e-mail + mot de
+                passe), tes données sont aussi enregistrées en ligne et retrouvées sur un autre appareil.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => setDialog('login')}>
                   Se connecter
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => setDialog('signup')}>
-                  Créer un compte
+                  Créer un compte en ligne
                 </Button>
               </div>
             </>

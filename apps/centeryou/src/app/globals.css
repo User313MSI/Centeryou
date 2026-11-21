@@ -47,8 +47,68 @@ html.dark {
  * dans layout.tsx depuis design/tokens.ts (source unique) : :root = thème clair
  * (design validé), html.dark = mode sombre (classe posée selon settings.theme).
  */
+/*
+ * ÉCHELLES CENTERYOU — Pinceau (M-18, vague 2). Source de vérité visuelle :
+ * design/tokens.ts (couleurs, typo, radius, motion) + tailwind.config.ts qui
+ * en dérive les classes. Ce bloc les expose en variables CSS pour globals.css
+ * lui-même et documente les échelles appliquées PARTOUT dans src/components/** :
+ *
+ * - Espacement : grille de base 4 px (--space-*), demi-pas 2 px autorisé pour
+ *   les micro-ajustements (badges, pastilles, libellés d'heures) — toutes les
+ *   classes Tailwind d'espacement (p, m, gap, space suivies d'un cran, ex. p-4,
+ *   gap-2) sont des multiples de 2 px.
+ * - Typographie : 12/14/16/18/24/32/48 px, interligne 1,5 (classes text-xs à
+ *   text-4xl) ; aucun text-[…] arbitraire ne subsiste dans les composants.
+ *   Titres : leading-tight ; corps : interligne 1,5 ; pastilles chiffrées :
+ *   leading-none.
+ * - Rayons : card 16 px (cartes/blocs), tile 20 px (grandes tuiles, halo de
+ *   célébration), pill 999 px (boutons, badges, onglets), full = cercle parfait
+ *   (pastilles, avatars, coches). Aucun autre rayon.
+ * - Ombres : uniquement --shadow-rest (cartes au repos) et --shadow-hover
+ *   (survol / élévation), injectées par layout.tsx selon le thème.
+ * - Mouvement : transitions et entrées/sorties UI = --dur-fast (200 ms) ou
+ *   --dur-normal (300 ms), courbe --ease-ui (ease-out) partout ;
+ *   prefers-reduced-motion et le réglage « Animations » tuent tout (blocs
+ *   globaux ci-dessous). Les célébrations (Paillette) gardent leurs durées
+ *   propres documentées plus bas ; les boucles ambiantes (ondes vocales, halos
+ *   de rappel, film) gardent les leurs.
+ */
+
 :root {
   color-scheme: light;
+
+  /* espacement — base 4 px, demi-pas 2 px */
+  --space-05: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+
+  /* typographie — design/tokens.ts typography.scale, interligne 1,5 */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-4xl: 48px;
+
+  /* rayons — design/tokens.ts radius */
+  --radius-card: 16px;
+  --radius-tile: 20px;
+  --radius-pill: 999px;
+
+  /* mouvement — design/tokens.ts motion */
+  --dur-fast: 200ms;
+  --dur-normal: 300ms;
+  --ease-ui: ease-out;
 }
 
 @layer base {
@@ -217,24 +277,27 @@ html.dark {
 }
 
 .animate-fade-in {
-  animation: fade-in 240ms ease-out both;
+  animation: fade-in var(--dur-fast) var(--ease-ui) both;
 }
 .animate-slide-up {
-  animation: slide-up 280ms ease-out both;
+  animation: slide-up var(--dur-normal) var(--ease-ui) both;
 }
 .animate-pop {
-  animation: pop 220ms ease-out both;
+  animation: pop var(--dur-fast) var(--ease-ui) both;
 }
 .animate-event-in {
-  animation: event-in 260ms ease-out both;
+  animation: event-in var(--dur-normal) var(--ease-ui) both;
 }
 .animate-drop-settle {
-  animation: drop-settle 320ms ease-out;
+  animation: drop-settle var(--dur-normal) var(--ease-ui);
 }
 .animate-view-in {
-  animation: view-in 260ms ease-out both;
+  animation: view-in var(--dur-normal) var(--ease-ui) both;
 }
 
+/* Pinceau (M-18) : famille « célébrations » à part — durées propres (overshoot
+   élastique intentionnel), hors échelle UI 200/300 ms ; tuées comme tout le reste
+   par prefers-reduced-motion / html.animations-off. */
 .animate-event-celebrate {
   animation: event-celebrate-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
 }
@@ -244,7 +307,7 @@ html.dark {
 }
 
 .animate-exit {
-  animation: exit-out 200ms ease-in both;
+  animation: exit-out var(--dur-fast) var(--ease-ui) both;
 }
 
 /*
@@ -281,7 +344,7 @@ html.animations-off .rappel-halo {
 /* halo posé à côté du bloc (mêmes coordonnées, débord de 6 px) — derrière le bloc */
 .celebrate-halo {
   position: absolute;
-  border-radius: 18px;
+  border-radius: var(--radius-tile); /* Pinceau (M-18) : famille rayons, était 18 px */
   background: rgb(var(--c-primary) / 0.22);
   pointer-events: none;
   z-index: 0;

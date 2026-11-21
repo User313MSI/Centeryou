@@ -22,7 +22,7 @@ export function SyncOfferDialog() {
     const outcome = await pushNow();
     setOfferOpen(false);
     if (outcome === 'saved') pushToast({ message: 'Données enregistrées en ligne ✓' });
-    else pushToast({ message: 'Enregistrement reporté (hors ligne ou erreur réseau)' });
+    else pushToast({ message: 'Enregistrement reporté : hors ligne pour le moment, réessayé à la reconnexion.' });
   };
 
   const onPull = async () => {

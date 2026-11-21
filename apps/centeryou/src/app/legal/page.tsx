@@ -11,7 +11,7 @@ import { formatPriceMonthly, PLANS } from '../../lib/plans';
 export const metadata: Metadata = {
   title: 'Mentions légales & confidentialité',
   description:
-    'Mentions légales de Centeryou : données stockées uniquement dans votre navigateur (localStorage), aucun cookie ni traceur, compte et offre Premium facultatifs, droits RGPD expliqués simplement.',
+    'Mentions légales de Centeryou : données stockées uniquement dans ton navigateur (localStorage), aucun cookie ni traceur, compte et offre Premium facultatifs, droits RGPD expliqués simplement.',
   alternates: { canonical: '/legal' },
 };
 
@@ -67,26 +67,26 @@ export default function LegalPage() {
         <CardBody className="flex flex-col gap-2 text-sm text-muted">
           <p>
             Centeryou est <strong className="text-ink">100 % local par défaut</strong> : événements, tâches, prénom et
-            réglages sont stockés uniquement dans le <code>localStorage</code> de votre navigateur (clé{' '}
-            <code>centeryou-v1</code>). Aucune donnée n’est envoyée, collectée, vendue ou partagée sans action de
-            l’utilisateur.
+            réglages sont stockés uniquement dans le <code>localStorage</code> de ton navigateur (clé{' '}
+            <code>centeryou-v1</code>). Aucune donnée n’est envoyée, collectée, vendue ou partagée sans action de ta
+            part.
           </p>
           <p>
-            Trois options facultatives peuvent envoyer des données, et uniquement si vous les activez : la{' '}
+            Trois options facultatives peuvent envoyer des données, et uniquement si tu les actives : la{' '}
             <strong className="text-ink">voix premium</strong> (le texte lu à voix haute — par exemple le brief du
             matin — passe par notre serveur puis par le service de synthèse vocale ElevenLabs ; la clé du service
             reste côté serveur), le <strong className="text-ink">compte en ligne</strong> (e-mail, mot de passe et
-            prénom chez Supabase, dans l’UE, plus une sauvegarde de vos données), et l’<strong className="text-ink">offre
-            Premium ({formatPriceMonthly(PLANS.premium.priceMonthlyEur)})</strong> (paiement via Stripe — votre carte ne
+            prénom chez Supabase, dans l’UE, plus une sauvegarde de tes données), et l’<strong className="text-ink">offre
+            Premium ({formatPriceMonthly(PLANS.premium.priceMonthlyEur)})</strong> (paiement via Stripe — ta carte ne
             passe jamais par nous — et synchronisation multi-appareils via notre serveur). Les rappels sont des
-            notifications <strong className="text-ink">100 % locales</strong> envoyées par votre navigateur.
+            notifications <strong className="text-ink">100 % locales</strong> envoyées par ton navigateur.
           </p>
           <p>
             Aucun cookie, aucun traceur, aucune publicité, aucune mesure d’audience : c’est pourquoi aucun bandeau
-            cookies n’apparaît (le stockage local strictement nécessaire n’en requiert pas). Vous pouvez{' '}
-            <strong className="text-ink">récupérer toutes vos données</strong> (Réglages → « Sauvegarder mes données » :
+            cookies n’apparaît (le stockage local strictement nécessaire n’en requiert pas). Tu peux{' '}
+            <strong className="text-ink">récupérer toutes tes données</strong> (Réglages → « Sauvegarder mes données » :
             fichier JSON complet) et <strong className="text-ink">tout effacer définitivement</strong> (Réglages →
-            « Supprimer mon compte et mes données » : effacement local immédiat + compte serveur si vous en avez un),
+            « Supprimer mon compte et mes données » : effacement local immédiat + compte serveur si tu en as un),
             en moins de 30 secondes. Détails et délais :{' '}
             <Link href="/confidentialite" className="font-semibold text-primarydark underline-offset-2 hover:underline">politique de confidentialité</Link>.
           </p>

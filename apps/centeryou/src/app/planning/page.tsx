@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CalendarRange, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardBody } from '../../components/ui/card';
@@ -10,7 +10,8 @@ import { DayView } from '../../components/events/day-view';
 import { MonthView } from '../../components/events/month-view';
 import { WeekView } from '../../components/events/week-view';
 import { useEventActions } from '../../components/events/use-event-actions';
-import { addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, nextSlot, startOfWeekISO, todayISO } from '../../lib/dates';
+import { addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, isSameMonth, monthMatrix, nextSlot, startOfWeekISO, todayISO } from '../../lib/dates';
+import { calendarMonthOnDate, calendarOnDate } from '../../lib/events';
 import { useUiStore, type PlanningView } from '../../lib/ui-store';
 import { useHorizontalSwipe } from '../../lib/use-swipe';
 
@@ -46,6 +47,18 @@ export default function PlanningPage() {
     setCursor(iso);
     setView('jour');
   };
+
+  // période affichée sans aucun élément (jour / semaine / mois déserte) :
+  // on le dit doucement, la grille reste cliquable pour créer le premier élément
+  const periodeVide = useMemo(() => {
+    const jours =
+      view === 'jour'
+        ? [cursor]
+        : view === 'semaine'
+          ? Array.from({ length: 7 }, (_, i) => addDaysISO(startOfWeekISO(cursor), i))
+          : monthMatrix(cursor).flat().filter((d) => isSameMonth(d, cursor));
+    return jours.every((d) => (view === 'mois' ? calendarMonthOnDate(events, tasks, d) : calendarOnDate(events, tasks, d)).length === 0);
+  }, [view, cursor, events, tasks]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -84,6 +97,13 @@ export default function PlanningPage() {
       ) : (
         <Card>
           <CardBody className="p-2 md:p-4">
+            {periodeVide && (
+              <p role="status" className="mb-3 rounded-card border border-dashed border-line bg-surface/60 px-4 py-3 text-sm text-muted">
+                {view === 'jour' && 'Journée libre — clique sur un créneau de la grille pour créer un événement.'}
+                {view === 'semaine' && 'Semaine libre — clique sur un créneau pour créer un événement.'}
+                {view === 'mois' && 'Rien de prévu ce mois-ci — clique sur un jour pour créer un événement.'}
+              </p>
+            )}
             <div
               key={`${view}-${cursor}`}
               ref={swipeRef}
