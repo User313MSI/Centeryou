@@ -12,10 +12,11 @@
 4. Quand Vibe Work annote « ✅ fusionnée » : la mission côté code est close. « ❌ refusée (raison) » : l'Adjudant corrige le tir.
 5. Conflit entre agents : l'Adjudant arbitre et documente le choix ici.
 6. Avant toute nouvelle mission : lire `AGENTS.md`, ce fichier et `apps/centeryou/docs/journal/` — ne jamais refaire ce qui est déjà fait.
+7. **Campagne parallèle (« Grand V », 21/11)** : plusieurs agents peuvent coder en même temps, chacun dans SA session Vibe Code dédiée, sur des ZONES ÉTANCHES de fichiers (inscrites dans la mission). Chaque agent publie AVANT de coder un commit sur main (fichier MISSIONS.md uniquement, en pullant d'abord) pour inscrire sa branche, et un autre à la PR. Aucun agent ne touche les fichiers de la zone des autres. Vibe Work fusionne dans l'ordre d'arrivée et arbitre les éventuels conflits. Maximum 4 missions en parallèle (M-07 Pont + 3 de la campagne).
 
 ## Missions en cours
 
-Ordre décidé par Vibe Work le 2026-11-20 au soir, après fusion de l'audit (M-03 ✅), des animations (M-05 ✅), du film (M-06 ✅), des correctifs de sécurité (M-08 ✅) et des rappels (M-04 ✅) : **M-07 export/import ICS → M-09 Déménageur (migration Vercel → Cloudflare) → activation Supabase/Stripe avec l'utilisateur → rodage quotidien et bêta-testeurs avant le 1/01/2027**.
+Campagne « Grand V » (21/11) : **M-07 Pont (session principale) en cours** + **M-10 Sourire, M-11 Souffle, M-12 Radar en parallèle dans des sessions dédiées**. Ensuite : M-09 Déménageur (Cloudflare, après création du compte utilisateur) → activation Supabase/Stripe avec l'utilisateur → rodage et bêta-testeurs avant le 1/01/2027.
 
 ### M-07 — Export / import ICS
 - **État : À LANCER MAINTENANT** (M-04 ✅ fusionnée — feux verts de Vibe Work et de l'utilisateur). Le prompt complet est remis à l'utilisateur (à coller dans la session de l'Adjudant). Périmètre strict : export ET import de fichiers .ics (RFC 5545), aucun abonnement d'agenda distant (c'est de la phase 1, après le lancement).
@@ -25,6 +26,22 @@ Ordre décidé par Vibe Work le 2026-11-20 au soir, après fusion de l'audit (M-
 - **État : À LANCER après M-07, AVANT le 31/12** — l'hébergement gratuit actuel (Vercel) interdit l'usage commercial : au 1/01/2027 Centeryou devient payant (Premium 4,99 €/mois), donc il faut soit payer Vercel ~20 $/mois soit migrer. L'utilisateur a choisi Cloudflare (site statique gratuit + Workers 5 $/mois par compte, plusieurs projets possibles) + Supabase (25 $/mois par organisation, 1er projet inclus) pour centraliser ses projets. La migration doit être invisible : même URL en prod, interruption nulle, tous les tests verts.
 - Objectif : déployer apps/centeryou sur Cloudflare (Workers/Pages via l'adaptateur OpenNext/@opennextjs/cloudflare pour Next.js), vérifier contraintes (runtime Node pour /api/* : voix, sync, checkout, suppression, webhook Stripe), variables d'environnement reprises à l'identique, headers de sécurité (CSP nonce, HSTS) et rate-limits conservés, service worker et PWA intacts, mesures de poids comparées avant/après. Le prompt complet sera rédigé par Vibe Work après la fusion de M-07 ; l'utilisateur créera le compte Cloudflare et les clés d'API au moment venu.
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 20/11 au soir.
+
+### M-10 — Sourire · Accessibilité & contrastes (campagne Grand V)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapport Sentinelle (axe accessibilité 3/5 : teinte « danger » 2,66:1 et « warning » 1,75:1, sous le seuil AA 4,5:1 ;复审 du clavier et des aria).
+- **Zone étanche** : src/components/**, globals.css (uniquement les 2 teintes de texte concernées), composants de texte/badges. INTERDIT : reglages/page.tsx, src/lib/sync.ts, tout fichier ICS (zone Pont), event-dialog (zone Radar), apps/centeryou-desktop, package.json.
+- Exception à la règle des tokens : ajustement des DEUX seules teintes #FFB020 et #FF6B6B autorisé (vitesse grand V, validité AA documentée avant/après dans le journal), les 5 autres intouchés. L'identité visuelle de l'app doit rester identique au premier regard.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-11 — Souffle · Performance & dette de code (campagne Grand V)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapport Sentinelle (axe perf 4/5 : rendu dynamique à surveiller ; dette 3/5 : nextSlot défini 3 fois, code mort design tokens).
+- **Zone étanche** : configs de pages (src/app/**), src/lib/** (sauf ics/sync), suppression de code mort. INTERDIT : event-dialog (zone Radar), reglages/page.tsx, components/** si non strictement nécessaire, globals.css, apps/centeryou-desktop, package.json.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-12 — Radar · Créneaux suggérés (campagne Grand V)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
+- **Zone étanche** : src/components/events/event-dialog.tsx, nouveau src/lib/radar.ts, composants planning si besoin. INTERDIT : reglages/page.tsx, globals.css, sw.js, tout fichier ICS (zone Pont), src/lib/sync.ts.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ## Missions terminées (mémoire)
 
