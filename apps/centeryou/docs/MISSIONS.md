@@ -31,9 +31,10 @@ Campagne « Grand V » (21/11) — **M-07 Pont ✅ fusionnée le 21/11 (PR #29, 
 - PR : — (brouillon dès l'ouverture de la branche) · Dernière nouvelle : 2026-11-21 03:26 UTC — branche `vibe/sourire-accessibilite` ouverte, zone : src/components/** + globals.css (2 teintes), journal `journal/sourire.md`.
 
 ### M-11 — Souffle · Performance & dette de code (campagne Grand V)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapport Sentinelle (axe perf 4/5 : rendu dynamique à surveiller ; dette 3/5 : nextSlot défini 3 fois, code mort design tokens).
+- **État : EN COURS depuis le 2026-11-21 ~03:30 UTC** (session Vibe Code dédiée). Source : rapport Sentinelle (axe perf 4/5 : rendu dynamique à surveiller ; dette 3/5 : nextSlot défini 3 fois, code mort design tokens).
 - **Zone étanche** : configs de pages (src/app/**), src/lib/** (sauf ics/sync), suppression de code mort. INTERDIT : event-dialog (zone Radar), reglages/page.tsx, components/** si non strictement nécessaire, globals.css, apps/centeryou-desktop, package.json.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- **Branche** : `vibe/souffle-performance` (base `origin/main`).
+- PR : — · Dernière nouvelle : 2026-11-21 03:30 UTC — branche ouverte ; analyse du rendu faite (contrainte CSP à nonce par requête documentée : toutes les pages restent en rendu dynamique), nextSlot unifié en une définition partagée (src/lib/dates.ts), code mort supprimé (design tokens, priorityColor, exports morts) ; build + tests en cours.
 
 ### M-12 — Radar · Créneaux suggérés (campagne Grand V)
 - **État : EN COURS, EN PARALLÈLE** — branche `vibe/radar-creneaux` ouverte par Radar le 21/11 à 03:19 UTC (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
