@@ -4,7 +4,7 @@
 
 - **Agent** : Trompette (session Vibe Code dédiée). Branche : `vibe/trompette-marketing` (base `main`).
 - **Zone étanche** : `apps/centeryou/docs/marketing/**` UNIQUEMENT + ce journal. **Aucun fichier de code touché** — mission docs uniquement.
-- **PR** : — (ouverte en brouillon après le premier push, base `main`).
+- **PR** : **https://github.com/User313MSI/Centeryou/pull/31** (brouillon, base `main`, ouverte le 2026-11-21 à 03:31 UTC, head `vibe/trompette-marketing` @ `4cdb6fd`). Fusion réservée à Vibe Work.
 
 ### Références lues avant d'écrire
 - `AGENTS.md`, `apps/centeryou/docs/MISSIONS.md` (règles Grand V : publier MISSIONS.md sur main à l'ouverture de la branche et à la PR, pull d'abord), tous les journaux de `docs/journal/` (pas de chevauchement : personne d'autre n'écrit dans `docs/marketing/`).
@@ -21,8 +21,9 @@
   - `PLAN-LANCEMENT.MD` — countdown 21/11 (J-41) → 1/01/2027 (J-0) en 6 phases (teasing, coulisses, démo vidéo du film, preuves/bêta, fêtes, compte à rebours final, jour J), 5 plateformes FR (Reddit r/antitaff + r/etudiants, presse tech FR via `/presse`, LinkedIn FR, Discords étude/routine FR, TikTok/Reels/Shorts), message de jour J mot pour mot + variante courte.
   - `POSTS-RESEAUX.MD` — 10 posts prêts à copier (accroche + texte + visuel) : 3 LinkedIn, 2 Instagram, 2 TikTok/Shorts (scripts vidéo 9:16 du film et du parseur), 2 Reddit (r/antitaff, r/etudiants), 1 X.
   - `EMAILS.MD` — 5 e-mails prêts : E1 annonce (21/11), E2 veille du jour J (31/12 20h), E3 jour J (1/01 8h), E4 bienvenue nouvel utilisateur, E5 relance douce J+7 (zéro culpabilité, désinscription facile).
-- 2026-11-21 03:5x — commit + push de la branche, ouverture de la PR (brouillon, base `main`) → lien ajouté ci-dessous.
-- 2026-11-21 — **MISSIONS.md publié sur main à la PR** (pull d'abord, fichier MISSIONS.md uniquement) : entrée M-15 mise à jour avec le lien de PR.
+- 2026-11-21 03:31 — commit `4cdb6fd` + push `vibe/trompette-marketing`, **PR #31 ouverte en brouillon** (base `main`) : https://github.com/User313MSI/Centeryou/pull/31
+- 2026-11-21 03:32 — **MISSIONS.md publié sur main à la PR** (pull d'abord : main passé à `9e25108`, commit `ff5e176`, fichier `apps/centeryou/docs/MISSIONS.md` uniquement) : entrée M-15 mise à jour avec le lien PR #31 et le détail des livrables.
+- 2026-11-21 03:33 — journal finalisé (ce commit) + push.
 
 ### Décisions importantes
 - **Règle d'or appliquée à la lettre** : chaque promesse marketing est adossée à une preuve vérifiable dans le code de `main` au 21/11 (parseur, film, voix, rappels, mode sombre, local-first, plans 0 €/4,99 €). Les fonctions en cours (ICS M-07, créneaux M-12) ne sont **pas** mentionnées. La limite des rappels (app ouverte/arrière-plan seulement) est dite telle quelle, dans la FAQ et l'e-mail de bienvenue.
