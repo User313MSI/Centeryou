@@ -34,8 +34,8 @@ Campagne « Grand V » (21/11) — **VAGUE 1 FUSIONNÉE À 100 %** : 7 missions 
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ### M-18 — Pinceau · Interface & harmonie visuelle (campagne Grand V, VAGUE 2)
-- **État : FEU VERT le 21/11 (vague 1 fusionnée) — À LANCER maintenant, session dédiée, en parallèle avec M-16 et M-17** (zone libre). Echelle d'espacements/typo cohérente, ombres et rayons, parfaite parité clair/sombre, responsive 320 px, transitions homogènes. Pas de changement de palette, pas de refonte.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- **État : EN COURS depuis le 2026-11-21 05:31 UTC** (agent Pinceau, session dédiée, branche `vibe/pinceau-ui`, base `main` `da7954a`, en parallèle avec M-16 Diapason et M-17 Nord). Zone étanche : `src/app/globals.css` + styles des composants `src/components/**` (className uniquement, aucune logique). INTERDIT tenu : logique métier, fichiers ICS (`src/lib/ics.ts`, `agendas-card.tsx`), `event-dialog.tsx` (zone Radar), api, `package.json`, pages `src/app/**` hors globals.css. Objectif : échelles d'espacement/typo/rayons/ombres appliquées partout, parité clair/sombre, responsive 320 px, transitions homogènes (200/300 ms ease-out), `prefers-reduced-motion` respecté. Palette FIGÉE (violet #7C5CFF, primarydark #5B3FE8, thé #2DD4BF, corail, ambre, azur nuit #1A1B2E) : aucune teinte changée, cohérence uniquement.
+- PR : — · Dernière nouvelle : 2026-11-21 05:31 UTC — branche `vibe/pinceau-ui` ouverte, inscription publiée (audit des écarts en cours).
 
 ## Missions terminées (mémoire)
 
