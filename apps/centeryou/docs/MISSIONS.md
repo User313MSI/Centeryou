@@ -41,9 +41,9 @@ Campagne « Grand V » (21/11) — **M-07 Pont ✅ fusionnée le 21/11 (PR #29, 
 - PR : — · Dernière nouvelle : branche `vibe/radar-creneaux` ouverte le 21/11 à 03:19 UTC, MISSIONS.md publié sur main à l'ouverture (Radar).
 
 ### M-13 — Verrou · Sécurité offensive pré-lancement (campaign Grand V, vague 1)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapports sentinelle.md (15 attaques pentest) + bouclier.md (ce qui est déjà corrigé).
-- **Zone étanche** : src/app/api/**, src/lib/server/**, src/middleware.ts, .github/workflows/**. INTERDIT : tout le reste (components, reglages, fichiers ICS, package.json, apps/centeryou-desktop).
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- **État : EN COURS** (lancée le 2026-11-21 à 03:29 UTC par l'agent Verrou, session Vibe Code dédiée, branche `vibe/verrou-securite`, base `main` b0127c3). Source : rapports sentinelle.md (15 attaques pentest) + bouclier.md (ce qui est déjà corrigé — ne pas refaire). Objectifs : rate-limits sur /api/checkout, /api/portal, /api/subscription-status (modèle /api/voix) ; quota voix renforcé (plafond IP plus strict + session Supabase prioritaire sur le prénom) ; validation du Host pour l'URL de retour de paiement ; validation d'entrées manuelle sur chaque route API ; nouveau fichier de tests d'intrusion (≥ 20 attaques automatisées) ; CI : scan de secrets bloquant + npm audit informatif. Validation : 327 tests intacts + ≥ 20 nouveaux, build vert, smoke des routes, appels légitimes inchangés. Zéro dépendance, interface 100 % FR, aucune fusion (réservé à Vibe Work).
+- **Zone étanche** : src/app/api/**, src/lib/server/**, src/middleware.ts, .github/workflows/** (+ journal `journal/verrou.md`). INTERDIT : tout le reste (components, reglages, fichiers ICS, package.json, apps/centeryou-desktop).
+- PR : — (brouillon dès l'ouverture de la branche) · Dernière nouvelle : 2026-11-21 03:29 UTC — branche `vibe/verrou-securite` ouverte, MISSIONS.md publié sur main à l'ouverture (Verrou).
 
 ### M-14 — Coffre · Confidentialité & données personnelles (campagne Grand V, vague 1)
 - **État : EN COURS, EN PARALLÈLE** — branche `vibe/coffre-confidentialite` ouverte par Coffre le 21/11 à 03:27 UTC (session Vibe Code dédiée). Objectif : inventaire complet des données, conformité claire pour le grand public français.
