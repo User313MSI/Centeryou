@@ -12,7 +12,7 @@
 4. Quand Vibe Work annote « ✅ fusionnée » : la mission côté code est close. « ❌ refusée (raison) » : l'Adjudant corrige le tir.
 5. Conflit entre agents : l'Adjudant arbitre et documente le choix ici.
 6. Avant toute nouvelle mission : lire `AGENTS.md`, ce fichier et `apps/centeryou/docs/journal/` — ne jamais refaire ce qui est déjà fait.
-7. **Campagne parallèle (« Grand V », 21/11)** : plusieurs agents peuvent coder en même temps, chacun dans SA session Vibe Code dédiée, sur des ZONES ÉTANCHES de fichiers (inscrites dans la mission). Chaque agent publie AVANT de coder un commit sur main (fichier MISSIONS.md uniquement, en pullant d'abord) pour inscrire sa branche, et un autre à la PR. Aucun agent ne touche les fichiers de la zone des autres. Vibe Work fusionne dans l'ordre d'arrivée et arbitre les éventuels conflits. Maximum 4 missions en parallèle (M-07 Pont + 3 de la campagne).
+7. **Campagne parallèle (« Grand V », 21/11)** : plusieurs agents peuvent coder en même temps, chacun dans SA session Vibe Code dédiée, sur des ZONES ÉTANCHES de fichiers (inscrites dans la mission). Chaque agent publie AVANT de coder un commit sur main (fichier MISSIONS.md uniquement, en pullant d'abord) pour inscrire sa branche, et un autre à la PR. Aucun agent ne touche les fichiers de la zone des autres. Vibe Work fusionne dans l'ordre d'arrivée et arbitre les éventuels conflits. Plafond vague 1 (21/11) : 7 missions en parallèle aux zones étanches (M-07, M-10, M-11, M-12, M-13, M-14, M-15). Vague 2 (M-16, M-17, M-18) : uniquement APRÈS la fusion complète de la vague 1, les zones se recoupant.
 
 ## Missions en cours
 
