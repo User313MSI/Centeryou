@@ -46,7 +46,8 @@ SCOPE=(
   apps/centeryou/.env.local.example
   apps/centeryou/next.config.mjs
   apps/centeryou/postcss.config.mjs
-  apps/centeryou/tailwind.config.ts
+  apps/c
+enteryou/tailwind.config.ts
   apps/centeryou/vitest.config.ts
   apps/centeryou/vitest.audit.config.mts
   apps/centeryou/next-env.d.ts
@@ -67,9 +68,9 @@ EXCLUDES=(
   --exclude='scan-secrets.sh'
 )
 
-// Vibe Work (21/11) : ne garder que les chemins existants — un chemin absent
-// faisait sortir grep en erreur technique (rc=2) et échouait la CI sans
-// aucun secret trouvé.
+# Vibe Work (21/11) : ne garder que les chemins existants — un chemin absent
+# faisait sortir grep en erreur technique (rc=2) et échouait la CI sans
+# aucun secret trouvé.
 _existing=()
 for p in "${SCOPE[@]}"; do
   [ -e "$p" ] && _existing+=("$p")
@@ -117,7 +118,8 @@ elif [ $rc -ne 1 ]; then
 fi
 
 if [ $fail -ne 0 ]; then
-  echo "ÉCHEC du scan de secrets : aucun secret ne doit être commité (voir AGENTS.md)."
+  echo "ÉCHEC du scan de secre
+ts : aucun secret ne doit être commité (voir AGENTS.md)."
   exit 1
 fi
 
