@@ -16,7 +16,7 @@
 
 ## Missions en cours
 
-Campagne « Grand V » (21/11) : **M-07 Pont (session principale) en cours** + **M-10 Sourire, M-11 Souffle, M-12 Radar en parallèle dans des sessions dédiées**. Ensuite : M-09 Déménageur (Cloudflare, après création du compte utilisateur) → activation Supabase/Stripe avec l'utilisateur → rodage et bêta-testeurs avant le 1/01/2027.
+Campagne « Grand V » (21/11), **vague 1** : M-07 Pont + M-10 Sourire + M-11 Souffle + M-12 Radar + **M-13 Verrou (sécurité) + M-14 Coffre (confidentialité) + M-15 Trompette (marketing, docs uniquement)** — 7 agents au total, zones étanches. **Vague 2 (après fusion des PR en vol)** : M-16 Diapason (son), M-17 Nord (UX), M-18 Pinceau (UI). Ensuite : M-09 Déménageur (Cloudflare, après création du compte utilisateur) → activation Supabase/Stripe avec l'utilisateur → rodage et bêta-testeurs avant le 1/01/2027.
 
 ### M-07 — Export / import ICS
 - **État : À LANCER MAINTENANT** (M-04 ✅ fusionnée — feux verts de Vibe Work et de l'utilisateur). Le prompt complet est remis à l'utilisateur (à coller dans la session de l'Adjudant). Périmètre strict : export ET import de fichiers .ics (RFC 5545), aucun abonnement d'agenda distant (c'est de la phase 1, après le lancement).
@@ -41,6 +41,33 @@ Campagne « Grand V » (21/11) : **M-07 Pont (session principale) en cours** + *
 ### M-12 — Radar · Créneaux suggérés (campagne Grand V)
 - **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
 - **Zone étanche** : src/components/events/event-dialog.tsx, nouveau src/lib/radar.ts, composants planning si besoin. INTERDIT : reglages/page.tsx, globals.css, sw.js, tout fichier ICS (zone Pont), src/lib/sync.ts.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-13 — Verrou · Sécurité offensive pré-lancement (campaign Grand V, vague 1)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapports sentinelle.md (15 attaques pentest) + bouclier.md (ce qui est déjà corrigé).
+- **Zone étanche** : src/app/api/**, src/lib/server/**, src/middleware.ts, .github/workflows/**. INTERDIT : tout le reste (components, reglages, fichiers ICS, package.json, apps/centeryou-desktop).
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-14 — Coffre · Confidentialité & données personnelles (campagne Grand V, vague 1)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Objectif : inventaire complet des données, conformité claire pour le grand public français.
+- **Zone étanche** : pages légales (mentions, confidentialité, CGU), src/lib/legal.ts, journal. Recommandations hors zone : documentées dans le journal uniquement, jamais codées. INTERDIT : tout le reste.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-15 — Trompette · Marketing & plan de lancement (campagne Grand V, vague 1)
+- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Objectif : kit de lancement complet pour le 1/01/2027.
+- **Zone étanche** : docs/marketing/** UNIQUEMENT (documents, aucun code de l'app). INTERDIT : toucher au code de l'app.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-16 — Diapason · Design sonore (campagne Grand V, VAGUE 2)
+- **État : ATTENDRE la fusion des PR en vol avant de lancer** (sa zone reprend des fichiers des agents actuels : reglages/page.tsx, celebrate.ts). Moteur Web Audio synthétisé (zéro fichier binaire, zéro dépendance), réglage « Sons », sons discrets pour célébrations et notifications, nappe du film optionnelle et off par défaut.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-17 — Nord · Expérience utilisateur (campagne Grand V, VAGUE 2)
+- **État : ATTENDRE la fusion des PR en vol avant de lancer** (zone components = zone Sourire en cours). Parcours premier lancement, états vides, messages d'erreur humains, microcopy, annulations sûres, terminologie homogène. Corrections chirurgicales, pas de refonte.
+- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+
+### M-18 — Pinceau · Interface & harmonie visuelle (campagne Grand V, VAGUE 2)
+- **État : ATTENDRE la fusion des PR en vol avant de lancer** (zone globals.css = zone Sourire en cours). Echelle d'espacements/typo cohérente, ombres et rayons, parfaite parité clair/sombre, responsive 320 px, transitions homogènes. Pas de changement de palette, pas de refonte.
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ## Missions terminées (mémoire)
