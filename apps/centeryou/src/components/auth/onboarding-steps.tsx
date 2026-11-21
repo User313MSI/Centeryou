@@ -38,7 +38,7 @@ export function OnboardingSteps() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <header className="text-center">
-        <h1 className="text-2xl font-extrabold text-ink md:text-3xl">
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">
           Bienvenue{prenom.trim() ? `, ${prenom.trim()}` : ''} !
         </h1>
         <p className="mx-auto mt-1 max-w-md text-sm font-semibold text-muted">

@@ -40,7 +40,7 @@ function LandingPage() {
     <div className="flex flex-col gap-10 md:gap-14">
       <section className="flex flex-col items-center gap-6 pt-6 text-center md:pt-10">
         <LogoWithName size={44} />
-        <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-ink md:text-[56px] md:leading-[1.1]">
+        <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-ink md:text-4xl">
           {SLOGAN}
         </h1>
         <p className="max-w-xl text-base font-semibold text-muted md:text-lg">
