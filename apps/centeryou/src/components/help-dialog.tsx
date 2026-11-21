@@ -5,7 +5,7 @@ import { useUiStore } from '../lib/ui-store';
 
 const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: 'N', desc: 'Nouvel événement' },
-  { keys: 'T', desc: 'Saisie rapide de tâche' },
+  { keys: 'T', desc: 'Saisie rapide (tâche ou événement)' },
   { keys: 'V', desc: 'Assistant vocal (écouter / arrêter)' },
   { keys: '1 / 2 / 3', desc: 'Vues Jour / Semaine / Mois du planning' },
   { keys: '?', desc: 'Cette aide' },

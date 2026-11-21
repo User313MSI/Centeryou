@@ -41,7 +41,7 @@ export function useEventActions() {
     if (zone.date === ev.date && start === ev.start) return;
     moveEvent(eventId, zone.date, start);
     setLastDrop(eventId);
-    pushToast({ message: `« ${ev.title} » déplacé au ${formatDayShort(zone.date)} à ${formatTimeFr(start)}` });
+    pushToast({ message: `« ${ev.title} » déplacé au ${formatDayShort(zone.date)} à ${formatTimeFr(start)}.` });
   };
 
   return { events, tasks, dayStart, onSlotClick, onEventClick, onTaskToggle, onDropAt };

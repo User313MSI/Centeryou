@@ -6,19 +6,20 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { categoryLabel } from '../../lib/categories';
 
-import { formatDayShort, formatTimeFr } from '../../lib/dates';
+import { formatDayShort, formatTimeFr, minutesOf, timeOf } from '../../lib/dates';
 import { parseInput } from '../../lib/parser';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { playBlip } from '../../lib/voice';
 import { cx } from '../../lib/utils';
 
-const DEFAULT_PLACEHOLDER = 'Ajoute vite : « sport demain 14h », « médecin mardi 10h30 santé », « !lundi réunion »…';
+const DEFAULT_PLACEHOLDER = 'Ajoute vite : « rapport vendredi » ou « sport demain 14h »…';
 const LARGE_PLACEHOLDER = 'Ajoute vite : sport demain 14h…';
 
 export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean; suggestions?: string[] }) {
   const [value, setValue] = useState('');
   const addTask = useStore((s) => s.addTask);
+  const addEvent = useStore((s) => s.addEvent);
   const sounds = useStore((s) => s.settings.sounds);
   const pushToast = useUiStore((s) => s.pushToast);
 
@@ -26,11 +27,20 @@ export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean;
     const raw = rawInput.trim();
     if (!raw) return;
     const p = parseInput(raw);
-    addTask({ title: p.title, date: p.date, time: p.time, category: p.category, priority: p.priority });
     if (sounds) playBlip(720);
-    pushToast({
-      message: `Tâche ajoutée : « ${p.title} » — ${formatDayShort(p.date)}${p.time ? ` à ${formatTimeFr(p.time)}` : ''}${p.priority === 'haute' ? ' · priorité haute' : ''}${p.category !== 'autre' ? ` · ${categoryLabel(p.category)}` : ''}`,
-    });
+    // même règle partout (commande vocale, page Bienvenue) : une heure = événement, sinon tâche
+    if (p.time) {
+      const end = timeOf(Math.min(minutesOf(p.time) + 60, 24 * 60 - 1));
+      addEvent({ title: p.title, date: p.date, start: p.time, end, category: p.category, repeat: 'jamais' });
+      pushToast({
+        message: `Événement ajouté : « ${p.title} » — ${formatDayShort(p.date)} à ${formatTimeFr(p.time)}${p.category !== 'autre' ? ` · ${categoryLabel(p.category)}` : ''}.`,
+      });
+    } else {
+      addTask({ title: p.title, date: p.date, time: null, category: p.category, priority: p.priority });
+      pushToast({
+        message: `Tâche ajoutée : « ${p.title} » — ${formatDayShort(p.date)}${p.priority === 'haute' ? ' · priorité haute' : ''}${p.category !== 'autre' ? ` · ${categoryLabel(p.category)}` : ''}.`,
+      });
+    }
     setValue('');
   };
 
@@ -47,7 +57,7 @@ export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean;
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={large ? LARGE_PLACEHOLDER : DEFAULT_PLACEHOLDER}
-          aria-label="Ajout rapide de tâche en langage naturel"
+          aria-label="Ajout rapide de tâche ou d’événement en langage naturel"
           maxLength={140}
           className={large ? 'min-h-14 rounded-pill px-6 text-lg shadow-card' : undefined}
         />

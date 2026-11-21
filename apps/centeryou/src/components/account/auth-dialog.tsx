@@ -10,7 +10,7 @@ export type AuthMode = 'login' | 'signup' | 'reset';
 
 const TITLES: Record<AuthMode, string> = {
   login: 'Connexion',
-  signup: 'Créer un compte',
+  signup: 'Créer un compte en ligne',
   reset: 'Mot de passe oublié',
 };
 
@@ -90,7 +90,7 @@ export function AuthDialog({
             Annuler
           </Button>
           <Button size="md" onClick={submit} disabled={busy}>
-            {busy ? 'Patiente…' : mode === 'login' ? 'Se connecter' : mode === 'signup' ? 'Créer mon compte' : 'Envoyer le lien'}
+            {busy ? 'Patiente…' : mode === 'login' ? 'Se connecter' : mode === 'signup' ? 'Créer mon compte en ligne' : 'Envoyer le lien'}
           </Button>
         </>
       }
@@ -152,7 +152,7 @@ export function AuthDialog({
         {mode === 'login' && (
           <>
             <button type="button" className="font-semibold text-primarydark underline-offset-2 hover:underline" onClick={() => onSwitch('signup')}>
-              Pas encore de compte ? Créer un compte
+              Pas encore de compte en ligne ? Créer un compte en ligne
             </button>
             <button type="button" className="text-muted underline-offset-2 hover:underline" onClick={() => onSwitch('reset')}>
               Mot de passe oublié ?
@@ -171,7 +171,7 @@ export function AuthDialog({
         )}
       </div>
       <p className="text-xs text-muted">
-        Sans compte, Centeryou fonctionne exactement comme avant : tout reste dans ce navigateur.
+        Sans compte en ligne, Centeryou fonctionne exactement comme avant : tout reste dans ce navigateur.
       </p>
     </Dialog>
   );
