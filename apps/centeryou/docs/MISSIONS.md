@@ -33,8 +33,8 @@ Campagne « Grand V » (21/11) — **M-07 Pont ✅ fusionnée le 21/11 (PR #29, 
 ### M-11 — Souffle · Performance & dette de code (campagne Grand V)
 - **État : EN COURS depuis le 2026-11-21 ~03:30 UTC** (session Vibe Code dédiée). Source : rapport Sentinelle (axe perf 4/5 : rendu dynamique à surveiller ; dette 3/5 : nextSlot défini 3 fois, code mort design tokens).
 - **Zone étanche** : configs de pages (src/app/**), src/lib/** (sauf ics/sync), suppression de code mort. INTERDIT : event-dialog (zone Radar), reglages/page.tsx, components/** si non strictement nécessaire, globals.css, apps/centeryou-desktop, package.json.
-- **Branche** : `vibe/souffle-performance` (base `origin/main`).
-- PR : — · Dernière nouvelle : 2026-11-21 03:30 UTC — branche ouverte ; analyse du rendu faite (contrainte CSP à nonce par requête documentée : toutes les pages restent en rendu dynamique), nextSlot unifié en une définition partagée (src/lib/dates.ts), code mort supprimé (design tokens, priorityColor, exports morts) ; build + tests en cours.
+- **Branche** : `vibe/souffle-performance` (base `origin/main`, resynchronisée avant la PR).
+- PR : **https://github.com/User313MSI/Centeryou/pull/33** (brouillon, base `main`) · Dernière nouvelle : 2026-11-21 ~05:05 UTC — livrée : contrainte CSP nonce prouvée (pages dynamiques = contrainte de sécurité, prerender impossible sans affaiblir la CSP), robots.txt/sitemap.xml en ISR 24 h, nextSlot unifié (src/lib/dates.ts), code mort supprimé (design tokens, priorityColor, exports morts), top 3 chunks analysés (supabase déjà lazy, react/react-dom irréductibles). Validation : 383/383 tests, build ✅, smoke 22/22 routes en 200, First Load JS inchangé (87,5 kO partagé, / = 114 kO). Journal : `journal/souffle.md`.
 
 ### M-12 — Radar · Créneaux suggérés (campagne Grand V)
 - **État : EN COURS, EN PARALLÈLE** — branche `vibe/radar-creneaux` ouverte par Radar le 21/11 à 03:19 UTC (session Vibe Code dédiée). Source : étude marché (phase 1 « suggestions de créneaux », ici en version 100 % locale sans IA réseau).
