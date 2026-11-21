@@ -49,9 +49,9 @@ Campagne « Grand V » (21/11), **vague 1** : M-07 Pont + M-10 Sourire + M-11 So
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ### M-14 — Coffre · Confidentialité & données personnelles (campagne Grand V, vague 1)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Objectif : inventaire complet des données, conformité claire pour le grand public français.
+- **État : EN COURS, EN PARALLÈLE** — branche `vibe/coffre-confidentialite` ouverte par Coffre le 21/11 à 03:27 UTC (session Vibe Code dédiée). Objectif : inventaire complet des données, conformité claire pour le grand public français.
 - **Zone étanche** : pages légales (mentions, confidentialité, CGU), src/lib/legal.ts, journal. Recommandations hors zone : documentées dans le journal uniquement, jamais codées. INTERDIT : tout le reste.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- PR : — · Dernière nouvelle : branche `vibe/coffre-confidentialite` ouverte le 21/11 à 03:27 UTC, MISSIONS.md publié sur main à l'ouverture (Coffre).
 
 ### M-15 — Trompette · Marketing & plan de lancement (campagne Grand V, vague 1)
 - **État : EN COURS, EN PARALLÈLE** — branche `vibe/trompette-marketing` ouverte par Trompette le 21/11 à 03:27 UTC (session Vibe Code dédiée). Objectif : kit de lancement complet pour le 1/01/2027 (positionnement, copie vitrine, plan de lancement, posts réseaux, e-mails — 5 documents Markdown FR).
