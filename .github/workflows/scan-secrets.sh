@@ -67,6 +67,19 @@ EXCLUDES=(
   --exclude='scan-secrets.sh'
 )
 
+// Vibe Work (21/11) : ne garder que les chemins existants — un chemin absent
+// faisait sortir grep en erreur technique (rc=2) et échouait la CI sans
+// aucun secret trouvé.
+_existing=()
+for p in "${SCOPE[@]}"; do
+  [ -e "$p" ] && _existing+=("$p")
+done
+SCOPE=("${_existing[@]}")
+if [ ${#SCOPE[@]} -eq 0 ]; then
+  echo "::error::Scan de secrets : périmètre vide (aucun chemin n'existe)"
+  exit 2
+fi
+
 fail=0
 
 report() {
