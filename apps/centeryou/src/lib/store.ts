@@ -31,6 +31,13 @@ interface CenteryouState {
   updateEvent: (id: string, patch: Partial<Omit<EventItem, 'id' | 'createdAt'>>) => void;
   deleteEvent: (id: string) => void;
   moveEvent: (id: string, date: string, start: string) => void;
+  /**
+   * importe des événements (Pont M-07, fichier .ics) : AJOUTE à la liste existante,
+   * ne remplace jamais. Chaque élément passe par sanitizeEvents AVANT d'entrer dans le
+   * store (même pattern que la restauration de sauvegarde) ; les éléments invalides sont
+   * écartés. Renvoie les événements effectivement ajoutés.
+   */
+  importEvents: (candidats: Array<Omit<EventItem, 'id' | 'createdAt'>>) => EventItem[];
 
   addTask: (t: Omit<TaskItem, 'id' | 'createdAt' | 'done'>) => TaskItem;
   toggleTask: (id: string) => void;
@@ -75,6 +82,13 @@ export const useStore = create<CenteryouState>()(
           events: s.events.map((e) => (e.id === id ? { ...e, ...patch } : e)),
         })),
       deleteEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
+      importEvents: (candidats) => {
+        const ajoutes = candidats
+          .map((c) => sanitizeEvents([{ ...c, id: uid(), createdAt: Date.now() }])[0])
+          .filter((e): e is EventItem => Boolean(e));
+        if (ajoutes.length > 0) set((s) => ({ events: [...s.events, ...ajoutes] }));
+        return ajoutes;
+      },
       moveEvent: (id, date, start) =>
         set((s) => ({
           events: s.events.map((e) => {
