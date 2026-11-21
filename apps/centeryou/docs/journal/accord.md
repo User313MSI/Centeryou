@@ -2,7 +2,7 @@
 
 ## Mission M-20 — Accordage d'après le premier test utilisateur réel en production (21/11 au soir)
 
-Agent : **Accord**. Branche : `vibe/accord-m20` (base `main` `eed2dab`, inscription M-20 publiée sur `main` à `eed2dab` après pull — M-19 Compris était passée entre-temps, rebase fait avant push). PR : voir MISSIONS.md (base `main`).
+Agent : **Accord**. Branche : `vibe/accord-m20` (base `main` `eed2dab`, inscription M-20 publiée sur `main` à `eed2dab` après pull — M-19 Compris était passée entre-temps, rebase fait avant push). PR : **https://github.com/User313MSI/Centeryou/pull/40** (brouillon, base `main`).
 
 ### Références lues avant de coder
 - `AGENTS.md`, `docs/MISSIONS.md`, tout `docs/journal/` — en particulier **diapason.md** (M-16 : moteur `sons.ts`, volume 0,35, crête 0,22, garde « running » dans `jouerSon`), **realisateur.md** (M-06 : film, bouton « Lancer le film », layout `pb-24 pt-16` + sous-titres absolus), **paillette.md** (M-05), **cloche.md** (M-04), **sourire.md** (M-10), **nord.md** (M-17), **pinceau.md** (M-18).
@@ -12,7 +12,7 @@ Agent : **Accord**. Branche : `vibe/accord-m20` (base `main` `eed2dab`, inscript
 `src/lib/sons.ts`, `src/components/today/launch-film.tsx`, `src/app/globals.css` (bloc film uniquement), `src/app/taches/page.tsx` + `src/components/today/aujourdhui-view.tsx` (textes d'astuce uniquement), `src/app/stats/**` + `src/components/stats/**` (formulations uniquement), `tests/**` (ajustements documentés ci-dessous), ce journal. `src/lib/celebrate.ts` et `src/lib/rappels-service.ts` : lus, **aucune logique modifiée** (ils appellent déjà les lecteurs du moteur, qui profitent seuls des nouveaux réglages). **INTERDIT tenu** : `parser.ts`, `voice-commands.ts` (zone Compris M-19 en cours), `src/app/api/**`, `package.json`/lock (diff vide), fichiers ICS, `src/lib/dates.ts` — vérifié `git diff --name-only`.
 **Une extension documentée** : `src/lib/defaults.ts`, 1 littéral (`soundVolume: 0.35` → `0.6`). Obligatoire : le volume par défaut y est stocké, et le test existant `defaultSettings.soundVolume === VOLUME_DEFAUT_SONS` (sons.test.ts) lie les deux fichiers — monter le défaut à 0,6 sans toucher `defaults.ts` était impossible sans casser ce test. Aucun agent actif sur ce fichier (vague 2 fusionnée).
 
-### Baseline mesurée (main eed2dab, 2026-11-21 ~23:45 UTC)
+### Baseline mesurée (main eed2dab, 2026-11-21 ~22:55 UTC)
 `npm test` **495/495** ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (23 routes).
 
 ---
@@ -61,7 +61,7 @@ Tests : `launch-film.test.tsx` — 4 tests réécrits sur le nouveau contrat (fi
 - « X jours organisés d’affilée » → « X jours de suite » ; « Pas encore de série de jours organisés » → « Pas encore de jours de suite » ; « (au moins une tâche accomplie chaque jour) » → « (au moins une tâche faite chaque jour) »
 - Tests d'alignement mis à jour (`stats-view.test.tsx`, 5 assertions de libellés) — aucun test supprimé.
 
-## Validation finale (2026-11-21 ~23:59 UTC)
+## Validation finale (2026-11-21 23:03 UTC)
 - `npm test` : **499/499** ✅ (32 fichiers — 495 baseline intacts + 4 nouveaux : premier geste, crête, layout film, fondu croisé ; aucun supprimé, ajustements de libellés/comportement documentés ci-dessus)
 - `npx tsc --noEmit` ✅ · `npm run build` ✅ (23 routes) · smoke `next start` : `/`, `/aujourdhui`, `/taches`, `/stats`, `/reglages`, `/planning` en **200** ✅
 - `git diff` : `package.json`/lock vide, aucun binaire audio, aucune teinte changée (tokens intacts), interface 100 % FR, zone tenue (+ `defaults.ts` 1 littéral, voir ci-dessus).
