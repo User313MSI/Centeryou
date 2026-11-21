@@ -24,6 +24,8 @@ const selectClass =
 
 export default function ReglagesPage() {
   const settings = useStore((s) => s.settings);
+  // Diapason (M-16) : volume des sons, borné 0–1 (défaut bas garanti par sanitizeSettings)
+  const volumeSons = Math.min(1, Math.max(0, typeof settings.soundVolume === 'number' ? settings.soundVolume : 0.35));
   const updateSettings = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
   const restoreBackup = useStore((s) => s.restoreBackup);
@@ -311,15 +313,50 @@ export default function ReglagesPage() {
 
       <Card>
         <CardHeader>
-          <h2 className="text-base font-bold text-ink">Son &amp; voix</h2>
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Volume2 size={18} aria-hidden className="text-primary" /> Sons
+          </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-ink">Sons de l’interface</p>
-              <p className="text-xs text-muted">Petits bips discrets lors des actions.</p>
+              <p className="text-sm font-semibold text-ink">Effets sonores</p>
+              <p className="text-xs text-muted">
+                Des sons doux et synthétisés sur place : « ding » à la coche d’une tâche, « pop » à la création d’un
+                événement, carillon discret aux rappels. Aucun son ne joue sans ton premier geste dans l’onglet.
+              </p>
             </div>
-            <Toggle checked={settings.sounds} onChange={(v) => updateSettings({ sounds: v })} label="Sons de l’interface" id="toggle-sons" />
+            <Toggle checked={settings.sounds} onChange={(v) => updateSettings({ sounds: v })} label="Effets sonores" id="toggle-sons" />
+          </div>
+          <Field label={`Volume des sons — ${Math.round(volumeSons * 100)} %`} htmlFor="reglage-volume-sons">
+            <input
+              id="reglage-volume-sons"
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(volumeSons * 100)}
+              disabled={!settings.sounds}
+              onChange={(e) => updateSettings({ soundVolume: Number(e.target.value) / 100 })}
+              className="min-h-11 w-full accent-primary disabled:opacity-50"
+              style={{ accentColor: 'rgb(var(--c-primary))' }}
+              aria-valuetext={`${Math.round(volumeSons * 100)} pour cent`}
+            />
+          </Field>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">Nappe du film</p>
+              <p className="text-xs text-muted">
+                Une nappe très douce (quelques accords lents) pendant le film de lancement. Désactivée par défaut :
+                elle ne s’impose jamais, tu la découvres en l’activant ici.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.filmPad}
+              onChange={(v) => updateSettings({ filmPad: v })}
+              label="Nappe du film"
+              id="toggle-nappe-film"
+            />
           </div>
           <div className="flex items-center justify-between gap-4">
             <div>

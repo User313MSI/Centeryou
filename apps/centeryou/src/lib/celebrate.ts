@@ -14,6 +14,8 @@
 
 import { CELEBRATE_PALETTE, animationsActiveFrom } from './motion';
 
+import { playDing, playPop, playRecord } from './sons';
+
 import { useStore } from './store';
 
 /** gate de sécurité : aucune célébration si animations désactivées ou prefers-reduced-motion */
@@ -49,6 +51,7 @@ export function vibrateShort(): void {
 
 /** onde violette depuis un point (création d'un événement) — un seul anneau, retiré à la fin */
 export function spawnRipple(x: number, y: number): void {
+  playPop(); // Diapason (M-16) : « pop » velouté — le son ne dépend PAS du réglage d'animations
   if (!motionAllowed() || typeof document === 'undefined') return;
   const el = document.createElement('span');
   el.className = 'celebrate-ripple';
@@ -79,6 +82,7 @@ export function spawnRippleAt(el: HTMLElement | null): void {
  * (translation + rotation + fondu), supprimée à la fin.
  */
 export function spawnConfetti(host: HTMLElement | null): void {
+  playDing(); // Diapason (M-16) : « ding » chaleureux à la coche — même si les animations sont coupées
   if (!motionAllowed() || !host || typeof document === 'undefined') return;
   if (window.getComputedStyle(host).position === 'static') host.style.position = 'relative';
   const rect = host.getBoundingClientRect();
@@ -137,6 +141,7 @@ export function spawnConfetti(host: HTMLElement | null): void {
 
 /** petit feu d'artifice discret depuis un point (record /stats) — rayon limité (~92 px), rAF */
 export function spawnFirework(x: number, y: number): void {
+  playRecord(); // Diapason (M-16) : petit motif discret quand un record est battu
   if (!motionAllowed() || typeof document === 'undefined') return;
   const layer = document.createElement('div');
   layer.className = 'celebrate-firework';

@@ -26,6 +26,8 @@ import {
 
 import { useStore } from './store';
 
+import { playCarillon, type SonsDeps } from './sons';
+
 import { useUiStore } from './ui-store';
 
 /**
@@ -45,6 +47,8 @@ export interface TickDeps {
   permission?: () => RappelPermission;
   actionsSupported?: () => boolean;
   show?: (n: RappelNotification) => Promise<boolean> | boolean;
+  /** Diapason (M-16) : carillon discret à chaque notification — injectable pour les tests */
+  jouerCarillon?: (deps?: SonsDeps) => void;
   pushToast?: (t: { message: string; actionLabel?: string; onAction?: () => void; duration?: number }) => void;
   getData?: () => { events: EventItem[]; tasks: TaskItem[]; settings: Settings };
   getRappelState?: () => RappelState;
@@ -67,9 +71,11 @@ export async function runRappelTick(deps: TickDeps = {}): Promise<RappelState> {
     const { reminders, tasks: tasksDue } = computeDueReminders(events, tasks, settings, now, state);
     const actionsOk = deps.actionsSupported?.() ?? notificationActionsSupported();
     const show = deps.show ?? showRappelNotification;
+    const jouerCarillon = deps.jouerCarillon ?? playCarillon;
     const pushToast = deps.pushToast ?? ((t: { message: string; actionLabel?: string; onAction?: () => void; duration?: number }) => useUiStore.getState().pushToast(t));
     for (const r of reminders) {
       await show(buildEventNotification(r, actionsOk));
+      jouerCarillon({ getSettings: () => settings }); // carillon discret (garde interne : sons actifs + geste)
       state = applyShown(state, r);
       if (!actionsOk) {
         // pas de boutons dans la notification : un toast dans l'app propose « Reporter »
@@ -85,6 +91,7 @@ export async function runRappelTick(deps: TickDeps = {}): Promise<RappelState> {
     }
     if (tasksDue) {
       await show(buildTasksNotification(tasksDue.count, tasksDue.date));
+      jouerCarillon({ getSettings: () => settings }); // carillon discret aussi pour le récapitulatif des tâches
       state = { ...state, tachesDate: tasksDue.date };
     }
   }

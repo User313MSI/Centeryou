@@ -86,6 +86,10 @@ export function sanitizeSettings(input: unknown): Settings {
   if (typeof input.prenom === 'string') base.prenom = input.prenom;
   if (typeof input.dayStart === 'number' && Number.isFinite(input.dayStart)) base.dayStart = Math.min(10, Math.max(6, input.dayStart));
   if (typeof input.sounds === 'boolean') base.sounds = input.sounds;
+  // champ ajouté ensuite (Diapason : design sonore M-16) : borné 0–1, défaut bas garanti
+  if (typeof input.soundVolume === 'number' && Number.isFinite(input.soundVolume)) {
+    base.soundVolume = Math.min(1, Math.max(0, input.soundVolume));
+  }
   if (typeof input.voice === 'boolean') base.voice = input.voice;
   if (typeof input.briefShownDate === 'string') base.briefShownDate = input.briefShownDate;
   if (input.welcomeSequence === 'always' || input.welcomeSequence === 'daily' || input.welcomeSequence === 'off') {
@@ -98,6 +102,8 @@ export function sanitizeSettings(input: unknown): Settings {
   }
   if (typeof input.launchFilmShownDate === 'string') base.launchFilmShownDate = input.launchFilmShownDate;
   if (typeof input.launchFilmVoice === 'boolean') base.launchFilmVoice = input.launchFilmVoice;
+  // champ ajouté ensuite (Diapason : nappe du film M-16) — OFF par défaut garanti
+  if (typeof input.filmPad === 'boolean') base.filmPad = input.filmPad;
   // champs ajoutés ensuite (Dario : theme/onboarded, Elena : darkMode) : valeurs sûres garanties
   if (input.theme === 'sombre' || input.theme === 'clair') base.theme = input.theme;
   if (typeof input.onboarded === 'boolean') base.onboarded = input.onboarded;
