@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cx } from '../../lib/utils';
 
@@ -21,6 +21,8 @@ export function Dialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<Element | null>(null);
+  // Sourire (M-10) : le titre h2 est référencé par aria-labelledby (nom accessible fiable)
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -81,14 +83,14 @@ export function Dialog({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
         className={cx(
           'max-h-[90vh] w-full overflow-y-auto rounded-card bg-surface p-6 shadow-hover animate-slide-up',
           wide ? 'max-w-2xl' : 'max-w-lg',
         )}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 className="text-xl font-bold text-ink">{title}</h2>
+          <h2 id={titleId} className="text-xl font-bold text-ink">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Fermer la fenêtre"

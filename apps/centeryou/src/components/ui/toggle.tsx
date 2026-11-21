@@ -25,7 +25,9 @@ export function Toggle({
         // largeur fixe 48 px : le curseur (20 px) en position active (left 26 px) tient dans le bouton
         'relative h-7 min-h-11 w-12 rounded-pill transition-colors duration-normal ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
-        checked ? 'bg-primarydark' : 'bg-line',
+        // Sourire (M-10) : piste « off » en bg-muted (4,74:1 sur surface) — bg-line n'était
+        // pas assez visible contre le fond (1,1:1) pour percevoir l'état du switch
+        checked ? 'bg-primarydark' : 'bg-muted',
       )}
     >
       <span

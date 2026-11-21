@@ -208,7 +208,7 @@ export function EventBlock({
             aria-hidden
             className={cx(
               'inline-block h-3 w-3 shrink-0 rounded-full border-2',
-              instance.done ? 'border-voice bg-voice' : 'border-muted bg-surface',
+              instance.done ? 'border-voicetext bg-voice' : 'border-muted bg-surface',
             )}
           />
         )}

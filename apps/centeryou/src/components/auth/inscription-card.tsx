@@ -51,7 +51,7 @@ export function InscriptionCard() {
       <CardBody className="flex flex-col gap-5 pt-6">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-pill bg-primary/10">
-            <Sparkles size={22} aria-hidden className="text-primary" />
+            <Sparkles size={22} aria-hidden className="text-primarydark" />
           </span>
           <div>
             <h2 className="text-base font-bold text-ink">Ton compte, sur cet appareil</h2>

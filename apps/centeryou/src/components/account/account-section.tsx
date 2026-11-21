@@ -86,7 +86,7 @@ export function AccountSection() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <Cloud size={18} aria-hidden className="text-primary" /> Compte &amp; sauvegarde en ligne
+            <Cloud size={18} aria-hidden className="text-primarydark" /> Compte &amp; sauvegarde en ligne
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -120,7 +120,7 @@ export function AccountSection() {
           {configured && status === 'ready' && user && (
             <>
               <div className="flex items-center gap-2 text-sm text-ink">
-                <UserRound size={16} aria-hidden className="text-primary" />
+                <UserRound size={16} aria-hidden className="text-primarydark" />
                 <span className="font-semibold">{user.email}</span>
               </div>
               <Field label="Prénom du compte" htmlFor="compte-prenom">
@@ -142,7 +142,7 @@ export function AccountSection() {
                 {syncStatus === 'offline' || syncStatus === 'error' ? (
                   <CloudOff size={14} aria-hidden className={syncStatus === 'error' ? 'text-danger' : 'text-warning'} />
                 ) : (
-                  <Cloud size={14} aria-hidden className="text-voicetext" />
+                  <Cloud size={14} aria-hidden className="text-primarydark" />
                 )}
                 {syncStatusText(syncStatus)}
               </p>

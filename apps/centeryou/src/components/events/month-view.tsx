@@ -53,7 +53,9 @@ export function MonthView({
                   aria-label={`Voir le ${formatDayLong(iso)}`}
                   className={cx(
                     'flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-fast hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:h-7 md:w-7',
-                    isToday(iso) ? 'bg-primary text-surface' : outOfMonth ? 'text-muted' : 'text-ink',
+                    // Sourire (M-10) : pastille « aujourd'hui » en bg-primarydark — blanc sur
+                    // #7C5CFF ne faisait que 4,35:1 (3,87:1 en sombre) ; sur #5B3FE8 = 6,32:1
+                    isToday(iso) ? 'bg-primarydark text-surface' : outOfMonth ? 'text-muted' : 'text-ink',
                   )}
                 >
                   {formatDayNumber(iso)}
@@ -69,7 +71,7 @@ export function MonthView({
                       {inst.kind === 'task' ? (
                         <span
                           aria-hidden
-                          className={cx('h-2 w-2 shrink-0 rounded-full border', inst.done ? 'border-voice bg-voice' : 'border-muted bg-surface')}
+                          className={cx('h-2 w-2 shrink-0 rounded-full border', inst.done ? 'border-voicetext bg-voice' : 'border-muted bg-surface')}
                         />
                       ) : (
                         <span

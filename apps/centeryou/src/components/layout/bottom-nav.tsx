@@ -36,7 +36,7 @@ export function BottomNav() {
                   active ? 'border-primary bg-primary/5 text-primarydark' : 'border-transparent text-muted',
                 )}
               >
-                <Icon size={20} aria-hidden className={active ? 'text-primary' : ''} />
+                <Icon size={20} aria-hidden className={active ? 'text-primarydark' : ''} />
                 {item.label}
               </Link>
             </li>

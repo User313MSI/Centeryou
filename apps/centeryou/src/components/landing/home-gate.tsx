@@ -14,7 +14,7 @@ import { SLOGAN } from '../../lib/site';
 
 const CTA_BASE =
   'inline-flex min-h-12 items-center justify-center gap-2 rounded-pill px-6 text-base font-semibold transition-all duration-normal ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]';
-const CTA_PRIMARY = `${CTA_BASE} bg-primarydark text-surface shadow-card hover:bg-primary hover:shadow-hover`;
+const CTA_PRIMARY = `${CTA_BASE} bg-primarydark text-surface shadow-card hover:brightness-95 hover:shadow-hover`;
 const CTA_SECONDARY = `${CTA_BASE} border border-line bg-surface text-ink hover:border-primary hover:text-primarydark`;
 
 const ARGUMENTS = [
@@ -68,7 +68,7 @@ function LandingPage() {
           <Card key={a.title}>
             <CardBody className="flex flex-col gap-3 pt-5">
               <span className="flex h-11 w-11 items-center justify-center rounded-pill bg-primary/10">
-                <a.icon size={22} aria-hidden className="text-primary" />
+                <a.icon size={22} aria-hidden className="text-primarydark" />
               </span>
               <h2 className="text-base font-bold text-ink">{a.title}</h2>
               <p className="text-sm text-muted">{a.text}</p>

@@ -51,7 +51,7 @@ export function OnboardingSteps() {
           <Card key={s.title}>
             <CardBody className="flex flex-col gap-3 pt-5">
               <span className="flex h-11 w-11 items-center justify-center rounded-pill bg-primary/10">
-                <s.icon size={22} aria-hidden className="text-primary" />
+                <s.icon size={22} aria-hidden className="text-primarydark" />
               </span>
               <p className="text-xs font-bold uppercase tracking-wide text-muted">Étape {i + 1}</p>
               <h2 className="text-base font-bold text-ink">{s.title}</h2>

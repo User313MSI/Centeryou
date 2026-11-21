@@ -43,7 +43,7 @@ export function WeekBars({ weeks }: { weeks: WeekStats[] }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`Heures planifiées par semaine — ${summary}`}>
-      <line x1={8} x2={W - 8} y1={baseline} y2={baseline} stroke="currentColor" className="text-line" strokeWidth={1} aria-hidden />
+      <line x1={8} x2={W - 8} y1={baseline} y2={baseline} stroke="currentColor" className="text-muted" strokeWidth={1} aria-hidden />
       {weeks.map((w, i) => {
         const x = 8 + i * slot + (slot - barW) / 2;
         const segments = CATEGORY_ORDER.filter((c) => w.byCategory[c] > 0);
@@ -144,7 +144,9 @@ export function WeekdayBars({ perWeekday, busiestIndex }: { perWeekday: number[]
               height={16}
               rx={8}
               fill="currentColor"
-              className={isBusiest ? 'text-primary' : 'text-voicetext'}
+              // Sourire (M-10) : barres en primarydark (6,32:1) — primary 4,17:1 et voicetext
+              // 3,30:1 sous le seuil ; le jour le plus chargé reste repéré en ink (16:1) + gras
+              className={isBusiest ? 'text-ink' : 'text-primarydark'}
             >
               <title>{`${weekdayShortLabel(i)} : ${formatHoursFr(m)}`}</title>
             </rect>

@@ -28,7 +28,9 @@ export function Toasts() {
                 t.onAction?.();
                 dismiss(t.id);
               }}
-              className="rounded-pill px-2 py-1 font-semibold text-voicetext transition-colors duration-fast hover:bg-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
+              // Sourire (M-10) : text-surface au lieu de text-voicetext — la bulle est bg-ink,
+              // claire en thème sombre (voicetext n'y faisait que 3,14:1) ; text-surface passe à 16:1 des deux côtés
+              className="rounded-pill px-2 py-1 font-semibold text-surface underline underline-offset-2 transition-colors duration-fast hover:bg-surface/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {t.actionLabel}
             </button>
@@ -36,7 +38,7 @@ export function Toasts() {
           <button
             onClick={() => dismiss(t.id)}
             aria-label="Fermer la notification"
-            className="flex min-h-8 min-w-8 items-center justify-center rounded-pill text-surface/60 transition-colors duration-fast hover:text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice"
+            className="flex min-h-8 min-w-8 items-center justify-center rounded-pill text-surface/80 transition-colors duration-fast hover:text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <X size={16} aria-hidden />
           </button>

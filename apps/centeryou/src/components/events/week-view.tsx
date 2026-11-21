@@ -85,7 +85,8 @@ export function WeekView({
                 <span
                   className={cx(
                     'flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold',
-                    isToday(iso) ? 'bg-primary text-surface' : 'text-ink hover:bg-bg',
+                    // Sourire (M-10) : bg-primarydark pour la pastille « aujourd'hui » (6,32:1)
+                    isToday(iso) ? 'bg-primarydark text-surface' : 'text-ink hover:bg-bg',
                   )}
                 >
                   {formatDayNumber(iso)}

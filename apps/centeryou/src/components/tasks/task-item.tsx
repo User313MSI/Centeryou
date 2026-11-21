@@ -100,10 +100,13 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
           aria-hidden
           className={cx(
             'flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-fast ease-out',
-            task.done ? 'border-voice bg-voice' : 'border-line bg-surface hover:border-voice',
+            // Sourire (M-10) : coche « faite » — bordure voicetext (3,44:1 ≥ 3:1 sur surface,
+            // border-voice n'en faisait que 1,79) et coche onbright sur fond voice (9,10:1 ;
+            // text-surface n'y faisait que 1,83:1)
+            task.done ? 'border-voicetext bg-voice' : 'border-line bg-surface hover:border-voice',
           )}
         >
-          {task.done && <Check size={16} strokeWidth={3} className="animate-pop text-surface" />}
+          {task.done && <Check size={16} strokeWidth={3} className="animate-pop text-onbright" />}
         </span>
       </button>
       <div className="min-w-0 flex-1">
@@ -117,11 +120,11 @@ export function TaskItemRow({ task }: { task: TaskItem }) {
           <Badge tone={task.category} withDot>
             {categoryLabel(task.category)}
           </Badge>
-          <span className="inline-flex items-center gap-1 rounded-pill bg-line/60 px-2 py-0.5 text-xs text-muted">
+          <span className="inline-flex items-center gap-1 rounded-pill bg-line/60 px-2 py-0.5 text-xs text-ink">
             <CalendarDays size={12} aria-hidden /> {formatDayShort(task.date)}
           </span>
           {task.time && (
-            <span className="inline-flex items-center gap-1 rounded-pill bg-line/60 px-2 py-0.5 text-xs text-muted">
+            <span className="inline-flex items-center gap-1 rounded-pill bg-line/60 px-2 py-0.5 text-xs text-ink">
               <Clock size={12} aria-hidden /> {formatTimeFr(task.time)}
             </span>
           )}
