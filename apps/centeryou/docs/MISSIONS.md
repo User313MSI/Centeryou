@@ -54,9 +54,9 @@ Campagne « Grand V » (21/11), **vague 1** : M-07 Pont + M-10 Sourire + M-11 So
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
 
 ### M-15 — Trompette · Marketing & plan de lancement (campagne Grand V, vague 1)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Objectif : kit de lancement complet pour le 1/01/2027.
-- **Zone étanche** : docs/marketing/** UNIQUEMENT (documents, aucun code de l'app). INTERDIT : toucher au code de l'app.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- **État : EN COURS, EN PARALLÈLE** — branche `vibe/trompette-marketing` ouverte par Trompette le 21/11 à 03:27 UTC (session Vibe Code dédiée). Objectif : kit de lancement complet pour le 1/01/2027 (positionnement, copie vitrine, plan de lancement, posts réseaux, e-mails — 5 documents Markdown FR).
+- **Zone étanche** : `apps/centeryou/docs/marketing/**` UNIQUEMENT (documents, aucun code de l'app) + journal `apps/centeryou/docs/journal/trompette.md`. INTERDIT : toucher au code de l'app.
+- PR : — · Dernière nouvelle : branche `vibe/trompette-marketing` ouverte le 21/11 à 03:27 UTC, MISSIONS.md publié sur main à l'ouverture (Trompette).
 
 ### M-16 — Diapason · Design sonore (campagne Grand V, VAGUE 2)
 - **État : ATTENDRE la fusion des PR en vol avant de lancer** (sa zone reprend des fichiers des agents actuels : reglages/page.tsx, celebrate.ts). Moteur Web Audio synthétisé (zéro fichier binaire, zéro dépendance), réglage « Sons », sons discrets pour célébrations et notifications, nappe du film optionnelle et off par défaut.
