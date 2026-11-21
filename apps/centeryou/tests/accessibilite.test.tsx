@@ -237,7 +237,7 @@ describe('M-10 — rôles, états et aria-labels', () => {
 
   it('Toasts : zone aria-live, role=status, action nommée et fermeture nommée', () => {
     useUiStore.setState({
-      toasts: [{ id: 't1', message: '« Sport » supprimée', actionLabel: 'Annuler', duration: 5000 }],
+      toasts: [{ id: 't1', message: '« Sport » supprimée', actionLabel: 'Annuler' }],
     });
     render(<Toasts />);
     expect(screen.getByRole('status')).toHaveTextContent('« Sport » supprimée');
