@@ -83,7 +83,7 @@ export function InstallPrompt() {
       )}
     >
       <div className="flex items-start gap-3">
-        <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-primary/10 text-primary">
+        <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-primary/10 text-primarydark">
           {mode === 'ios' ? <Share size={18} /> : <Download size={18} />}
         </span>
         <div className="min-w-0 flex-1">
@@ -100,7 +100,7 @@ export function InstallPrompt() {
               <button
                 type="button"
                 onClick={install}
-                className="min-h-11 rounded-pill bg-primarydark px-4 text-sm font-bold text-surface transition-colors duration-fast hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                className="min-h-11 rounded-pill bg-primarydark px-4 text-sm font-bold text-surface transition-colors duration-fast hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
                 Installer
               </button>

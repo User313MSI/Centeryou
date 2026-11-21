@@ -95,7 +95,7 @@ export function SubscriptionCard() {
     <Card id="abonnement">
       <CardHeader>
         <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-          <Crown size={18} aria-hidden className="text-primary" /> Abonnement
+          <Crown size={18} aria-hidden className="text-primarydark" /> Abonnement
         </h2>
         <Badge tone={STATUS_TONE[subscription.status]}>{STATUS_LABEL[subscription.status]}</Badge>
       </CardHeader>
@@ -110,7 +110,7 @@ export function SubscriptionCard() {
         <ul className="flex flex-col gap-1.5">
           {plan.features.map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-ink">
-              <Check size={15} aria-hidden className="shrink-0 text-voicetext" />
+              <Check size={15} aria-hidden className="shrink-0 text-primarydark" />
               {f}
             </li>
           ))}

@@ -3,6 +3,46 @@
 @tailwind utilities;
 
 /*
+ * Sourire (M-10) — accessibilité, axe contrastes (rapport Sentinelle 3/5).
+ *
+ * SEULES les deux teintes « warning » et « danger » sont ajustées ici, et
+ * uniquement pour le thème CLAIR où elles servent de texte ou d'icône :
+ * assombries avec la même teinte pour atteindre le seuil AA 4,5:1 sur tous
+ * les fonds clairs où elles apparaissent (mesures WCAG avant/après dans
+ * docs/journal/sourire.md) :
+ *
+ *   warning #FFB020 (1,75:1) → #A06000  ambre profond, même hue ~36°
+ *     sur #FAFAFC 4,83:1 · sur #FFFFFF 5,04:1 · sur voile warning/15 4,59:1
+ *   danger  #FF6B6B (2,66:1) → #C03A3A  corail profond, même hue 0°
+ *     sur #FAFAFC 5,16:1 · sur #FFFFFF 5,37:1 · sur danger/10 4,86:1 · danger/15 4,63:1
+ *
+ * Ces règles sont HORS @layer et avec une spécificité html:root (0,1,1) >
+ * :root (0,1,0) du <style> inline injecté par layout.tsx : elles surchargent
+ * exactement ces deux variables, rien d'autre.
+ *
+ * Thème sombre (html.dark) et nuit du film (.film-root, fond #1A1B2E) :
+ * les teintes vives d'origine sont CONSERVÉES — sur fond sombre elles
+ * atteignent déjà 9,99:1 (warning) et 6,58:1 (danger) ; les assombrir
+ * dégraderait le contraste. Les 5 autres tokens restent intacts
+ * (#7C5CFF #5B3FE8 #2DD4BF #FAFAFC #1A1B2E) — design/tokens.ts non touché.
+ */
+html:root {
+  --c-warning: 160 96 0; /* #A06000 — ambre assombri, thème clair */
+  --c-danger: 192 58 58; /* #C03A3A — corail assombri, thème clair */
+}
+
+html.dark {
+  --c-warning: 255 176 32; /* #FFB020 inchangé en sombre (9,99:1 sur #14141F) */
+  --c-danger: 255 107 107; /* #FF6B6B inchangé en sombre (6,58:1 sur #14141F) */
+}
+
+/* le film de lancement se joue sur la nuit #1A1B2E : teintes vives comme en sombre */
+.film-root {
+  --c-warning: 255 176 32;
+  --c-danger: 255 107 107;
+}
+
+/*
  * Thèmes : les couleurs Tailwind lisent des variables CSS (--c-*), injectées
  * dans layout.tsx depuis design/tokens.ts (source unique) : :root = thème clair
  * (design validé), html.dark = mode sombre (classe posée selon settings.theme).

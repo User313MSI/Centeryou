@@ -23,7 +23,7 @@ function CompletionRow({ label, stats }: { label: string; stats: CompletionStats
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold text-ink">{label}</span>
-        <span className="font-bold text-voicetext">{stats.percent === null ? '—' : `${stats.percent} %`}</span>
+        <span className="font-bold text-primarydark">{stats.percent === null ? '—' : `${stats.percent} %`}</span>
       </div>
       <div
         role="progressbar"
@@ -33,7 +33,8 @@ function CompletionRow({ label, stats }: { label: string; stats: CompletionStats
         aria-label={`Taux de complétion des tâches — ${label}`}
         className="h-3 overflow-hidden rounded-pill bg-line/70"
       >
-        <div className="h-full rounded-pill bg-voice transition-all duration-normal ease-out" style={{ width: `${pct}%` }} />
+        {/* Sourire (M-10) : remplissage bg-primarydark (≥ 5,6:1 contre la piste), voir progress-bar */}
+        <div className="h-full rounded-pill bg-primarydark transition-all duration-normal ease-out" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-xs text-muted">
         {stats.total === 0
@@ -97,12 +98,12 @@ export function StatsView() {
           <Card>
             <CardHeader>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-                <ChartColumn size={18} aria-hidden className="text-primary" /> Temps par semaine
+                <ChartColumn size={18} aria-hidden className="text-primarydark" /> Temps par semaine
               </h2>
               <span
                 className={cx(
                   'flex items-center gap-1 text-sm font-bold',
-                  stats.weekDelta !== null && stats.weekDelta > 0 ? 'text-voicetext' : 'text-muted',
+                  stats.weekDelta !== null && stats.weekDelta > 0 ? 'text-primarydark' : 'text-muted',
                 )}
                 title="Variation de la semaine en cours par rapport à la semaine précédente"
               >
@@ -136,7 +137,7 @@ export function StatsView() {
             <Card className="border-primary/25 bg-primary/5">
               <CardHeader>
                 <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-                  <Sparkles size={18} aria-hidden className="text-primary" /> Un mot sur ta semaine
+                  <Sparkles size={18} aria-hidden className="text-primarydark" /> Un mot sur ta semaine
                 </h2>
               </CardHeader>
               <CardBody>
@@ -148,7 +149,7 @@ export function StatsView() {
           <Card>
             <CardHeader>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-                <Gauge size={18} aria-hidden className="text-voicetext" /> Habitudes
+                <Gauge size={18} aria-hidden className="text-primarydark" /> Habitudes
               </h2>
             </CardHeader>
             <CardBody className="flex flex-col gap-6">

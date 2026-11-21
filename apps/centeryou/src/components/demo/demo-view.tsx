@@ -48,7 +48,7 @@ export function DemoView() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-start justify-between gap-3 rounded-card border border-voice/40 bg-voice/5 px-5 py-4 md:flex-row md:items-center" role="status">
         <p className="flex items-start gap-2 text-sm text-ink">
-          <Info size={18} aria-hidden className="mt-0.5 shrink-0 text-voicetext" />
+          <Info size={18} aria-hidden className="mt-0.5 shrink-0 text-primarydark" />
           <span>
             <strong>Mode démo — lecture seule.</strong> Voici la semaine type de <strong>{DEMO_PROFILE.prenom}</strong>,{' '}
             {DEMO_PROFILE.role}. Données fictives : aucune donnée réelle, aucun compte requis, rien n’est enregistré.
@@ -56,7 +56,7 @@ export function DemoView() {
         </p>
         <Link
           href="/inscription"
-          className="inline-flex min-h-11 shrink-0 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
         >
           Créer mon compte
         </Link>
@@ -72,7 +72,7 @@ export function DemoView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <CalendarRange size={18} aria-hidden className="text-primary" /> Son planning de la semaine
+            <CalendarRange size={18} aria-hidden className="text-primarydark" /> Son planning de la semaine
           </h2>
         </CardHeader>
         <CardBody className="p-2 md:p-4">
@@ -98,7 +98,7 @@ export function DemoView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <ListChecks size={18} aria-hidden className="text-primary" /> Ses tâches de la semaine
+            <ListChecks size={18} aria-hidden className="text-primarydark" /> Ses tâches de la semaine
           </h2>
           <span className="text-sm font-semibold text-muted">{demo ? `${demo.tasks.filter((t) => t.done).length}/${demo.tasks.length} faites` : ''}</span>
         </CardHeader>

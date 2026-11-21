@@ -56,7 +56,7 @@ export function QuickAdd({ large = false, suggestions = [] }: { large?: boolean;
         </Button>
       </form>
       {large && suggestions.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2" aria-label="Suggestions rapides">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Suggestions rapides">
           <span className="text-xs font-semibold text-muted">Essayer :</span>
           {suggestions.map((s) => (
             <Button key={s} variant="secondary" size="sm" onClick={() => submitText(s)}>

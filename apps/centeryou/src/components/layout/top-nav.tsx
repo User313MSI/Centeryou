@@ -53,7 +53,7 @@ export function TopNav() {
                   active ? 'bg-primary/10 text-primarydark' : 'text-muted hover:bg-bg hover:text-ink',
                 )}
               >
-                <Icon size={17} aria-hidden className={active ? 'text-primary' : ''} />
+                <Icon size={17} aria-hidden className={active ? 'text-primarydark' : ''} />
                 {item.label}
                 {/* marqueur violet #7C5CFF sous la rubrique active */}
                 <span
@@ -82,7 +82,7 @@ export function TopNav() {
               settingsActive ? 'bg-primary/10 text-primarydark' : 'text-muted hover:bg-bg hover:text-ink',
             )}
           >
-            <Settings size={20} aria-hidden className={settingsActive ? 'text-primary' : ''} />
+            <Settings size={20} aria-hidden className={settingsActive ? 'text-primarydark' : ''} />
           </Link>
         </div>
       </div>

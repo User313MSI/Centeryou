@@ -73,7 +73,9 @@ export function VoiceFab() {
           aria-live="polite"
           className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] right-4 z-fab max-w-[calc(100vw-2rem)] rounded-card bg-ink px-4 py-3 text-sm text-surface shadow-hover animate-slide-up md:bottom-28 md:right-8 md:max-w-xs"
         >
-          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-voicetext">Écoute en cours</p>
+          {/* Sourire (M-10) : text-surface — la bulle est bg-ink (sombre en clair, clair en sombre) ;
+              voicetext n'atteignait que 3,14:1 en thème sombre ; text-surface fait 16:1 des deux côtés */}
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-surface">Écoute en cours</p>
           <p>{transcript || 'Parle maintenant…'}</p>
         </div>
       )}
@@ -84,9 +86,9 @@ export function VoiceFab() {
         aria-label={listening ? "Arrêter l'écoute vocale" : "Démarrer l'assistant vocal"}
         className={cx(
           'fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-fab flex min-h-14 items-center gap-2.5 rounded-pill px-5 text-sm font-bold shadow-hover transition-all duration-normal ease-out',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-voice focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.97]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.97]',
           'md:bottom-8 md:right-8',
-          listening ? 'bg-voice text-onbright' : 'bg-primarydark text-surface hover:bg-primary',
+          listening ? 'bg-voice text-onbright' : 'bg-primarydark text-surface hover:brightness-95',
         )}
       >
         {listening ? <Waves /> : <Mic size={20} aria-hidden />}

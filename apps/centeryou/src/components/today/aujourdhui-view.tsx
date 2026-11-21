@@ -62,7 +62,7 @@ export function AujourdhuiView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <CalendarHeart size={18} aria-hidden className="text-primary" /> Programme du jour
+            <CalendarHeart size={18} aria-hidden className="text-primarydark" /> Programme du jour
           </h2>
         </CardHeader>
         <CardBody>
@@ -78,7 +78,7 @@ export function AujourdhuiView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <ChartLine size={18} aria-hidden className="text-voicetext" /> Ma progression
+            <ChartLine size={18} aria-hidden className="text-primarydark" /> Ma progression
           </h2>
         </CardHeader>
         <CardBody>
@@ -94,14 +94,14 @@ export function AujourdhuiView() {
             className="group flex min-h-11 items-center justify-between gap-3 rounded-card px-2 transition-colors duration-fast ease-out hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <span className="flex items-center gap-2.5">
-              <ChartPie size={18} aria-hidden className="text-primary" />
+              <ChartPie size={18} aria-hidden className="text-primarydark" />
               <span>
                 <span className="block text-sm font-bold text-ink">Tes statistiques</span>
                 <span className="block text-xs text-muted">Ton temps, en clair</span>
               </span>
             </span>
             <span className="flex items-center gap-1.5 text-sm font-semibold text-muted">
-              {weekMinutes > 0 && <span className="font-bold text-voicetext">{formatHoursFr(weekMinutes)} cette semaine</span>}
+              {weekMinutes > 0 && <span className="font-bold text-primarydark">{formatHoursFr(weekMinutes)} cette semaine</span>}
               <ArrowRight size={16} aria-hidden className="transition-transform duration-fast ease-out group-hover:translate-x-0.5" />
             </span>
           </Link>
@@ -111,7 +111,7 @@ export function AujourdhuiView() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <ListChecks size={18} aria-hidden className="text-primary" /> Tâches du jour
+            <ListChecks size={18} aria-hidden className="text-primarydark" /> Tâches du jour
           </h2>
           <span className="text-sm font-semibold text-muted">
             {doneCount}/{todayTasks.length}

@@ -553,7 +553,9 @@ export function LaunchFilm() {
       role="dialog"
       aria-modal="true"
       aria-label="Film de lancement — le résumé de ta journée"
-      className="animate-fade-in fixed inset-0 z-dialog"
+      // Sourire (M-10) : .film-root redonne à l'intérieur du film les teintes vives
+      // warning/danger (définies dans globals.css) — le film se joue sur la nuit #1A1B2E
+      className="film-root animate-fade-in fixed inset-0 z-dialog"
       onClick={(e) => {
         // clic hors zone (fond nuit) -> on passe le film
         if (!(e.target as HTMLElement).closest('[data-film-keep]')) close();

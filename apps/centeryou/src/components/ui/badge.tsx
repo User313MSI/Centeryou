@@ -24,7 +24,7 @@ const toneClasses: Record<BadgeTone, string> = {
   haute: 'bg-warning/15 text-ink',
   danger: 'bg-danger/15 text-ink',
   voice: 'bg-voice/15 text-ink',
-  neutre: 'bg-line/60 text-muted',
+  neutre: 'bg-line/60 text-ink', // Sourire (M-10) : text-muted sur #F0F0F6 ne faisait que 4,14:1
 };
 
 const dotClasses: Record<BadgeTone, string> = {
