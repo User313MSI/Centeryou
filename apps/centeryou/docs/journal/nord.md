@@ -100,5 +100,5 @@ Audit « œil neuf » des 5 axes de la mission en lisant tout `src/components/**
 
 ## Liens
 
-- Branche : `vibe/nord-ux` (poussée) · PR : https://github.com/User313MSI/Centeryou/pull/36 (brouillon, base `main`) — voir MISSIONS.md pour le n° exact.
+- Branche : `vibe/nord-ux` (poussée, commit `2981476`) · PR : **https://github.com/User313MSI/Centeryou/pull/37** (brouillon, base `main`).
 - Inscription M-17 publiée sur `main` à 05:33 UTC (commit `2e52ebd`).
