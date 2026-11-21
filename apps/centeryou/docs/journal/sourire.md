@@ -34,11 +34,11 @@ Principe : assombrir UNIQUEMENT `--c-warning` et `--c-danger`, uniquement là o�
 
 Implémentation : `globals.css` surcharge les deux variables CSS avec une spécificité supérieure au `<style>` inline de `layout.tsx` (`html:root` = 0,1,1 > `:root` = 0,1,0 ; `html.dark` idem) :
 
-- `html:root` (clair) : `--c-warning` / `--c-danger` → nouvelles teintes assombries (hex ci-dessous).
-- `html.dark` (sombre) : valeurs d’origine conservées (`255 176 32` / `255 107 107`).
-- `.film-root` (nuit `#1A1B2E` du film de lancement) : valeurs vives conservées, comme en sombre.
+- `html:root` (thème clair) : `--c-warning: 160 96 0` (**#A06000**, ambre profond, hue ~36° proche des 38,7° d’origine) et `--c-danger: 192 58 58` (**#C03A3A**, corail profond, hue 0° identique).
+- `html.dark` (sombre, placée après `html:root`) : valeurs d’origine conservées (`255 176 32` / `255 107 107`).
+- `.film-root` (classe ajoutée à la racine du dialogue du film, `launch-film.tsx`) : valeurs vives conservées, comme en sombre.
 
-(mise à jour après calcul final — voir §5 pour les hex et ratios APRÈS mesurés)
+Surcharge HORS `@layer`, vérifiée dans le CSS compilé de `npm run build` : `html:root{--c-warning:160 96 0;--c-danger:192 58 58}` et `html.dark{--c-warning:255 176 32;--c-danger:255 107 107}` — la spécificité (0,1,1) bat le `:root`/`.dark` (0,1,0) du `<style>` inline de `layout.tsx`.
 
 ## 3. Autres couples < 4,5:1 corrigés SANS toucher aux tokens (dans la zone, par classes existantes)
 
@@ -63,14 +63,34 @@ Implémentation : `globals.css` surcharge les deux variables CSS avec une spéci
 - Rôles/états : `role="switch"` + `aria-checked` (toggle), `aria-pressed` (mic, tâche), `role="tablist"/tab` + `aria-selected` + roving tabindex (tabs), `role="progressbar"` + `aria-valuenow/min/max/label` (barres), `role="alert"` (erreurs), `aria-live` (toasts, indicateurs, panneau voix), `aria-current="page"` (nav), `aria-hidden` sur tout le décoratif (icônes, logo, ondes, halos).
 - Ordre de tabulation : ordre DOM logique conservé ; créneaux de grille et blocs d’événements restent des `role="button"` focusables avec Entrée/Espace ; pièges de focus des dialogues conservés.
 
-## 5. Contrastes — mesures APRÈS (à compléter après application)
+## 5. Contrastes — mesures APRÈS (WCAG 2.1, mêmes fonds réels)
 
-## 6. Tests & validation
+| Couple (thème clair) | Avant | Après | AA 4,5:1 |
+|---|---|---|---|
+| warning sur `#FAFAFC` (texte/icône) | 1,75:1 | **#A06000 → 4,83:1** | ✅ |
+| warning sur `#FFFFFF` | 1,83:1 | **5,04:1** | ✅ |
+| warning sur voile `warning/15` `#FFF3DE` | 1,67:1 | **4,59:1** | ✅ |
+| warning sur carte brief `bg-voice/5` | 1,77:1 | **4,88:1** | ✅ |
+| danger sur `#FAFAFC` | 2,66:1 | **#C03A3A → 5,16:1** | ✅ |
+| danger sur `#FFFFFF` | 2,78:1 | **5,37:1** | ✅ |
+| danger sur voile `danger/10` `#FFF0F0` (alerte auth, hover tâche) | 2,51:1 | **4,86:1** | ✅ |
+| danger sur voile `danger/15` `#FFE9E9` | 2,39:1 | **4,63:1** | ✅ |
+| bouton danger : blanc `text-surface` sur corail (était onbright 6,10:1) | 6,10:1 | **5,37:1** | ✅ |
+| warning SOMBRE sur `#14141F` (inchangé) | 9,99:1 | 9,99:1 | ✅ |
+| danger SOMBRE sur `#1E1F2E` (inchangé) | 5,86:1 | 5,86:1 | ✅ |
+| warning film sur nuit `#1A1B2E` (inchangé) | 9,26:1 | 9,26:1 | ✅ |
 
-- Nouveau fichier `tests/accessibilite.test.tsx` : ≥ 12 tests (contraste mesuré programmatiquement sur les tokens et les fonds réels, présence des `aria-label`/rôles/états, focus visible, ordre des attributs ARIA).
-- `npm test` : 327 existants intacts + nouveaux = tous verts. `npm run build` ✅. `npx tsc --noEmit` ✅.
+Autres couples corrigés sans toucher aux tokens (mesurés) : `text-primarydark` 6,07:1 sur bg / 6,32:1 sur surface / 5,59:1 sur tuile `primary/10` ; pastille « aujourd’hui » blanche sur `bg-primarydark` 6,32:1 ; `text-muted` 4,54:1 ; ink sur voiles warning/15 15,42:1 et danger/15 14,58:1 ; remplissage progressbar `primarydark` vs piste `line/70` 5,48:1 ; coche « faite » `onbright` sur `voice` 9,10:1 ; bordure de coche `voicetext` 3,44:1 (≥ 3:1, WCAG 1.4.11) ; anneau de focus `primary` 4,17:1 clair / 4,20:1 sombre (≥ 3:1, WCAG 2.4.11) ; **token voix intact : 9,10:1 sur la nuit**.
+
+## 6. Tests & validation (exécutés sur la branche, après merge de `main`)
+
+- Nouveau fichier `tests/accessibilite.test.tsx` : **20 tests** — 8 de contraste mesuré programmatiquement (formule WCAG dans le test : sanity check que les anciennes valeurs échouaient, ratios attendus à ±0,05 près, tokens intacts, `globals.css` ne surcharge que les 2 variables), 9 de rôles/états/aria rendus (Dialog `aria-labelledby` + Échap + bouton nommé, Toggle `switch`/`aria-checked`, Tabs roving tabindex + flèches, Toasts `aria-live` + actions nommées, ProgressBar `aria-valuenow`, QuickAdd champ nommé + `role="group"`, TaskItemRow labels + `aria-pressed`, EventBlock `role="button"` + Entrée), 3 de focus visible.
+- `npm test` : **403/403 ✅** (383 de main — dont les 327 de la mission + les 56 ICS de Pont — + mes 20 ; aucun test supprimé ni modifié).
+- `npx tsc --noEmit` ✅ · `npm run test:parser` ✅ · `npm run build` ✅ (23 routes, « Compiled successfully »).
+- `git diff origin/main...origin/vibe/sourire-accessibilite` : 32 fichiers, **uniquement** `src/components/**`, `src/app/globals.css`, `tests/accessibilite.test.tsx`, `docs/journal/sourire.md` — zéro fichier hors zone.
+- Note : sur la base initiale (6dd1ab9), un test `rappels.test.ts` échouait à cause de la date du jour — correctif déjà fusionné sur `main` (d3c67e9) ; après merge de `main` dans ma branche : 403/403.
 
 ## 7. Publication
 
-- 2026-11-21 03:30 UTC — MISSIONS.md publié sur `main` (commit `6dd1ab9`), branche `vibe/sourire-accessibilite` poussée, PR brouillon ouverte (base `main`).
-- (à suivre : push à chaque étape, PR à jour, MISSIONS.md ré-annoté à la PR)
+- 2026-11-21 03:30 UTC — MISSIONS.md publié sur `main` (commit `6dd1ab9`), branche `vibe/sourire-accessibilite` poussée, **PR #30** ouverte en brouillon (base `main`).
+- 2026-11-21 ~05:10 UTC — commit `79a9b3b` (31 fichiers, zone uniquement) + `5b30245` (fix type test) + merge `main` (`f253e61`) ; tests 403/403, tsc ✅, build ✅ ; push branche ; MISSIONS.md ré-annoté sur `main` à la PR.
