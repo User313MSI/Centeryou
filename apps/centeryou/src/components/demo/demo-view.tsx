@@ -18,7 +18,7 @@ function DemoTaskRow({ task }: { task: TaskItem }) {
     <li className="flex items-center gap-3 rounded-card border border-line/70 bg-surface p-3 shadow-card">
       <span
         aria-hidden
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${task.done ? 'border-voice bg-voice' : 'border-line bg-surface'}`}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${task.done ? 'border-voice bg-voice' : 'border-line bg-surface'}`}
       />
       <div className="min-w-0 flex-1">
         <p className={`truncate text-sm font-semibold ${task.done ? 'text-muted line-through' : 'text-ink'}`}>{task.title}</p>
@@ -63,7 +63,7 @@ export function DemoView() {
       </div>
 
       <header>
-        <h1 className="text-2xl font-extrabold text-ink md:text-3xl">
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">
           La semaine de {DEMO_PROFILE.prenom}, {DEMO_PROFILE.role}
         </h1>
         <p className="mt-1 text-sm font-semibold capitalize text-muted">{weekLabel}</p>
