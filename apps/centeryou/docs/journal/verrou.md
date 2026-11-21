@@ -3,7 +3,7 @@
 ## Mission M-13 — Sécurité offensive pré-lancement (campagne « Grand V », vague 1)
 
 - **Agent** : Verrou (session Vibe Code dédiée). Branche : `vibe/verrou-securite` (base `main` b0127c3, puis 6187d37 après publication de MISSIONS.md).
-- **PR** : brouillon ouverte dès le premier commit (base `main`) — voir lien dans MISSIONS.md.
+- **PR** : **https://github.com/User313MSI/Centeryou/pull/35** (brouillon, base `main`, commit `5238bf1` + merge de main `f7da2ec`, 13 fichiers = zone uniquement).
 - **Zone étanche tenue** : `src/app/api/**`, `src/lib/server/**`, `src/middleware.ts`, `.github/workflows/**` + ce journal + `tests/api-intrusion.test.ts` (nouveau fichier exigé par la mission). **Aucun autre fichier touché** (vérifié au commit : `git commit -- <chemins>` explicites, car le worktree est partagé avec d'autres agents de la vague 1 — leurs fichiers WIP n'ont jamais été commités ici). Aucune fusion (réservé à Vibe Work). Aucun test supprimé. Zéro nouvelle dépendance (`package.json` inchangé). Interface 100 % FR.
 - **Références lues avant de coder** : `AGENTS.md`, `docs/MISSIONS.md`, `journal/sentinelle.md` (rapport d'audit, attaques pentest n°1–15), `journal/bouclier.md` (M-08 déjà corrigé — rien de refait : auth `/api/sync` + `/api/compte/suppression`, 429 modèle voix, etc.), `journal/secure.md`, tests existants `api-voix` / `api-securite` / `api-sync-auth`.
 - **Baseline mesurée** (2026-11-21 03:29 UTC) : `npm ci` ✅ · `npm test` ✅ **327/327** sur 2d08f82 ; après rebase sur b0127c3 (M-07 fusionnée) : **383 tests** sur main.
