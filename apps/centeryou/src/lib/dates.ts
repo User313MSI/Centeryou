@@ -1,4 +1,7 @@
+import { clamp } from './utils';
+
 export const DAY_START = 8;
+
 export const DAY_END = 22;
 
 export const WEEKDAY_NAMES = [
@@ -115,10 +118,6 @@ export function formatWeekdayShort(iso: string): string {
   return frDate(iso, { weekday: 'short' });
 }
 
-export function formatWeekdayLong(iso: string): string {
-  return frDate(iso, { weekday: 'long' });
-}
-
 export function formatMonthYear(iso: string): string {
   return frDate(iso, { month: 'long', year: 'numeric' });
 }
@@ -148,6 +147,16 @@ export function isSameMonth(a: string, b: string): boolean {
 export function nowMinutes(): number {
   const n = new Date();
   return n.getHours() * 60 + n.getMinutes();
+}
+
+/**
+ * Prochain créneau entier de la grille (ex. « 14:00 »), borné à la journée
+ * [DAY_START, DAY_END − 1 h]. Définition unique partagée (ouverture du dialogue
+ * d'événement, raccourci « n », page Planning).
+ */
+export function nextSlot(): string {
+  const next = Math.ceil((nowMinutes() + 1) / 60) * 60;
+  return timeOf(clamp(next, DAY_START * 60, DAY_END * 60 - 60));
 }
 
 export function greetingFor(date: Date = new Date()): string {

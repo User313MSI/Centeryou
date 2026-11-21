@@ -76,34 +76,6 @@ export function themeCssVars(c: Record<AppColor, string>, sh: { rest: string; ho
   return [...colorVars, `--shadow-rest: ${sh.rest};`, `--shadow-hover: ${sh.hover};`].join(' ');
 }
 
-/**
- * Palette sombre alternative (offre Premium — mode sombre). Mêmes clés que `colors`.
- * Le thème actif est porté par `darkColors` ci-dessus (injecté dans layout.tsx) ;
- * cette palette est conservée comme référence.
- */
-export const colorsDark = {
-  primary: '#7C5CFF',
-  primaryDark: '#9D86FF',
-  voice: '#2DD4BF',
-  voiceText: '#0F9B8E',
-  warning: '#FFB020',
-  danger: '#FF6B6B',
-  bg: '#0F0F16',
-  surface: '#191926',
-  ink: '#ECECF4',
-  textSecondary: '#9B9DB8',
-  border: '#2A2B3D',
-} as const;
-
-/** catégories en thème sombre (légèrement éclaircies pour le contraste) */
-export const categoryColorsDark = {
-  travail: '#9D86FF',
-  perso: '#5CE8D8',
-  sante: '#FF8585',
-  focus: '#FFC24D',
-  autre: '#9B9DB8',
-} as const;
-
 /** Catégories d'événements / tâches */
 export const categoryColors = {
   travail: '#7C5CFF',
@@ -123,9 +95,6 @@ export const typography = {
   lineHeight: 1.5,
 } as const;
 
-/** espacement base 4 px : 4/8/16/24/40/64 */
-export const spacing = { base: 4, s: 8, m: 16, l: 24, xl: 40, xxl: 64 } as const;
-
 export const radius = { card: 16, pill: 999, tile: 20 } as const;
 
 export const shadows = {
@@ -142,12 +111,8 @@ export const darkShadows = {
 /** animations sobres 200–300 ms ease-out */
 export const motion = { fast: 200, normal: 300, easing: 'ease-out' } as const;
 
+/** hauteurs de grille des vues jour/semaine (px) — la largeur max du contenu est en dur dans app-shell */
 export const layout = {
-  sidebarW: 248,
-  topbarH: 64,
-  shellMaxW: 1200,
-  dayStartDefault: 8,
-  dayEnd: 22,
   hourHeightDay: 60,
   hourHeightWeek: 48,
 } as const;

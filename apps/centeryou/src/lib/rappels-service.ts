@@ -14,7 +14,6 @@ import {
   notificationActionsSupported,
   parseRappelParam,
   rappelPermission,
-  requestRappelPermission,
   saveRappelState,
   showRappelNotification,
   snoozeOccurrence,
@@ -180,7 +179,3 @@ export function startRappelService(): () => void {
   };
 }
 
-/** exposé pour les tests : demande la permission (geste utilisateur requis côté appelant) */
-export async function demanderPermissionRappels(): Promise<RappelPermission> {
-  return requestRappelPermission();
-}
