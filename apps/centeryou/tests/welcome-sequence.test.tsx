@@ -62,9 +62,10 @@ describe('WelcomeSequence (composant)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('affiche le bouton « Écouter le résumé » (la voix ne démarre jamais seule)', async () => {
+  it('M-20 — la voix ne démarre jamais seule : le film s’ouvre visuellement, seul un petit bouton « Activer le son » attend un geste', async () => {
     render(<WelcomeSequence />);
     await screen.findByRole('dialog');
-    expect(screen.getByRole('button', { name: /écouter le résumé/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /activer le son/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /passer/i })).toBeInTheDocument();
   });
 });

@@ -4,7 +4,7 @@ import { StatsView } from '../../components/stats/stats-view';
 export const metadata: Metadata = {
   title: 'Statistiques — Ton temps, en clair',
   description:
-    'Ton temps, en clair : heures planifiées par semaine et par catégorie, habitudes, taux de complétion des tâches et série de jours organisés. Calculé localement, rien n’est envoyé en ligne.',
+    'Ton temps, en clair : temps prévu par semaine et par catégorie, jours les plus chargés, tâches accomplies et jours de suite. Calculé sur ton appareil, rien n’est envoyé en ligne.',
   alternates: { canonical: '/stats' },
 };
 

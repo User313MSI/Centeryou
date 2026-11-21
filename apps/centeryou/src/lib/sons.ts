@@ -12,22 +12,33 @@
  * - « record »   : record battu (/stats) — petit motif 3 notes (do5 → mi5 → sol5) ;
  * - nappe du film : 2-3 accords lents en boucle (la m → fa → sol → do), attaque/relâchement très doux.
  *
+ * Chaque note monte à la crête CRETE_NOTE (0,35) sous un gain maître = volume (défaut 0,6) :
+ * amplitude effective ~0,21 — audible sans être jamais criarde.
+ *
  * Règles absolues :
  * - JAMAIS de son sans geste utilisateur préalable dans la session (politique des navigateurs :
  *   `audioDebloque()` ne devient vrai qu'après un pointerdown / keydown / touchstart dans l'onglet,
  *   mémorisé en sessionStorage — même logique que le déverrouillage du film de lancement) ;
  * - jamais plus de MAX_SONS_SIMULTANES sons à la fois (la nappe compte pour un créneau) ;
- * - tout est piloté par les réglages persistés : `sounds` (on/off), `soundVolume` (0–1, défaut BAS),
- *   `filmPad` (nappe du film, OFF par défaut — elle ne s'impose jamais) ;
+ * - tout est piloté par les réglages persistés : `sounds` (on/off), `soundVolume` (0–1, défaut 0,6 :
+ *   assez audible pour être entendu, jamais criard — M-20), `filmPad` (nappe du film, OFF par défaut) ;
  * - sans Web Audio (SSR, jsdom, vieux navigateur) : no-op silencieux, aucun crash.
+ *
+ * Accord (M-20) : le volume par défaut passe à 0,6 et la crête par note à 0,35 (contre 0,35 × 0,22
+ * avant : un murmure inaudible). Et le PIÈGE du premier geste est levé : `jouerSon()` ne renvoie plus
+ * false quand le contexte est encore « suspended » — il tente resume() ET programme les notes, que
+ * Web Audio jouera dès que le contexte passera « running ». Le PREMIER clic d'une session sonne.
  */
 
 import type { Settings } from '../types';
 
 import { useStore } from './store';
 
-/** volume par défaut des effets sonores : BAS */
-export const VOLUME_DEFAUT_SONS = 0.35;
+/** volume par défaut des effets sonores : 0,6 (audible, doux) */
+export const VOLUME_DEFAUT_SONS = 0.6;
+
+/** crête par note (dans le gain maître = volume) : 0,35 — jamais criard, jamais de « machine à sous » */
+export const CRETE_NOTE = 0.35;
 
 /** jamais plus de 2 sons à la fois */
 export const MAX_SONS_SIMULTANES = 2;
@@ -131,7 +142,7 @@ export function sonsActifsFrom(s: Pick<Settings, 'sounds'> | undefined | null): 
   return s == null ? true : s.sounds === true;
 }
 
-/** volume 0–1 (défaut bas garanti, borné) */
+/** volume 0–1 (défaut 0,6 garanti, borné) */
 export function volumeFrom(s: Pick<Settings, 'soundVolume'> | undefined | null): number {
   const v = s?.soundVolume;
   if (typeof v !== 'number' || !Number.isFinite(v)) return VOLUME_DEFAUT_SONS;
@@ -265,7 +276,7 @@ export function jouerPlan(
     osc.type = n.onde ?? 'sine';
     osc.frequency.value = n.f;
     const g = ctx.createGain();
-    const peak = 0.22 * (n.g ?? 1); // crête par note : doux, jamais criard
+    const peak = CRETE_NOTE * (n.g ?? 1); // crête par note (0,35) : audible et doux, jamais criard (M-20)
     const a = t0 + n.t;
     const rel = a + n.d;
     g.gain.setValueAtTime(0.0001, a);
@@ -294,9 +305,15 @@ export interface SonsDeps {
 }
 
 /**
- * Joue un son de la bibliothèque. Renvoie true seulement si un son a réellement été joué.
+ * Joue un son de la bibliothèque. Renvoie true si le son a été programmé (audible dès que le
+ * contexte passera « running » — ce qui arrive au premier geste, voir le piège M-20 ci-dessous).
  * Gardes, dans l'ordre : réglage « sons » actif → geste utilisateur dans la session →
- * moins de MAX_SONS_SIMULTANES sons en cours → Web Audio disponible et running.
+ * moins de MAX_SONS_SIMULTANES sons en cours → Web Audio disponible (contexte « closed » refusé).
+ *
+ * PIÈGE M-20 levé : si le contexte est encore « suspended » (cas typique du PREMIER geste de la
+ * session, où resume() est asynchrone et l'état n'est pas encore « running »), on tente resume()
+ * ET on programme quand même les notes : Web Audio les jouera dès que le contexte tournera.
+ * Le premier clic produit donc bien un son, pas seulement le deuxième.
  */
 export function jouerSon(nom: NomSon, deps: SonsDeps = {}): boolean {
   const s = deps.getSettings?.() ?? useStore.getState().settings;
@@ -305,13 +322,16 @@ export function jouerSon(nom: NomSon, deps: SonsDeps = {}): boolean {
   if (nbActifs >= MAX_SONS_SIMULTANES) return false;
   const ctx = deps.getCtx?.() ?? getContexte();
   if (!ctx) return false;
+  if (ctx.state === 'closed') return false;
   if (ctx.state && ctx.state !== 'running') {
+    // « suspended » (ex. contexte créé avant le tout premier geste de la session) : resume()
+    // est asynchrone, l'état n'est pas encore « running » — on programme quand même les notes,
+    // Web Audio les jouera dès que le contexte tournera. Le 1er geste sonne, pas seulement le 2e.
     try {
       void ctx.resume?.();
     } catch {
       // ignore
     }
-    return false;
   }
   const volume = deps.getVolume?.() ?? volumeFrom(s);
   const { duree, dernier } = jouerPlan(ctx, PLANS[nom], volume, deps.maintenant?.() ?? ctx.currentTime);
@@ -364,10 +384,12 @@ export function startNappe(deps: SonsDeps = {}): (() => void) | null {
   const ctx = deps.getCtx?.() ?? getContexte();
   if (!ctx || (ctx.state && ctx.state !== 'running')) return null;
 
+  // la nappe joue à moitié du réglage : gain maître = volume/2, crête par note = CRETE_NOTE
+  // (M-20 : comme un son normal, amplitude effective ≈ (volume/2) × 0,35 — très douce mais audible)
   const volume = (deps.getVolume?.() ?? volumeFrom(s)) * 0.5;
   const master = ctx.createGain();
   master.gain.setValueAtTime(0.0001, ctx.currentTime);
-  master.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume * 0.5), ctx.currentTime + ATTAQUE_NAPPE_S);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), ctx.currentTime + ATTAQUE_NAPPE_S);
   master.connect(ctx.destination);
 
   const oscs: OscLike[] = [];
@@ -385,7 +407,7 @@ export function startNappe(deps: SonsDeps = {}): (() => void) | null {
       osc.type = 'sine';
       osc.frequency.value = f;
       const g = ctx.createGain();
-      const peak = volume * 0.34;
+      const peak = CRETE_NOTE; // même crête par note qu'un son normal (M-20)
       g.gain.setValueAtTime(0.0001, t0);
       g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t0 + ATTAQUE_NAPPE_S);
       g.gain.setValueAtTime(Math.max(0.0002, peak), t0 + DUREE_ACCORDE_S - 2.5);

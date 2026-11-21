@@ -30,7 +30,7 @@ function CompletionRow({ label, stats }: { label: string; stats: CompletionStats
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`Taux de complétion des tâches — ${label}`}
+        aria-label={`Tâches accomplies — ${label}`}
         className="h-3 overflow-hidden rounded-pill bg-line/70"
       >
         {/* Sourire (M-10) : remplissage bg-primarydark (≥ 5,6:1 contre la piste), voir progress-bar */}
@@ -38,8 +38,8 @@ function CompletionRow({ label, stats }: { label: string; stats: CompletionStats
       </div>
       <p className="text-xs text-muted">
         {stats.total === 0
-          ? 'Aucune tâche dans cette période'
-          : `${stats.done}/${stats.total} tâche${stats.total > 1 ? 's' : ''} accomplie${stats.done > 1 ? 's' : ''}`}
+          ? 'Aucune tâche sur cette période'
+          : `${stats.done} sur ${stats.total} tâche${stats.total > 1 ? 's' : ''} faite${stats.done > 1 ? 's' : ''}`}
       </p>
     </div>
   );
@@ -81,15 +81,15 @@ export function StatsView() {
       <header className="text-center">
         <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Statistiques</h1>
         <p className="mt-1 text-sm font-semibold text-muted">
-          Ton temps, en clair — calculé sur place, à partir de tes événements et de tes tâches. Rien n&rsquo;est envoyé en ligne.
+          Tout est calculé sur ton appareil, à partir de ton agenda et de tes tâches — rien n&rsquo;est envoyé en ligne.
         </p>
       </header>
 
       {!stats.hasData ? (
         <EmptyState
           icon={ChartPie}
-          title="Ajoute ton premier événement pour voir ta semaine prendre forme"
-          description="Tes statistiques sont calculées ici, sur ton appareil, dès que ton agenda ou ta liste de tâches commence à vivre."
+          title="Ajoute une tâche ou un événement pour remplir tes statistiques"
+          description="Dès que tu ajoutes quelque chose, tout est calculé ici, sur ton appareil — rien n’est envoyé en ligne."
           example="sport demain 14h"
           action={{ label: "Aller à Aujourd'hui", onClick: () => router.push('/aujourdhui') }}
         />
@@ -98,14 +98,14 @@ export function StatsView() {
           <Card>
             <CardHeader>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-                <ChartColumn size={18} aria-hidden className="text-primarydark" /> Temps par semaine
+                <ChartColumn size={18} aria-hidden className="text-primarydark" /> Temps prévu par semaine
               </h2>
               <span
                 className={cx(
                   'flex items-center gap-1 text-sm font-bold',
                   stats.weekDelta !== null && stats.weekDelta > 0 ? 'text-primarydark' : 'text-muted',
                 )}
-                title="Variation de la semaine en cours par rapport à la semaine précédente"
+                title="Changement par rapport à la semaine précédente"
               >
                 {stats.weekDelta !== null && stats.weekDelta > 0 && <ArrowUpRight size={16} aria-hidden />}
                 {stats.weekDelta !== null && stats.weekDelta < 0 && <ArrowDownRight size={16} aria-hidden />}
@@ -117,7 +117,7 @@ export function StatsView() {
               <WeekBars weeks={stats.weeks} />
               <p className="mt-1 text-xs text-muted">
                 {currentWeek
-                  ? `Cette semaine : ${formatHoursFr(currentWeek.totalMinutes)} planifiées · variation vs semaine précédente : ${formatDeltaFr(stats.weekDelta)}`
+                  ? `Cette semaine : ${formatHoursFr(currentWeek.totalMinutes)} au planning · ${formatDeltaFr(stats.weekDelta)} par rapport à la semaine précédente`
                   : ''}
               </p>
               <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5" aria-label="Légende des catégories">
@@ -155,15 +155,15 @@ export function StatsView() {
             <CardBody className="flex flex-col gap-6">
               <section aria-labelledby="stats-jours" className="flex flex-col gap-2">
                 <h3 id="stats-jours" className="text-sm font-bold text-ink">
-                  Jours les plus actifs
+                  Jours les plus chargés
                 </h3>
                 {stats.totalMinutes > 0 ? (
                   <>
                     <WeekdayBars perWeekday={stats.perWeekday} busiestIndex={stats.busiest?.index ?? null} />
-                    <p className="text-xs text-muted">Temps planifié par jour de semaine sur les 4 dernières semaines.</p>
+                    <p className="text-xs text-muted">Temps prévu chaque jour de la semaine, sur les 4 dernières semaines.</p>
                   </>
                 ) : (
-                  <p className="text-sm text-muted">Aucun événement planifié sur les 4 dernières semaines.</p>
+                  <p className="text-sm text-muted">Rien de prévu sur les 4 dernières semaines.</p>
                 )}
               </section>
 
@@ -190,24 +190,24 @@ export function StatsView() {
                     </ul>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted">Aucune catégorie à répartir pour l’instant.</p>
+                  <p className="text-sm text-muted">Pas encore de temps à répartir.</p>
                 )}
               </section>
 
               <section aria-labelledby="stats-taches" className="flex flex-col gap-3">
                 <h3 id="stats-taches" className="text-sm font-bold text-ink">
-                  Tâches
+                  Tes tâches
                 </h3>
-                <CompletionRow label="Complétion sur 7 jours" stats={stats.completion7} />
-                <CompletionRow label="Complétion sur 30 jours" stats={stats.completion30} />
+                <CompletionRow label="Sur 7 jours" stats={stats.completion7} />
+                <CompletionRow label="Sur 30 jours" stats={stats.completion30} />
                 <p ref={serieRef} id="stats-serie" className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Flame size={16} aria-hidden className="text-warning" />
                   {stats.streak > 0
                     ? stats.streak > 1
-                      ? `${stats.streak} jours organisés d’affilée`
-                      : '1 jour organisé d’affilée'
-                    : 'Pas encore de série de jours organisés'}
-                  <span className="text-xs font-semibold text-muted">(au moins une tâche accomplie chaque jour)</span>
+                      ? `${stats.streak} jours de suite`
+                      : '1 jour de suite'
+                    : 'Pas encore de jours de suite'}
+                  <span className="text-xs font-semibold text-muted">(au moins une tâche faite chaque jour)</span>
                 </p>
               </section>
             </CardBody>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Play, SkipForward, Sparkles } from 'lucide-react';
+import { SkipForward, Sparkles, Volume2 } from 'lucide-react';
 
 import { Button } from '../ui/button';
 
@@ -18,7 +18,7 @@ import { useMotionEnabled } from '../../lib/use-motion';
 
 import { useStore } from '../../lib/store';
 
-import { nappeVoulue, startNappe, stopNappe } from '../../lib/sons';
+import { marquerGesteAudio, nappeVoulue, startNappe, stopNappe } from '../../lib/sons';
 
 import { speak, stopSpeaking } from '../../lib/voice';
 
@@ -36,9 +36,10 @@ import { cx } from '../../lib/utils';
  * - Voix : narration = texte du brief du matin (buildBriefText, source unique partagée
  *   avec BriefCard — aucun recalcul, aucun surcoût de quota) ; speak() réutilise la
  *   logique existante (navigateur par défaut, premium si droit + quota, bascule sinon).
- *   Jamais de son sans interaction : première ouverture de session -> bouton
- *   « ▶ Lancer le film » qui débloque ; sinon lecture auto.
- * - Sous-titres permanents en bas (aria-live).
+ *   Accord (M-20) : le film VISUEL démarre tout seul à l'ouverture — seule la voix/le son
+ *   attendent un geste utilisateur, via un petit bouton discret « Activer le son »
+ *   (jamais bloquant, le film tourne déjà) ; avec un geste déjà vu dans l'onglet, lecture auto.
+ * - Sous-titres permanents en bas (aria-live), dans le flux : jamais de chevauchement avec les scènes.
  * - prefers-reduced-motion / réglage « Animations » off -> version sobre statique
  *   avec sous-titres complets (les keyframes CSS sont tuées par les blocs globaux,
  *   et aucun timer de scène n'est posé).
@@ -165,10 +166,10 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 /** scène 2 — ta journée : compteurs animés + prochaine étape à halo pulsant (ou phrase motivante) */
-function SceneDay({ film }: { film: FilmData }) {
-  const ev = useAnimatedNumber(film.eventCount, true);
-  const tk = useAnimatedNumber(film.taskOpen, true);
-  const minutes = useAnimatedNumber(film.plannedMinutes, true, 1500);
+function SceneDay({ film, actif }: { film: FilmData; actif: boolean }) {
+  const ev = useAnimatedNumber(film.eventCount, actif);
+  const tk = useAnimatedNumber(film.taskOpen, actif);
+  const minutes = useAnimatedNumber(film.plannedMinutes, actif, 1500);
   return (
     <>
       <h2 className="film-title text-2xl font-extrabold md:text-4xl">Ta journée</h2>
@@ -199,7 +200,7 @@ function SceneDay({ film }: { film: FilmData }) {
 }
 
 /** anneau SVG animé (part des tâches faites cette semaine) */
-function AnimatedRing({ percent }: { percent: number }) {
+function AnimatedRing({ percent, actif }: { percent: number; actif: boolean }) {
   const motion = useMotionEnabled();
   const R = 64;
   const C = 2 * Math.PI * R;
@@ -207,7 +208,7 @@ function AnimatedRing({ percent }: { percent: number }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (!motion) {
+    if (!motion || !actif) {
       el.style.strokeDashoffset = String(C * (1 - percent / 100));
       return;
     }
@@ -222,7 +223,7 @@ function AnimatedRing({ percent }: { percent: number }) {
     };
     id = requestFrame(step);
     return () => cancelFrame(id);
-  }, [percent, motion, C]);
+  }, [percent, motion, actif, C]);
   return (
     <div className="relative" role="img" aria-label={`${percent} pour cent des tâches de la semaine sont faites`}>
       <svg width="160" height="160" viewBox="0 0 160 160" aria-hidden>
@@ -247,12 +248,12 @@ function AnimatedRing({ percent }: { percent: number }) {
 }
 
 /** scène 3 — ta progression : anneau + série de jours organisés + encouragement */
-function SceneProgress({ film }: { film: FilmData }) {
+function SceneProgress({ film, actif }: { film: FilmData; actif: boolean }) {
   const pct = film.weekPercent ?? 0;
   return (
     <>
       <h2 className="film-title text-2xl font-extrabold md:text-4xl">Ta progression</h2>
-      <AnimatedRing percent={pct} />
+      <AnimatedRing percent={pct} actif={actif} />
       <div className="flex items-center gap-2" aria-label={`Série de ${film.streak} jour${film.streak > 1 ? 's' : ''} organisés d’affilée`}>
         {film.weekDays.map((d) => (
           <span
@@ -275,7 +276,7 @@ function SceneProgress({ film }: { film: FilmData }) {
 }
 
 /** scène 4 — la magie : la phrase s'écrit, se dissout, se transforme en carte d'événement */
-function SceneMagic({ film }: { film: FilmData }) {
+function SceneMagic({ film, actif }: { film: FilmData; actif: boolean }) {
   const motion = useMotionEnabled();
   const [chars, setChars] = useState(motion ? 0 : film.magicPhrase.length);
   const [card, setCard] = useState(!motion);
@@ -288,6 +289,7 @@ function SceneMagic({ film }: { film: FilmData }) {
       setCard(true);
       return;
     }
+    if (!actif) return; // la machine à écrire ne tourne que quand la scène est visible
     let i = 0;
     const tick = () => {
       i += 1;
@@ -297,7 +299,7 @@ function SceneMagic({ film }: { film: FilmData }) {
     };
     timers.current.push(window.setTimeout(tick, 600));
     return () => timers.current.forEach((t) => window.clearTimeout(t));
-  }, [film.magicPhrase, motion]);
+  }, [film.magicPhrase, motion, actif]);
   const category = film.next?.category ?? 'perso';
   return (
     <>
@@ -339,13 +341,13 @@ function SceneSignature({ film }: { film: FilmData }) {
   );
 }
 
-function SceneView({ scene, film }: { scene: number; film: FilmData }) {
+function SceneView({ scene, film, actif }: { scene: number; film: FilmData; actif: boolean }) {
   return (
-    <div key={scene} className="film-scene flex w-full flex-col items-center gap-6 md:gap-8">
+    <div className="flex w-full flex-col items-center gap-6 md:gap-8">
       {scene === 0 && <SceneOpen film={film} />}
-      {scene === 1 && <SceneDay film={film} />}
-      {scene === 2 && <SceneProgress film={film} />}
-      {scene === 3 && <SceneMagic film={film} />}
+      {scene === 1 && <SceneDay film={film} actif={actif} />}
+      {scene === 2 && <SceneProgress film={film} actif={actif} />}
+      {scene === 3 && <SceneMagic film={film} actif={actif} />}
       {scene === 4 && <SceneSignature film={film} />}
     </div>
   );
@@ -391,12 +393,16 @@ export function LaunchFilm() {
   const settings = useStore((s) => s.settings);
   const motion = useMotionEnabled();
   const [open, setOpen] = useState(false);
-  const [started, setStarted] = useState(false);
+  // M-20 : « needsGesture » = le petit bouton discret « Activer le son » est affiché
+  // (la voix/le son attendent un geste — mais le film VISUEL tourne déjà)
   const [needsGesture, setNeedsGesture] = useState(false);
   const [scene, setScene] = useState(0);
+  // scène précédente, encore montée ~700 ms pendant le fondu croisé (M-20 : plus de « saut »)
+  const [prevScene, setPrevScene] = useState<number | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const timers = useRef<number[]>([]);
   const startedRef = useRef(false);
+  const sceneRef = useRef(0);
   const nappeRef = useRef<(() => void) | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -422,14 +428,6 @@ export function LaunchFilm() {
     // marquage « vu » conservé : les deux tampons de date sont posés en mode « daily »
     if ((s.settings.welcomeSequence ?? 'daily') === 'daily') s.markWelcomeShown();
     if ((s.settings.launchFilm ?? 'daily') === 'daily') s.markLaunchFilmShown();
-    let gesture = false;
-    try {
-      gesture = window.sessionStorage.getItem(GESTURE_KEY) === '1';
-    } catch {
-      gesture = false;
-    }
-    // voix demandée mais aucun geste dans cet onglet -> bouton « Lancer le film » (politique navigateur)
-    setNeedsGesture(!gesture && launchFilmVoiceWanted(s.settings));
     setOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
@@ -444,9 +442,10 @@ export function LaunchFilm() {
       stopNappe();
     }
     setSpeaking(false);
-    setStarted(false);
     startedRef.current = false;
     setScene(0);
+    sceneRef.current = 0;
+    setPrevScene(null);
     setOpen(false);
   }, [clearTimers]);
 
@@ -468,25 +467,39 @@ export function LaunchFilm() {
     let acc = 900;
     for (let i = 1; i < SCENE_DURATIONS.length; i++) {
       acc += SCENE_DURATIONS[i - 1];
-      timers.current.push(window.setTimeout(() => setScene(i), acc));
+      timers.current.push(
+        window.setTimeout(() => {
+          // fondu croisé (M-20) : l'ancienne scène reste montée ~720 ms sous la nouvelle
+          setPrevScene(sceneRef.current);
+          sceneRef.current = i;
+          setScene(i);
+          timers.current.push(window.setTimeout(() => setPrevScene(null), 720));
+        }, acc),
+      );
     }
     acc += SCENE_DURATIONS[SCENE_DURATIONS.length - 1];
     timers.current.push(window.setTimeout(() => close(), acc + 900));
   }, [clearTimers, close]);
 
   const start = useCallback(
-    (withVoice: boolean) => {
-      try {
-        window.sessionStorage.setItem(GESTURE_KEY, '1');
-      } catch {
-        // stockage indisponible : aucun impact
+    (withVoice: boolean, marquer: boolean) => {
+      if (marquer) {
+        // geste réel dans l'onglet : on tamponne (prochaine ouverture en lecture auto)
+        // et on débloque le moteur de sons — le 1er geste produit un 1er son audible (M-20)
+        try {
+          window.sessionStorage.setItem(GESTURE_KEY, '1');
+        } catch {
+          // stockage indisponible : aucun impact
+        }
+        marquerGesteAudio();
       }
-      setNeedsGesture(false);
-      setStarted(true);
+      // needsGesture n'est levé que par un vrai geste (bouton « Activer le son »), pas par le
+      // démarrage visuel auto : sans geste, le petit bouton reste affiché pendant le film
       startedRef.current = true;
       // Diapason (M-16) : nappe ambiante très douce — OFF par défaut, ne démarre que si
-      // l'utilisateur l'a activée dans Réglages « Sons » (elle ne s'impose jamais)
-      if (nappeVoulue(useStore.getState().settings)) {
+      // l'utilisateur l'a activée dans Réglages « Sons » ET si l'audio est déjà débloqué
+      // (elle ne s'impose jamais ; sans geste, startNappe refuserait de démarrer de toute façon)
+      if (marquer && nappeVoulue(useStore.getState().settings)) {
         nappeRef.current = startNappe();
       }
       if (withVoice) void narrate();
@@ -495,11 +508,37 @@ export function LaunchFilm() {
     [motion, narrate, scheduleScenes],
   );
 
-  // lecture auto si un geste a déjà eu lieu dans cet onglet (et voix demandée) ; sinon on attend le bouton
+  // M-20 : le film VISUEL démarre tout seul à l'ouverture. Seule la voix/le son attendent un
+  // geste : sans geste dans l'onglet, un petit bouton « Activer le son » discret s'affiche
+  // (jamais bloquant) ; avec un geste déjà vu, lecture auto de la narration.
   useEffect(() => {
-    if (!open || startedRef.current || needsGesture) return;
-    start(launchFilmVoiceWanted(useStore.getState().settings));
-  }, [open, needsGesture, start]);
+    if (!open || startedRef.current) return;
+    let gesture = false;
+    try {
+      gesture = window.sessionStorage.getItem(GESTURE_KEY) === '1';
+    } catch {
+      gesture = false;
+    }
+    const voixVoulue = launchFilmVoiceWanted(useStore.getState().settings);
+    setNeedsGesture(!gesture && voixVoulue);
+    start(gesture && voixVoulue, gesture);
+  }, [open, start]);
+
+  // « Activer le son » (M-20) : débloque la voix (et la nappe si activée) sans jamais
+  // bloquer ni redémarrer le film qui tourne déjà
+  const activerSon = useCallback(() => {
+    try {
+      window.sessionStorage.setItem(GESTURE_KEY, '1');
+    } catch {
+      // ignore
+    }
+    marquerGesteAudio();
+    setNeedsGesture(false);
+    if (nappeVoulue(useStore.getState().settings) && !nappeRef.current) {
+      nappeRef.current = startNappe();
+    }
+    void narrate();
+  }, [narrate]);
 
   // tout geste dans l'onglet débloque le son pour la prochaine fois
   useEffect(() => {
@@ -572,7 +611,10 @@ export function LaunchFilm() {
       aria-label="Film de lancement — le résumé de ta journée"
       // Sourire (M-10) : .film-root redonne à l'intérieur du film les teintes vives
       // warning/danger (définies dans globals.css) — le film se joue sur la nuit #1A1B2E
-      className="film-root animate-fade-in fixed inset-0 z-dialog"
+      // Accord (M-20) : colonne flex plein écran — barre du haut, zone centrale centrée
+      // dans l'espace restant (défilable si écran très bas), sous-titres dans le flux :
+      // centrage réel équilibré à toutes les largeurs, jamais de chevauchement.
+      className="film-root animate-fade-in fixed inset-0 z-dialog flex flex-col"
       onClick={(e) => {
         // clic hors zone (fond nuit) -> on passe le film
         if (!(e.target as HTMLElement).closest('[data-film-keep]')) close();
@@ -580,42 +622,45 @@ export function LaunchFilm() {
     >
       <FilmBackground />
 
-      <div className="absolute inset-x-0 top-0 z-20 flex justify-end p-4" data-film-keep>
+      {/* barre du haut : « Activer le son » discret (M-20, voix seulement) + « Passer » */}
+      <div className="relative z-20 flex items-center justify-between gap-3 p-4" data-film-keep>
+        {needsGesture ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={activerSon}
+            aria-label="Activer le son du film"
+            className="gap-1.5 font-semibold shadow-card"
+          >
+            <Volume2 size={15} aria-hidden /> Activer le son
+          </Button>
+        ) : (
+          <span aria-hidden />
+        )}
         <Button variant="secondary" size="lg" onClick={close} className="border-2 font-bold shadow-card" aria-label="Passer le film de lancement">
           <SkipForward size={16} aria-hidden /> Passer
         </Button>
       </div>
 
-      <div className="relative z-10 flex h-full items-center justify-center px-5 pb-24 pt-16">
-        <div className="flex w-full max-w-2xl justify-center" data-film-keep>
-          {needsGesture && !started ? (
-            <div className="film-scene flex w-full flex-col items-center gap-6 text-center">
-              <VoiceMonogram />
-              <h1 className="film-title text-2xl font-extrabold md:text-4xl">
-                {film.greeting}
-                {film.prenom ? `, ${film.prenom}` : ''}
-              </h1>
-              <p className="film-sub font-semibold capitalize">{film.dateFr}</p>
-              <Button
-                size="lg"
-                onClick={() => start(true)}
-                aria-label="Lancer le film et écouter le résumé de la journée"
-                className="mt-2 text-base font-bold"
-              >
-                <Play size={18} aria-hidden /> Lancer le film
-              </Button>
-              <p className="film-faint max-w-sm text-sm">Le son démarre avec ton accord — rien ne se lance jamais tout seul.</p>
+      {/* zone centrale : centrée dans l'espace restant entre la barre et les sous-titres
+          (m-auto sur l'enfant = centrage horizontal ET vertical, même en cas de débordement),
+          défilable si l'écran est très bas — jamais de contenu écrasé ni coupé (320 px compris) */}
+      <div className="relative z-10 flex min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        <div className="relative m-auto flex w-full max-w-2xl justify-center" data-film-keep>
+          {prevScene !== null && prevScene !== scene && (
+            <div key={`prev-${prevScene}`} className="film-scene film-scene-off" aria-hidden>
+              <SceneView scene={prevScene} film={film} actif={false} />
             </div>
-          ) : motion ? (
-            <SceneView scene={scene} film={film} />
-          ) : (
-            <StaticPanel film={film} />
           )}
+          <div key={scene} className="film-scene film-scene-on">
+            {motion ? <SceneView scene={scene} film={film} actif /> : <StaticPanel film={film} />}
+          </div>
         </div>
       </div>
 
-      {/* sous-titres permanents (lisibilité + accessibilité) */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-4 pb-5" data-film-keep>
+      {/* sous-titres permanents (lisibilité + accessibilité), dans le flux : un seul,
+          jamais de chevauchement avec les scènes */}
+      <div className="relative z-20 px-4 pb-4 pt-1" data-film-keep>
         <p aria-live="polite" className="film-caption mx-auto w-fit max-w-2xl rounded-pill px-5 py-2.5 text-center text-sm font-semibold md:text-base">
           {caption}
           {speaking && <span className="ml-2 inline-block h-2 w-2 animate-pulse rounded-full bg-voice align-middle" aria-label="lecture vocale en cours" />}

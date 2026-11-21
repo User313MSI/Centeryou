@@ -20,7 +20,7 @@ import { calendarOnDate } from '../../lib/events';
 import { formatHoursFr, statsWeeks } from '../../lib/stats';
 import { useStore } from '../../lib/store';
 
-const SUGGESTIONS = ['sport demain 14h', 'médecin mardi 10h30 santé', '!lundi réunion', 'rapport vendredi'];
+const SUGGESTIONS = ['sport demain 14h', 'médecin mardi 10h30 santé', 'rapport vendredi', 'courses samedi matin'];
 
 export function AujourdhuiView() {
   const today = todayISO();
@@ -122,7 +122,7 @@ export function AujourdhuiView() {
             <EmptyState
               title="Aucune tâche pour aujourd’hui"
               description="Ajoute ta première tâche avec la grande barre ci-dessus, en langage naturel."
-              example="!lundi réunion"
+              example="rapport vendredi"
               action={{
                 label: 'Ajouter une tâche',
                 onClick: () => document.getElementById('quick-add-input')?.focus(),
