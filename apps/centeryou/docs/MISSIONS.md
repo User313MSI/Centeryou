@@ -25,8 +25,9 @@ Campagne « Grand V » (21/11) — **VAGUE 1 FUSIONNÉE À 100 %** : 7 missions 
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 20/11 au soir.
 
 ### M-16 — Diapason · Design sonore (campagne Grand V, VAGUE 2)
-- **État : FEU VERT le 21/11 (vague 1 fusionnée) — À LANCER maintenant, session dédiée, en parallèle avec M-17 et M-18** (zone libre). Moteur Web Audio synthétisé (zéro fichier binaire, zéro dépendance), réglage « Sons », sons discrets pour célébrations et notifications, nappe du film optionnelle et off par défaut.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- **État : EN COURS — lancée le 2026-11-21 à 05:30 UTC par l’agent Diapason (session Vibe Code dédiée, branche `vibe/diapason-son`, base `main` da7954a, vague 1 fusionnée à 100 %)**. Moteur Web Audio 100 % synthétisé `src/lib/sons.ts` (zéro fichier binaire, zéro dépendance) : « ding » chaleureux (coche de tâche, 2 notes douces), « pop » velouté (création d’événement), carillon discret (notification de rappel), nappe ambiante très douce pour le film (2-3 accords lents, **OFF par défaut**) ; volume réglable (défaut bas), activé/coupé, jamais plus de 2 sons à la fois, **jamais de son sans geste utilisateur préalable dans la session** (déverrouillage audio comme le film).
+- **Zone étanche** : `src/lib/sons.ts` (nouveau), `src/app/reglages/page.tsx` (carte « Sons »), `src/lib/celebrate.ts`, `src/lib/rappels-service.ts`, `src/components/today/launch-film.tsx` + champs de réglage uniquement (`src/types.ts`, `src/lib/defaults.ts`, `src/lib/sanitize.ts` — migrations v2 intactes) + tests nouveaux + `docs/journal/diapason.md`.
+- PR : — · Dernière nouvelle : inscrite par Diapason le 21/11 à 05:30 UTC.
 
 ### M-17 — Nord · Expérience utilisateur (campagne Grand V, VAGUE 2)
 - **État : FEU VERT le 21/11 (vague 1 fusionnée) — À LANCER maintenant, session dédiée, en parallèle avec M-16 et M-18** (zone libre). Parcours premier lancement, états vides, messages d'erreur humains, microcopy, annulations sûres, terminologie homogène. Corrections chirurgicales, pas de refonte.
