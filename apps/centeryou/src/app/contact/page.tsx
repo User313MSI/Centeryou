@@ -51,6 +51,9 @@ export default function ContactPage() {
           <Link href="/cgu" className="rounded-pill border border-line bg-bg px-4 py-2 text-sm font-semibold text-ink transition-colors duration-fast hover:border-primary hover:text-primarydark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             CGU
           </Link>
+          <Link href="/legal" className="rounded-pill border border-line bg-bg px-4 py-2 text-sm font-semibold text-ink transition-colors duration-fast hover:border-primary hover:text-primarydark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            Mentions légales
+          </Link>
         </div>
       </LegalSection>
     </LegalDoc>
