@@ -10,8 +10,7 @@ import { DayView } from '../../components/events/day-view';
 import { MonthView } from '../../components/events/month-view';
 import { WeekView } from '../../components/events/week-view';
 import { useEventActions } from '../../components/events/use-event-actions';
-import { DAY_END, DAY_START, addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, startOfWeekISO, timeOf, todayISO } from '../../lib/dates';
-import { clamp } from '../../lib/utils';
+import { addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, nextSlot, startOfWeekISO, todayISO } from '../../lib/dates';
 import { useUiStore, type PlanningView } from '../../lib/ui-store';
 import { useHorizontalSwipe } from '../../lib/use-swipe';
 
@@ -20,12 +19,6 @@ const VIEW_OPTIONS: TabOption[] = [
   { id: 'semaine', label: 'Semaine' },
   { id: 'mois', label: 'Mois' },
 ];
-
-function nextSlot(): string {
-  const now = new Date();
-  const m = now.getHours() * 60 + now.getMinutes();
-  return timeOf(clamp(Math.ceil((m + 1) / 60) * 60, DAY_START * 60, DAY_END * 60 - 60));
-}
 
 export default function PlanningPage() {
   const [cursor, setCursor] = useState(todayISO());

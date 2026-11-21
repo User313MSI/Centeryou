@@ -6,9 +6,8 @@ import { useHydrated } from '../../lib/useHydrated';
 import { useStore } from '../../lib/store';
 import { useUiStore } from '../../lib/ui-store';
 import { initSync } from '../../lib/sync';
-import { DAY_END, DAY_START, nowMinutes, timeOf, todayISO } from '../../lib/dates';
+import { nextSlot, todayISO } from '../../lib/dates';
 import { getStorageReport } from '../../lib/safe-storage';
-import { clamp } from '../../lib/utils';
 import { isPublicRoute } from '../../lib/routes';
 import { Logo } from '../brand/logo';
 import { SyncProvider } from '../account/sync-provider';
@@ -24,12 +23,6 @@ import { VoiceFab } from './voice-fab';
 import { InstallPrompt } from './install-prompt';
 import { PwaRegister } from './pwa-register';
 import { TaskActionsMenu } from '../tasks/task-actions-menu';
-
-function nextSlot(): string {
-  const m = nowMinutes();
-  const next = Math.min(Math.ceil((m + 1) / 60) * 60, DAY_END * 60 - 60);
-  return timeOf(clamp(next, DAY_START * 60, DAY_END * 60 - 60));
-}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const hydrated = useHydrated();

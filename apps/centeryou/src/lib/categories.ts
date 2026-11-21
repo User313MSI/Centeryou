@@ -27,6 +27,3 @@ export function priorityLabel(p: Priority): string {
   return PRIORITY_LIST.find((x) => x.id === p)?.label ?? 'Moyenne';
 }
 
-export function priorityColor(p: Priority): string {
-  return PRIORITY_LIST.find((x) => x.id === p)?.color ?? colors.primary;
-}
