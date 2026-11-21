@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import {
   cacheSubscription,
   retrieveSubscription,
@@ -7,22 +8,36 @@ import {
   type StripeSubscription,
 } from '../../../../lib/server/stripe';
 
+import { json } from '../../../../lib/server/http';
+
 export const runtime = 'nodejs';
+
 export const dynamic = 'force-dynamic';
+
+/** M-13 Verrou : un événement Stripe réel tient largement en 256 Ko — au-delà, 413. */
+const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 /**
  * POST /api/stripe/webhook
  * Réception des événements Stripe signés (signature HMAC vérifiée avec
- * STRIPE_WEBHOOK_SECRET). Met à jour le cache serveur de statut ; le client
- * resynchronise de toute façon directement depuis Stripe, donc un webhook
- * manqué ou en échec ne casse jamais l'app.
+ * STRIPE_WEBHOOK_SECRET, tolérance ±300 s anti-rejeu). Met à jour le cache
+ * serveur de statut ; le client resynchronise de toute façon directement
+ * depuis Stripe, donc un webhook manqué ou en échec ne casse jamais l'app.
  *
+ * - corps > 256 Ko → 413 (hors profil, refus propre)
  * - signature invalide → 400 (Stripe réessaiera)
+ * - événement illisible ou sans type → 400
  * - erreur de traitement → 500 (Stripe réessaiera)
  * - tout le reste → 200
+ *
+ * Pas de rate-limit ici : la signature HMAC + l'anti-rejeu sont
+ * l'authentification de cette route (les rappels Stripe doivent passer).
  */
 export async function POST(req: Request) {
   const rawBody = await req.text();
+  if (rawBody.length > MAX_WEBHOOK_BYTES) {
+    return json({ error: 'Corps de requête trop volumineux' }, 413);
+  }
   const signature = req.headers.get('stripe-signature');
   const secret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
 
@@ -30,11 +45,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Signature invalide' }, { status: 400 });
   }
 
+  let event: { type?: unknown; data?: { object?: Record<string, unknown> } };
   try {
-    const event = JSON.parse(rawBody) as {
-      type: string;
-      data?: { object?: Record<string, unknown> };
-    };
+    event = JSON.parse(rawBody) as typeof event;
+  } catch {
+    return NextResponse.json({ error: 'Événement illisible' }, { status: 400 });
+  }
+  if (typeof event.type !== 'string' || !event.type) {
+    return NextResponse.json({ error: 'Événement invalide' }, { status: 400 });
+  }
+
+  try {
     const object = event.data?.object ?? {};
 
     if (event.type === 'checkout.session.completed') {

@@ -5,6 +5,7 @@ on:
     paths:
       - 'apps/centeryou/**'
       - '.github/workflows/centeryou-ci.yml'
+      - '.github/workflows/scan-secrets.sh'
   push:
     branches:
       - 'vibe/novaloom-suite-fe60b6'
@@ -12,6 +13,7 @@ on:
     paths:
       - 'apps/centeryou/**'
       - '.github/workflows/centeryou-ci.yml'
+      - '.github/workflows/scan-secrets.sh'
   workflow_dispatch:
 
 jobs:
@@ -43,3 +45,14 @@ jobs:
 
       - name: Build de production Next.js
         run: npm run build
+
+      # M-13 Verrou : scan de secrets BLOQUANT (grep de motifs de clés courantes
+      # dans src/, public/, scripts/, tests/, configs et .github — zéro dépendance).
+      - name: Scan de secrets (bloquant)
+        run: bash .github/workflows/scan-secrets.sh
+
+      # M-13 Verrou : npm audit INFORMATIF et non bloquant (les CVE connues de
+      # next@14.2.35 / vitest sont suivies dans journal/sentinelle.md ; la montée
+      # majeure est prévue après le lancement).
+      - name: npm audit (informatif, non bloquant)
+        run: npm audit --omit=dev || echo "::warning file=package.json::npm audit --omit=dev a remonté des vulnérabilités (informatif, non bloquant — suivi dans apps/centeryou/docs/journal/sentinelle.md)"
