@@ -48,8 +48,10 @@ jobs:
 
       # M-13 Verrou : scan de secrets BLOQUANT (grep de motifs de clés courantes
       # dans src/, public/, scripts/, tests/, configs et .github — zéro dépendance).
+      # Vibe Work (21/11) : le job tourne depuis apps/centeryou, le script vit à la
+      # racine du dépôt, donc chemin absolu via GITHUB_WORKSPACE.
       - name: Scan de secrets (bloquant)
-        run: bash .github/workflows/scan-secrets.sh
+        run: bash "$GITHUB_WORKSPACE/.github/workflows/scan-secrets.sh"
 
       # M-13 Verrou : npm audit INFORMATIF et non bloquant (les CVE connues de
       # next@14.2.35 / vitest sont suivies dans journal/sentinelle.md ; la montée
