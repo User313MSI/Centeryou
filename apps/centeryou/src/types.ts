@@ -53,6 +53,8 @@ export interface Settings {
   /** heure de début de la grille (6–10) */
   dayStart: number;
   sounds: boolean;
+  /** volume des effets sonores (0–1) — par défaut bas (Diapason, M-16) */
+  soundVolume: number;
   voice: boolean;
   /** thème d'apparence (bascule dans Réglages, mémorisé) */
   theme: Theme;
@@ -70,6 +72,8 @@ export interface Settings {
   launchFilmShownDate: string;
   /** voix du film de lancement (bascule dédiée — voix du navigateur par défaut, premium si droit + quota) */
   launchFilmVoice: boolean;
+  /** nappe ambiante très douce pendant le film de lancement — OFF par défaut, ne s'impose jamais (Diapason, M-16) */
+  filmPad: boolean;
   /** mode sombre (champ historique, le thème actif est piloté par `theme`) */
   darkMode: boolean;
   /** animations & célébrations (apparitions douces, micro-confettis, petits feux d'artifice) — activées par défaut */

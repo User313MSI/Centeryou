@@ -18,6 +18,8 @@ import { useMotionEnabled } from '../../lib/use-motion';
 
 import { useStore } from '../../lib/store';
 
+import { nappeVoulue, startNappe, stopNappe } from '../../lib/sons';
+
 import { speak, stopSpeaking } from '../../lib/voice';
 
 import { shouldShowWelcome } from '../../lib/welcome';
@@ -395,6 +397,7 @@ export function LaunchFilm() {
   const [speaking, setSpeaking] = useState(false);
   const timers = useRef<number[]>([]);
   const startedRef = useRef(false);
+  const nappeRef = useRef<(() => void) | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const today = todayISO();
@@ -406,6 +409,9 @@ export function LaunchFilm() {
   }, []);
 
   useEffect(() => clearTimers, [clearTimers]);
+
+  // Diapason (M-16) : la nappe du film ne s'arrête jamais en suspens (démontage compris)
+  useEffect(() => () => stopNappe(), []);
 
   // décide une seule fois au chargement si le film joue (double verrou : historique + nouveau réglage)
   useEffect(() => {
@@ -431,6 +437,12 @@ export function LaunchFilm() {
   const close = useCallback(() => {
     clearTimers();
     stopSpeaking();
+    if (nappeRef.current) {
+      nappeRef.current();
+      nappeRef.current = null;
+    } else {
+      stopNappe();
+    }
     setSpeaking(false);
     setStarted(false);
     startedRef.current = false;
@@ -472,6 +484,11 @@ export function LaunchFilm() {
       setNeedsGesture(false);
       setStarted(true);
       startedRef.current = true;
+      // Diapason (M-16) : nappe ambiante très douce — OFF par défaut, ne démarre que si
+      // l'utilisateur l'a activée dans Réglages « Sons » (elle ne s'impose jamais)
+      if (nappeVoulue(useStore.getState().settings)) {
+        nappeRef.current = startNappe();
+      }
       if (withVoice) void narrate();
       if (motion) scheduleScenes();
     },
