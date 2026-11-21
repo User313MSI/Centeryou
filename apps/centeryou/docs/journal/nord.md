@@ -102,3 +102,5 @@ Audit « œil neuf » des 5 axes de la mission en lisant tout `src/components/**
 
 - Branche : `vibe/nord-ux` (poussée, commit `2981476`) · PR : **https://github.com/User313MSI/Centeryou/pull/37** (brouillon, base `main`).
 - Inscription M-17 publiée sur `main` à 05:33 UTC (commit `2e52ebd`).
+
+- Vibe Work (21/11) : branche resynchronisée sur main (Pinceau fusionné, 2cc2e60). Un échec du build de production est apparu sur la combinaison lors du premier passage CI ; relance de diagnostic en cours (aucun secret, aucun test rouge : tests 457/457 verts, échec isolé à l'étape `npm run build`).
