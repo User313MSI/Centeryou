@@ -45,7 +45,8 @@ export default function TachesPage() {
         <CardBody className="pt-5">
           <QuickAdd />
           <p className="mt-2 text-xs text-muted">
-            Astuce : « sport demain 14h » · « médecin mardi 10h30 santé » · « rapport vendredi » · « !lundi réunion »
+            Astuce : « rapport vendredi » ou « !lundi réunion » créent une tâche · « sport demain 14h » crée un
+            événement à l’agenda.
           </p>
         </CardBody>
       </Card>
@@ -69,14 +70,10 @@ export default function TachesPage() {
               : 'Change de filtre ou ajoute une nouvelle tâche pour la voir apparaître ici.'
           }
           example={filter === 'toutes' ? 'rapport vendredi' : undefined}
-          action={
-            filter === 'toutes'
-              ? {
-                  label: 'Ajouter ma première tâche',
-                  onClick: () => document.getElementById('quick-add-input')?.focus(),
-                }
-              : undefined
-          }
+          action={{
+            label: filter === 'toutes' ? 'Ajouter ma première tâche' : 'Ajouter une tâche',
+            onClick: () => document.getElementById('quick-add-input')?.focus(),
+          }}
         />
       ) : (
         <ul className="flex flex-col gap-2.5" aria-label="Liste des tâches">

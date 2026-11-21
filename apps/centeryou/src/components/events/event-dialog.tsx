@@ -146,10 +146,10 @@ export function EventDialog() {
     const lead = reminder === '' ? null : (Number(reminder) as ReminderLead);
     if (editing) {
       updateEvent(editing.id, { title: t, date, start, end, category, repeat, reminderMinutes: lead });
-      pushToast({ message: `Événement modifié : « ${t} »` });
+      pushToast({ message: `Événement modifié : « ${t} ».` });
     } else {
       addEvent({ title: t, date, start, end, category, repeat, reminderMinutes: lead });
-      pushToast({ message: `Événement ajouté : « ${t} »` });
+      pushToast({ message: `Événement ajouté : « ${t} ».` });
     }
     // demande de permission AU BON MOMENT : première création/modification d'événement
     // AVEC rappel activé (geste utilisateur = ce clic). Jamais de popup au chargement.
@@ -173,7 +173,7 @@ export function EventDialog() {
     // sortie douce du bloc dans le planning (rétrécissement + fondu) avant suppression réelle
     requestExit(`event:${editing.id}`, () => deleteEvent(editing.id));
     pushToast({
-      message: `« ${editing.title} » supprimé`,
+      message: `« ${editing.title} » supprimé.`,
       actionLabel: 'Annuler',
       duration: 5000,
       onAction: () => {
@@ -302,8 +302,8 @@ export function EventDialog() {
           </select>
         </Field>
         <p className="-mt-2 text-xs text-muted">
-          Notification locale envoyée par ton navigateur quand Centeryou est ouvert ou en arrière-plan — pas si
-          l’application est complètement fermée.
+          Rappel envoyé par ton navigateur quand Centeryou est ouvert ou en arrière-plan — pas si l’application est
+          complètement fermée.
         </p>
         {error && (
           <p role="alert" className="rounded-card bg-danger/10 px-4 py-3 text-sm font-semibold text-ink">

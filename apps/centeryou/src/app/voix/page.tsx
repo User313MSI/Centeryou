@@ -42,10 +42,10 @@ export default function VoixPage() {
             ))}
           </ul>
           <p className="mt-3 text-xs text-muted">
-            Sans voix premium, la synthèse utilise la voix de ton navigateur (français, gratuite). La voix premium
-            (ElevenLabs, côté serveur via <code>/api/voix</code>, quota serveur de 300 caractères/jour) est illimitée
-            avec l’offre Premium, et offerte 3 essais gratuits par mois en Découverte ; sinon Centeryou bascule
-            automatiquement, sans erreur.
+            Sans voix premium, la synthèse utilise la voix de ton navigateur (en français, gratuite). La voix premium
+            (hébergée par nos soins, jamais exposée dans ton navigateur) est illimitée avec l’offre Premium, et offerte
+            3 essais gratuits par mois en Découverte ; sinon Centeryou bascule automatiquement sur la voix de ton
+            navigateur, sans erreur.
           </p>
         </CardBody>
       </Card>
