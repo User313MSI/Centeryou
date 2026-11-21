@@ -28,10 +28,10 @@ Campagne « Grand V » (21/11), **vague 1** : M-07 Pont + M-10 Sourire + M-11 So
 - PR : — · Dernière nouvelle : inscrite par Vibe Work le 20/11 au soir.
 
 ### M-10 — Sourire · Accessibilité & contrastes (campagne Grand V)
-- **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapport Sentinelle (axe accessibilité 3/5 : teinte « danger » 2,66:1 et « warning » 1,75:1, sous le seuil AA 4,5:1 ;复审 du clavier et des aria).
+- **État : EN COURS** (lancée le 2026-11-21 à 03:30 UTC par l'agent Sourire, session Vibe Code dédiée, branche `vibe/sourire-accessibilite`, base `main` 2d08f82). Source : rapport Sentinelle (axe accessibilité 3/5 : teinte « danger » 2,66:1 et « warning » 1,75:1, sous le seuil AA 4,5:1 ; revue du clavier et des aria).
 - **Zone étanche** : src/components/**, globals.css (uniquement les 2 teintes de texte concernées), composants de texte/badges. INTERDIT : reglages/page.tsx, src/lib/sync.ts, tout fichier ICS (zone Pont), event-dialog (zone Radar), apps/centeryou-desktop, package.json.
 - Exception à la règle des tokens : ajustement des DEUX seules teintes #FFB020 et #FF6B6B autorisé (vitesse grand V, validité AA documentée avant/après dans le journal), les 5 autres intouchés. L'identité visuelle de l'app doit rester identique au premier regard.
-- PR : — · Dernière nouvelle : inscrite par Vibe Work le 21/11.
+- PR : — (brouillon dès l'ouverture de la branche) · Dernière nouvelle : 2026-11-21 03:26 UTC — branche `vibe/sourire-accessibilite` ouverte, zone : src/components/** + globals.css (2 teintes), journal `journal/sourire.md`.
 
 ### M-11 — Souffle · Performance & dette de code (campagne Grand V)
 - **État : À LANCER MAINTENANT, EN PARALLÈLE** (session Vibe Code dédiée). Source : rapport Sentinelle (axe perf 4/5 : rendu dynamique à surveiller ; dette 3/5 : nextSlot défini 3 fois, code mort design tokens).
