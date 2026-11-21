@@ -45,4 +45,5 @@ Mission : la musique et les sons de Centeryou, **100 % synthétisés en direct p
 
 ### Validation finale
 - **495/495 tests** (457 intacts + 38 nouveaux) ✅ · `tsc --noEmit` ✅ · `build` ✅ 23 routes · smoke 6 routes en 200 ✅ · zéro dépendance ajoutée · zéro binaire audio · interface 100 % FR · First Load JS `/` inchangé (114 kB).
+- **PR #38** (brouillon, base `main`) : CI bloquante « Tests Vitest + build Next.js » = **success** ✅ (run 44872024333, head `71efc49`), 11 fichiers changés (zone uniquement), Vercel Preview OK.
 - PR : **https://github.com/User313MSI/Centeryou/pull/38** (brouillon, base `main`, ouverte le 2026-11-21 ~06:50 UTC, commit `b6e33c6`). MISSIONS.md publié sur `main` à l'inscription (`4ebc93b`, 05:30 UTC) et à la PR (`5d35f87`, ~06:52 UTC).
