@@ -44,6 +44,37 @@ Trois défauts mesurés, tous visibles sur les captures headless :
 
 ## Validation
 
-- `npm test` : **544/544** ✅ (543 base main + 1 nouveau M-21 ; 0 supprimé) · `npx tsc --noEmit` ✅ · `npm run test:parser` ✅ · `npm run build` ✅ (voir ci-dessous pour le détail) · `git diff --name-only` = uniquement la zone (voir PR).
+- `npm test` : **544/544** ✅ (543 base main `e84722a` + 1 nouveau test M-21 ; **0 supprimé**) · `npx tsc --noEmit` ✅ · `npm run test:parser` ✅ · `npm run build` ✅ (23 routes — 1ʳᵉ tentative en faux échec d'infrastructure connu/documenté (`ENOENT` collecte de pages, tests verts), **relancée une fois avant diagnostic** : la relance passe) · branche resynchronisée sur `main` (rebase, 0 conflit), tests rejoués : 544/544 ✅.
+- `git diff --name-only` (branche vs main) : `src/components/today/launch-film.tsx`, `src/app/globals.css`, `tests/launch-film.test.tsx`, `docs/journal/cineaste.md` — **uniquement la zone** (+ MISSIONS.md publié séparément sur main, règle du canal). `src/lib/launch-film.ts` relu, **inchangé**. `package.json`/lock inchangés, aucun binaire, aucune image committée.
 
-*(Preuves d'écran APRÈS correctif et détail scène par scène / taille par taille : section suivante, remplie après les captures `after/`.)*
+---
+
+## Preuves d'écran APRÈS correctif (captures `after/`, mêmes méthode et tailles)
+
+**Mesures communes à toutes les tailles** : `.film-root` = exactement le viewport (0,0 → 1920×1080 / 1366×768 / 1440×900 / 320×700 — avant : 1100 px de large, jusqu'à y=2006/2511 hors écran). Zone centrale : `scrollHeight == clientHeight` partout (avant : contenu fantôme faisait défiler). Débordement de chaque `.film-scene` par rapport au conteneur de scènes : **aucun positif** (tous à −24 px = à l'intérieur, rognage `overflow-hidden` jamais atteint). exactly **1** `.film-caption` partout. Scène 4 : **2** `.film-scene-on` (la scène + la carte « Carte créée » désormais visible).
+
+| Taille | Scène 1 (ouverture) | Scène 2 (Ta journée) | Scène 3 (progression) | Scène 4 (La magie) | Scène 5 (signature) | Transition |
+|---|---|---|---|---|---|---|
+| 1920×1080 | monogramme + « Bonjour, Camille » + date centrés, rien ne dépasse | 3 compteurs + carte « Prochaine étape » à halo, centrés | anneau 50 % + pastilles + texte | **carte « CARTE CRÉÉE — Réunion équipe · 10h00 · Travail » VISIBLE + halo + texte d'aide**, sous-titre en bas | signature centrée | une seule scène lisible, l'ancienne fond dessous (z-index 0), 0 débordement |
+| 1366×768 | idem, plein écran 1366×768 | idem | idem | idem, carte visible | idem | idem (−5,8/−10,2 px = intérieur) |
+| 1440×900 | idem | idem | idem | idem, carte visible | idem | idem |
+| 320×700 | idem, plein écran 320 px | 3 cartes côte à côte lisibles (2 / 1 / 3 h), carte prochaine étape, rien ne dépasse | idem | **carte visible**, titre + carte + aide + sous-titre tiennent dans 700 px (zone scrollH = clientH = 517) | idem | idem |
+
+Détail visuel (captures `after/s1..s5_<taille>.png`, `after/transition_<taille>.png`) :
+- **Scène 1** : fond nuit plein écran avec halos/particules, barre du haut (« Activer le son » à gauche, « Passer » à droite), monogramme d'ondes, « Bonjour, Camille », « Dimanche 22 novembre » centrés verticalement et horizontalement (m-auto conservé), sous-titre « Bonjour, Camille. Nous sommes le Dimanche 22 novembre. » en bas dans le flux.
+- **Scène 2** : « Ta journée » + 3 cartes (2 événements / 1 tâche à faire / 3 h planifié) + carte « Prochaine étape — Réunion équipe, 10h00–11h00 · Travail » à halo pulsant ; à 320 px les 3 cartes tiennent (≈75 px chacune), labels wrappés proprement.
+- **Scène 3** : « Ta progression », anneau animé 50 %, 7 pastilles (aujourd'hui en surbrillance), « Série de 1 jour organisés d'affilée. Tu avances bien, bravo. ».
+- **Scène 4 « La magie »** : après la machine à écrire, la **carte « CARTE CRÉÉE » apparaît en fondu (film-scene-in) avec son halo**, suivie du texte « Dis-la à voix haute, ou écris-la dans l'ajout rapide — elle devient un événement. » — **avant M-21 cette carte était invisible (opacity 0)** et débornait de 114 px.
+- **Scène 5** : « Ton planning qui te parle. / Bonne journée, Camille. » + monogramme.
+- **Transition** (capturée à +350 ms du changement de scène, 720 ms de fondu) : une seule scène lisible à la fois ; l'ancienne est sous la nouvelle (z-index 0 vs 1) et fond en 720 ms, sans jamais rester nette par-dessus, et sans déborder du conteneur (mesuré : −5,8 px haut / −10,2 px bas = à l'intérieur).
+
+**Hors zone, noté sans toucher** : la carte PWA « Installer Centeryou » (composant `install-prompt`, z-index au-dessus du film) peut chevaucher le bas du film à 320 px — présente avant M-21, hors de ma zone, annulable (×).
+
+### Comportements vérifiés sans régression (tests + code)
+« Passer » toujours visible (haut droite) · Échap (capture) · clic hors zone (`data-film-keep`) · piège de focus sur le dialogue · sous-titres permanents en bas, un seul, dans le flux · `prefers-reduced-motion` / animations off → panneau statique `film-static` (keyframes tuées par les blocs globaux 0,01 ms) · réglages « Film de lancement » (3 modes) + « Voix du film » · bouton « Activer le son » discret non bloquant (visible sur toutes les captures) · double verrou de fréquence · lazy loading du film · voix = un seul `speak` du brief. Tests : 544/544 (dont tous les tests M-06/M-20 du film, inchangés sauf les 2 requêtes `container` → `document` justifiées par le portail).
+
+### Suivi
+- 2026-11-22 ~05:45 UTC — branche `vibe/cineaste-film-propre` créée depuis `main` e84722a ; inscription M-21 publiée sur `main` (d56f14b).
+- ~06:10 UTC — diagnostic reproduit en headless (captures `before/` + mesures), correctifs codés, 544/544 tests, tsc, build (après 1 relance du faux échec infra), commit `b85ad7c` poussé, **PR #45 ouverte en brouillon** (base main) ; MISSIONS.md mis à jour sur main (6b7b701).
+- ~06:35 UTC — preuves d'écran APRÈS livrées (captures `after/` + mesures ci-dessus, 5 scènes + transition × 4 tailles), branche resynchronisée sur main (rebase 24e78d9, 0 conflit), tests rejoués 544/544, tsc ✅. PR : **https://github.com/User313MSI/Centeryou/pull/45** (brouillon).
+- ~06:55 UTC — vérification de propreté : un 500 sur `/` observé en smoke venait d'un `.next` pollué par le serveur dev lancé en parallèle dans le même worktree (artefact d'environnement, pas du code) — après arrêt du dev et **rebuild propre** : smoke **11/11 routes en 200** (`/`, `/aujourdhui`, `/planning`, `/taches`, `/stats`, `/reglages`, `/voix`, `/demo`, `/bienvenue`, `/onboarding`, `/presse`, `/offres`) et re-capture scène 4 à 1920×1080 sur ce build propre : `.film-root` = viewport exact, 2 `film-scene-on` (scène + carte « Carte créée » visible). Le code de main pristine servant `/` en 200 dans le même environnement, aucune régression attribuable au diff.
