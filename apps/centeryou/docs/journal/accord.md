@@ -68,3 +68,5 @@ Tests : `launch-film.test.tsx` — 4 tests réécrits sur le nouveau contrat (fi
 
 ### Hors zone signalé (non codé, pour le propriétaire de la zone)
 - `src/app/reglages/page.tsx` (~ligne 301) : le texte d'aide mentionne encore « un bouton « Lancer le film » débloque le son » — le bouton s'appelle maintenant « Activer le son » et ne bloque plus le film (M-20). Zone réglages hors de mon périmètre.
+
+- Vibe Work (22/11) : branche resynchronisée sur main (Compris fusionné, 59e215e). Le premier passage CI de la combinaison a échoué sur « Build de production » avec la signature exacte des faux échecs documentés (tests verts, scan nets) ; relance de vérification.
