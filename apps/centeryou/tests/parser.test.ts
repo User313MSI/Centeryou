@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInput, type ParsedInput } from '../src/lib/parser';
+import { parseInput, parseInputDetailed, type ParsedInput } from '../src/lib/parser';
 import { addDaysISO, parseISO } from '../src/lib/dates';
 
 // lundi 6 janvier 2025 (référence fixe pour des tests déterministes)
@@ -116,5 +116,60 @@ describe('parseur — quantités relatives plafonnées (M-08 : plus jamais de da
     const r = p('dans 2 mois');
     expect(r.date).toBe(TODAY);
     expect(r.title).toBe('Dans 2 mois');
+  });
+});
+
+describe('parseur — phrases naturelles M-19 (mots de remplissage retirés du titre)', () => {
+  it.each<[string, Partial<ParsedInput>]>([
+    // la phrase exacte dictée par l’utilisateur en production
+    ["écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2", { title: 'Stream sur Red Dead 2', date: '2025-01-07', time: '18:00' }],
+    ['note que vendredi j’ai rdv dentiste 10h30', { title: 'Rdv dentiste', date: '2025-01-10', time: '10:30' }],
+    ['stream sur Red Dead 2 demain à 18h', { title: 'Stream sur Red Dead 2', date: '2025-01-07', time: '18:00' }],
+    ['stream Red Dead 2 demain soir 21h', { title: 'Stream Red Dead 2', date: '2025-01-07', time: '21:00' }],
+    ["j'ai une réunion demain matin à 9h", { title: 'Réunion', date: '2025-01-07', time: '09:00' }],
+    ["rappelle-moi d'acheter du pain demain", { title: "D'acheter du pain", date: '2025-01-07', time: null }],
+    ['mets laver la voiture samedi', { title: 'Laver la voiture', date: '2025-01-11', time: null }],
+    ['ajoute sport demain 14h', { title: 'Sport', date: '2025-01-07', time: '14:00' }],
+    ['un appel à 15h', { title: 'Appel', date: TODAY, time: '15:00' }],
+    ['réunion à 18:00', { title: 'Réunion', date: TODAY, time: '18:00' }],
+    ['demain soir 21h', { title: 'Nouvelle tâche', date: '2025-01-07', time: '21:00' }],
+    // aucune heure après « soir » : le mot reste dans le titre, aucune heure inventée
+    ['dîner demain soir', { title: 'Dîner soir', date: '2025-01-07', time: null }],
+    ['yoga samedi matin', { title: 'Yoga matin', date: '2025-01-11', time: null }],
+    ["dans 3 jours j'ai un rendez-vous à 16h", { title: 'Rendez-vous', date: '2025-01-09', time: '16:00' }],
+    ['réveil ce matin à 7h30', { title: 'Réveil', date: TODAY, time: '07:30' }],
+    ['appel paul à 15h aujourd’hui', { title: 'Appel paul', date: TODAY, time: '15:00' }],
+    ['dis-moi que lundi 10h il y a le dentiste', { title: 'Il y a le dentiste', date: '2025-01-06', time: '10:00' }],
+    ['écris moi que jeudi 20h30 je sors avec Léa', { title: 'Je sors avec Léa', date: '2025-01-09', time: '20:30' }],
+    ['note que je dois appeler le plombier mardi', { title: 'Je dois appeler le plombier', date: '2025-01-07', time: null }],
+    ['mets un rappel téléphonique vendredi à 9h', { title: 'Rappel téléphonique', date: '2025-01-10', time: '09:00' }],
+  ])('« %s »', (input, expected) => {
+    expect(p(input)).toEqual({ category: 'autre', priority: 'moyenne', time: null, ...expected });
+  });
+
+  it('le « à » devant une heure ne reste jamais dans le titre', () => {
+    expect(p('stream à 18h').title).toBe('Stream');
+    expect(p('stream à 18:00').title).toBe('Stream');
+    expect(p('à 18h').title).toBe('Nouvelle tâche');
+  });
+
+  it('« j’ai » disparaît aussi au milieu de la phrase', () => {
+    expect(p('vendredi j’ai rdv dentiste').title).toBe('Rdv dentiste');
+  });
+});
+
+describe('parseInputDetailed — drapeaux hasDate/hasTime (M-19)', () => {
+  it('une date ou une heure reconnue est signalée ; la date par défaut ne compte pas', () => {
+    expect(parseInputDetailed('blabla incompris', TODAY)).toMatchObject({ hasDate: false, hasTime: false, date: TODAY, time: null });
+    expect(parseInputDetailed('demain', TODAY)).toMatchObject({ hasDate: true, hasTime: false, date: '2025-01-07' });
+    expect(parseInputDetailed('à 18h', TODAY)).toMatchObject({ hasDate: false, hasTime: true, time: '18:00' });
+    expect(parseInputDetailed('lundi 10h', TODAY)).toMatchObject({ hasDate: true, hasTime: true, date: '2025-01-06', time: '10:00' });
+    expect(parseInputDetailed('ce soir', TODAY)).toMatchObject({ hasDate: true, hasTime: true, time: '19:00' });
+    expect(parseInputDetailed('dans 2 jours 8h', TODAY)).toMatchObject({ hasDate: true, hasTime: true, date: '2025-01-08', time: '08:00' });
+    expect(parseInputDetailed('sport', TODAY)).toMatchObject({ hasDate: false, hasTime: false });
+  });
+
+  it('parseInput garde exactement sa forme historique à 5 champs', () => {
+    expect(Object.keys(parseInput('sport demain 14h', TODAY)).sort()).toEqual(['category', 'date', 'priority', 'time', 'title']);
   });
 });

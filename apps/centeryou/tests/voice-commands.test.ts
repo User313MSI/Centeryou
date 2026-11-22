@@ -16,7 +16,7 @@ import { handleVoiceCommand, programSentence } from '../src/lib/voice-commands';
 import { defaultSettings } from '../src/lib/defaults';
 import { useStore } from '../src/lib/store';
 import { useUiStore } from '../src/lib/ui-store';
-import { addDaysISO, todayISO } from '../src/lib/dates';
+import { addDaysISO, nextWeekdayISO, todayISO } from '../src/lib/dates';
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -107,5 +107,137 @@ describe('quota / activation voix', () => {
     useStore.getState().addTask({ title: 'Sport', date: todayISO(), time: null, category: 'autre', priority: 'moyenne' });
     await handleVoiceCommand("c'est fait sport");
     expect(playBlipMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('M-19 — saisie vocale vraiment naturelle (repli parseInput avant « Je n’ai pas compris »)', () => {
+  // règle 8 : aucune date littérale comparée au jour réel — tout est recalculé à l’exécution
+  const today = () => todayISO();
+  const tomorrow = () => addDaysISO(todayISO(), 1);
+  const weekday = (idx: number) => nextWeekdayISO(idx, todayISO()); // lundi=0 … dimanche=6
+
+  it('la phrase exacte dictée en production : « écris-moi que demain à 18:00 j’ai un stream sur Red Dead 2 »', async () => {
+    const reply = await handleVoiceCommand("écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2");
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0]).toMatchObject({ title: 'Stream sur Red Dead 2', date: tomorrow(), start: '18:00', end: '19:00' });
+    expect(s.tasks).toHaveLength(0);
+    expect(reply).toContain('Ajouté : Stream sur Red Dead 2, demain à 18h00');
+  });
+
+  it('« note que vendredi j’ai rdv dentiste 10h30 » -> événement « Rdv dentiste » vendredi 10h30', async () => {
+    const reply = await handleVoiceCommand('note que vendredi j’ai rdv dentiste 10h30');
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0]).toMatchObject({ title: 'Rdv dentiste', date: weekday(4), start: '10:30', end: '11:30' });
+    expect(reply).toContain('Rdv dentiste');
+  });
+
+  it('« stream sur Red Dead 2 demain à 18h » -> événement demain 18h00', async () => {
+    await handleVoiceCommand('stream sur Red Dead 2 demain à 18h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Stream sur Red Dead 2', date: tomorrow(), start: '18:00', end: '19:00' });
+  });
+
+  it('« stream Red Dead 2 demain soir 21h » -> 21h00, « soir » retiré du titre', async () => {
+    await handleVoiceCommand('stream Red Dead 2 demain soir 21h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Stream Red Dead 2', date: tomorrow(), start: '21:00', end: '22:00' });
+  });
+
+  it('« j’ai une réunion demain matin à 9h » -> événement « Réunion » demain 9h00', async () => {
+    await handleVoiceCommand("j'ai une réunion demain matin à 9h");
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Réunion', date: tomorrow(), start: '09:00', end: '10:00' });
+  });
+
+  it('« rappelle-moi d’acheter du pain demain » -> tâche (pas d’heure) « D’acheter du pain »', async () => {
+    const reply = await handleVoiceCommand("rappelle-moi d'acheter du pain demain");
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(0);
+    expect(s.tasks).toHaveLength(1);
+    expect(s.tasks[0]).toMatchObject({ title: "D'acheter du pain", date: tomorrow(), time: null });
+    expect(reply).toContain('tâches');
+  });
+
+  it('« laver la voiture samedi » -> tâche « Laver la voiture » samedi prochain', async () => {
+    await handleVoiceCommand('laver la voiture samedi');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Laver la voiture', date: weekday(5), time: null });
+  });
+
+  it('« appel paul à 15h » -> événement aujourd’hui 15h00 (le « à » ne pollue pas le titre)', async () => {
+    const reply = await handleVoiceCommand('appel paul à 15h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Appel paul', date: today(), start: '15:00', end: '16:00' });
+    expect(reply).toContain("aujourd'hui à 15h00");
+  });
+
+  it('« à 18h » seul -> une heure = un événement d’1 h aujourd’hui', async () => {
+    await handleVoiceCommand('à 18h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Nouvelle tâche', date: today(), start: '18:00', end: '19:00' });
+  });
+
+  it('« demain 18h » -> événement demain 18h00', async () => {
+    await handleVoiceCommand('demain 18h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Nouvelle tâche', date: tomorrow(), start: '18:00' });
+  });
+
+  it('« ! demain je dois finir le rapport » -> tâche prioritaire haute', async () => {
+    await handleVoiceCommand('! demain je dois finir le rapport');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Je dois finir le rapport', date: tomorrow(), priority: 'haute' });
+  });
+
+  it('« dans 3 jours j’ai un rendez-vous à 16h » -> événement dans 3 jours à 16h00', async () => {
+    await handleVoiceCommand("dans 3 jours j'ai un rendez-vous à 16h");
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Rendez-vous', date: addDaysISO(today(), 3), start: '16:00', end: '17:00' });
+  });
+
+  it('« dîner ce soir » -> événement « Dîner » aujourd’hui 19h00', async () => {
+    await handleVoiceCommand('dîner ce soir');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Dîner', date: today(), start: '19:00', end: '20:00' });
+  });
+
+  it('« mardi 14h30 appel client » -> événement « Appel client » mardi prochain 14h30', async () => {
+    await handleVoiceCommand('mardi 14h30 appel client');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Appel client', date: weekday(1), start: '14:30', end: '15:30' });
+  });
+
+  it('« courses demain » -> tâche ; « courses demain 18h » -> événement 18h00 (même règle que partout)', async () => {
+    await handleVoiceCommand('courses demain');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Courses', date: tomorrow(), time: null });
+    expect(useStore.getState().events).toHaveLength(0);
+    await handleVoiceCommand('courses demain 18h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Courses', date: tomorrow(), start: '18:00', end: '19:00' });
+  });
+
+  it('créneau déjà pris en phrase naturelle -> refus poli, rien n’est créé', async () => {
+    useStore.getState().addEvent({ title: 'Réunion', date: tomorrow(), start: '10:00', end: '11:00', category: 'travail', repeat: 'jamais' });
+    const reply = await handleVoiceCommand('dentiste demain à 10h');
+    expect(useStore.getState().events).toHaveLength(1);
+    expect(reply).toContain('déjà pris');
+  });
+
+  it('« écris-moi que jeudi à 20h je sors avec Léa » -> événement « Je sors avec Léa » jeudi 20h00', async () => {
+    await handleVoiceCommand('écris-moi que jeudi à 20h je sors avec Léa');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Je sors avec Léa', date: weekday(3), start: '20:00', end: '21:00' });
+  });
+
+  it('« mets un rappel téléphonique vendredi à 9h » -> événement « Rappel téléphonique » vendredi 9h00', async () => {
+    await handleVoiceCommand('mets un rappel téléphonique vendredi à 9h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Rappel téléphonique', date: weekday(4), start: '09:00', end: '10:00' });
+  });
+
+  it('échec réel -> message d’aide humain qui invite à parler naturellement + formules figées', async () => {
+    const reply = await handleVoiceCommand('blabla incompris');
+    expect(reply).toContain('Je n’ai pas compris');
+    expect(reply).toContain('dans les mots que tu veux');
+    expect(reply).toContain('stream Red Dead 2 demain soir 21h');
+    expect(reply).toContain('mon programme');
+    expect(reply).toContain('quoi de prévu demain');
+    expect(useStore.getState().events).toHaveLength(0);
+    expect(useStore.getState().tasks).toHaveLength(0);
+  });
+
+  it('les commandes existantes ne changent pas : « agenda » lit toujours le programme du jour', async () => {
+    const reply = await handleVoiceCommand('agenda');
+    expect(reply).toContain('libre');
+    expect(useStore.getState().events).toHaveLength(0);
+    expect(useStore.getState().tasks).toHaveLength(0);
   });
 });

@@ -1,11 +1,17 @@
 'use client';
 
 import { addDaysISO, formatDayLong, formatTimeFr, minutesOf, timeOf, todayISO } from './dates';
+
 import { eventsOnDate, findConflict } from './events';
-import { parseInput } from './parser';
+
+import { parseInput, parseInputDetailed, type ParsedInput } from './parser';
+
 import { useStore } from './store';
+
 import { useUiStore } from './ui-store';
+
 import { normalizeText } from './utils';
+
 import { playBlip, speak } from './voice';
 
 function programSentence(iso: string): string {
@@ -40,48 +46,60 @@ function programSentence(iso: string): string {
   return `${who}${label}, ${parts.join('. Et . ')}.`;
 }
 
+function whenLabel(date: string, today: string, tomorrow: string): string {
+  return date === today ? "aujourd'hui" : date === tomorrow ? 'demain' : formatDayLong(date);
+}
+
+/**
+ * Crée la tâche ou l’événement à partir d’un résultat de parseur.
+ * Règle unique, partout pareil : une heure = événement d’1 h (avec refus poli
+ * si le créneau est déjà pris exactement), sinon = tâche.
+ */
+function createFromParsed(parsed: ParsedInput, today: string, tomorrow: string): string {
+  const s = useStore.getState();
+  if (parsed.time) {
+    const start = parsed.time;
+    const end = timeOf(Math.min(minutesOf(start) + 60, 24 * 60 - 1));
+    const conflict = findConflict(s.events, { date: parsed.date, start, end });
+    if (conflict?.exact) {
+      return `Je n’ai pas pu ajouter « ${parsed.title} » : ce créneau est déjà pris par « ${conflict.other.title} ».`;
+    }
+    s.addEvent({ title: parsed.title, date: parsed.date, start, end, category: parsed.category, repeat: 'jamais' });
+    return `Ajouté : ${parsed.title}, ${whenLabel(parsed.date, today, tomorrow)} à ${formatTimeFr(start)}.`;
+  }
+  s.addTask({
+    title: parsed.title,
+    date: parsed.date,
+    time: null,
+    category: parsed.category,
+    priority: parsed.priority,
+  });
+  return `Ajouté à tes tâches : ${parsed.title}, pour ${whenLabel(parsed.date, today, tomorrow)}.`;
+}
+
+/** M-19 — aide en cas d’échec réel : invite à parler naturellement + liste figée de formules. */
+const HELP_REPLY =
+  "Je n’ai pas compris. Dis ce que tu veux dans les mots que tu veux : « stream Red Dead 2 demain soir 21h » ou « rdv dentiste vendredi 10h30 » seront compris. Formules sûres : « ajoute sport demain 14h », « mon programme », « quoi de prévu demain ? », « c’est fait sport ».";
+
 /**
  * Exécute une commande vocale (ou tapée) et renvoie la réponse textuelle.
  * Parle la réponse si le réglage Voix est activé. Ne lève jamais d'erreur bloquante.
+ *
+ * M-19 : avant de répondre « Je n’ai pas compris », on tente TOUJOURS le parseur
+ * sur la phrase entière — toute date ou heure reconnue crée la tâche/l’événement.
  */
 export async function handleVoiceCommand(raw: string): Promise<string> {
   const s = useStore.getState();
   const ui = useUiStore.getState();
   const norm = normalizeText(raw);
+
   const today = todayISO();
   const tomorrow = addDaysISO(today, 1);
   let reply: string;
 
   if (norm.startsWith('ajoute')) {
     const rest = raw.replace(/^\s*ajoute\s+/i, '');
-    const parsed = parseInput(rest);
-    if (parsed.time) {
-      const start = parsed.time;
-      const end = timeOf(Math.min(minutesOf(start) + 60, 24 * 60 - 1));
-      const conflict = findConflict(s.events, { date: parsed.date, start, end });
-      if (conflict?.exact) {
-        reply = `Je n’ai pas pu ajouter « ${parsed.title} » : ce créneau est déjà pris par « ${conflict.other.title} ».`;
-      } else {
-        s.addEvent({ title: parsed.title, date: parsed.date, start, end, category: parsed.category, repeat: 'jamais' });
-        const when =
-          parsed.date === today
-            ? "aujourd'hui"
-            : parsed.date === tomorrow
-              ? 'demain'
-              : formatDayLong(parsed.date);
-        reply = `Ajouté : ${parsed.title}, ${when} à ${formatTimeFr(start)}.`;
-      }
-    } else {
-      s.addTask({
-        title: parsed.title,
-        date: parsed.date,
-        time: null,
-        category: parsed.category,
-        priority: parsed.priority,
-      });
-      const when = parsed.date === today ? "aujourd'hui" : parsed.date === tomorrow ? 'demain' : formatDayLong(parsed.date);
-      reply = `Ajouté à tes tâches : ${parsed.title}, pour ${when}.`;
-    }
+    reply = createFromParsed(parseInput(rest, today), today, tomorrow);
   } else if (norm.includes('cest fait') || norm.startsWith('fait ')) {
     const rest = raw.replace(/^\s*(c'est|c est|fait)\s+/i, '');
     const target = normalizeText(rest);
@@ -107,8 +125,13 @@ export async function handleVoiceCommand(raw: string): Promise<string> {
   ) {
     reply = programSentence(today);
   } else {
-    reply =
-      "Je n’ai pas compris. Essaie : « ajoute sport demain 14h », « mon programme », « quoi de prévu demain ? » ou « c’est fait sport ».";
+    // M-19 : repli naturel — toute phrase contenant une date ou une heure est comprise
+    const detailed = parseInputDetailed(raw, today);
+    if (detailed.hasDate || detailed.hasTime) {
+      reply = createFromParsed(detailed, today, tomorrow);
+    } else {
+      reply = HELP_REPLY;
+    }
   }
 
   ui.setLastReply(reply);
