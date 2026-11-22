@@ -577,23 +577,40 @@ html.animations-off *::after {
   }
 }
 
-/* entrée de chaque scène : fondu flouté (blur-in) */
+/*
+ * Scènes du film — Accord (M-20) : fondu croisé entre deux scènes (l'ancienne reste montée
+ * ~720 ms en dessous pendant que la nouvelle arrive), au lieu d'un remplacement sec qui
+ * faisait « sauter » les scènes. La scène active est en « relative » (elle donne la hauteur
+ * du conteneur), l'ancienne en « absolute » par-dessus. prefers-reduced-motion et
+ * html.animations-off tuent ces transitions via les blocs globaux (durée 0,01 ms).
+ */
 .film-scene {
-  animation: film-scene-in 900ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(10px) scale(0.99);
+  transition:
+    opacity 650ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    filter 650ms cubic-bezier(0.22, 0.8, 0.3, 1),
+    transform 650ms cubic-bezier(0.22, 0.8, 0.3, 1);
   will-change: transform, opacity, filter;
+  pointer-events: none;
 }
 
-@keyframes film-scene-in {
-  from {
-    opacity: 0;
-    filter: blur(14px);
-    transform: scale(0.985) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: none;
-  }
+.film-scene-on {
+  position: relative;
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+
+.film-scene-off {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
 }
 
 /* monogramme d'ondes vocales qui respire (SVG) */

@@ -45,8 +45,9 @@ export default function TachesPage() {
         <CardBody className="pt-5">
           <QuickAdd />
           <p className="mt-2 text-xs text-muted">
-            Astuce : « rapport vendredi » ou « !lundi réunion » créent une tâche · « sport demain 14h » crée un
-            événement à l’agenda.
+            Astuce : écris « rapport vendredi » pour créer une tâche, ou « sport demain 14h » pour ajouter un
+            événement à l’agenda. Pour viser un jour précis à coup sûr, fais précéder ce jour d’un « ! » (par
+            exemple « !mardi »).
           </p>
         </CardBody>
       </Card>

@@ -54,7 +54,7 @@ beforeEach(() => {
 describe('StatsView', () => {
   it('état vide : invitation chaleureuse au premier jour', () => {
     render(<StatsView />);
-    expect(screen.getByText(/Ajoute ton premier événement pour voir ta semaine prendre forme/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ajoute une tâche ou un événement pour remplir tes statistiques/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /aller à aujourd'hui/i })).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument(); // aucun graphique sans données
   });
@@ -70,7 +70,7 @@ describe('StatsView', () => {
     const { container } = render(<StatsView />);
 
     // titres des cartes
-    expect(screen.getByText('Temps par semaine')).toBeInTheDocument();
+    expect(screen.getByText('Temps prévu par semaine')).toBeInTheDocument();
     expect(screen.getByText('Un mot sur ta semaine')).toBeInTheDocument();
     expect(screen.getByText('Habitudes')).toBeInTheDocument();
 
@@ -86,9 +86,9 @@ describe('StatsView', () => {
     expect(screen.getByText(/100 % de tes tâches sont accomplies/)).toBeInTheDocument();
 
     // taux de complétion 7 et 30 jours + streak
-    expect(screen.getByText('Complétion sur 7 jours')).toBeInTheDocument();
-    expect(screen.getByText('Complétion sur 30 jours')).toBeInTheDocument();
-    expect(screen.getByText('1 jour organisé d’affilée')).toBeInTheDocument();
+    expect(screen.getByText('Sur 7 jours')).toBeInTheDocument();
+    expect(screen.getByText('Sur 30 jours')).toBeInTheDocument();
+    expect(screen.getByText('1 jour de suite')).toBeInTheDocument();
     expect(screen.getAllByRole('progressbar')).toHaveLength(2);
   });
 });

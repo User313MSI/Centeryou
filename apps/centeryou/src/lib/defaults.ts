@@ -4,7 +4,7 @@ export const defaultSettings: Settings = {
   prenom: '',
   dayStart: 8,
   sounds: true,
-  soundVolume: 0.35,
+  soundVolume: 0.6, // M-20 Accord : volume par défaut audible (défini aussi dans src/lib/sons.ts VOLUME_DEFAUT_SONS)
   voice: true,
   theme: 'clair',
   onboarded: false,

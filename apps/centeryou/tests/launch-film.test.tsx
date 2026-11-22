@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
@@ -160,28 +160,35 @@ describe('LaunchFilm (composant)', () => {
     expect(useStore.getState().settings.launchFilmShownDate).toBe(TODAY);
   });
 
-  it('première ouverture de session : bouton « Lancer le film » (le son ne démarre jamais seul)', async () => {
+  it('première ouverture de session (M-20) : le film VISUEL démarre tout seul, seul un petit bouton « Activer le son » attend le geste', async () => {
     render(<LaunchFilm />);
-    await screen.findByRole('dialog');
-    const gate = screen.getByRole('button', { name: /lancer le film/i });
-    expect(gate).toBeInTheDocument();
-    expect(gate.getAttribute('aria-label')).toMatch(/écouter le résumé/i);
+    const dialog = await screen.findByRole('dialog');
+    // le film tourne déjà : une scène est visible (pas d’écran d’amorce bloquant)
+    expect(dialog.querySelector('.film-scene-on')).toBeTruthy();
+    // petit bouton discret, non bloquant
+    const son = screen.getByRole('button', { name: /activer le son/i });
+    expect(son.getAttribute('aria-label')).toMatch(/activer le son/i);
+    expect(screen.queryByRole('button', { name: /lancer le film/i })).not.toBeInTheDocument();
     expect(speak).not.toHaveBeenCalled();
   });
 
-  it('clic sur « Lancer le film » : la narration du brief du matin est dite (texte déjà calculé, un seul speak)', async () => {
+  it('clic sur « Activer le son » : la narration du brief du matin est dite (texte déjà calculé, un seul speak), le film continue', async () => {
     render(<LaunchFilm />);
-    await screen.findByRole('dialog');
-    fireEvent.click(screen.getByRole('button', { name: /lancer le film/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: /activer le son/i }));
     await waitFor(() => expect(speak).toHaveBeenCalledTimes(1));
     expect(speak).toHaveBeenCalledWith(buildBriefText('Camille', EVENTS, TASKS, TODAY));
+    // le bouton discret disparaît, le film n’est pas fermé ni redémarré
+    expect(screen.queryByRole('button', { name: /activer le son/i })).not.toBeInTheDocument();
+    expect(dialog.querySelector('.film-scene-on')).toBeTruthy();
   });
 
-  it('bascule « voix du film » désactivée : pas de bouton d’amorce, aucune voix', async () => {
+  it('bascule « voix du film » désactivée : pas de bouton « Activer le son », aucune voix — mais le film démarre quand même', async () => {
     useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
     render(<LaunchFilm />);
-    await screen.findByRole('dialog');
-    expect(screen.queryByRole('button', { name: /lancer le film/i })).not.toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog');
+    expect(screen.queryByRole('button', { name: /activer le son/i })).not.toBeInTheDocument();
+    expect(dialog.querySelector('.film-scene-on')).toBeTruthy(); // visuel auto
     expect(speak).not.toHaveBeenCalled();
   });
 
@@ -189,7 +196,7 @@ describe('LaunchFilm (composant)', () => {
     window.sessionStorage.setItem('centeryou-film-gesture-v1', '1');
     render(<LaunchFilm />);
     await screen.findByRole('dialog');
-    expect(screen.queryByRole('button', { name: /lancer le film/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /activer le son/i })).not.toBeInTheDocument();
     await waitFor(() => expect(speak).toHaveBeenCalledTimes(1));
   });
 
@@ -227,13 +234,75 @@ describe('LaunchFilm (composant)', () => {
       removeEventListener: () => {},
       dispatchEvent: () => false,
     })) as unknown as typeof window.matchMedia);
-    // voix du film désactivée -> pas d'amorce, le panneau statique s'affiche directement
+    // voix du film désactivée -> pas de bouton, le panneau statique s'affiche directement
     useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
     render(<LaunchFilm />);
     expect(await screen.findByTestId('film-static')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /lancer le film/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /activer le son/i })).not.toBeInTheDocument();
     // sous-titres complets = le texte intégral du brief du matin
     expect(screen.getByText(buildBriefText('Camille', EVENTS, TASKS, TODAY), { exact: false })).toBeInTheDocument();
+  });
+
+  it('M-20 — layout centré en colonne : barre du haut, zone centrale défilable, sous-titres DANS LE FLUX (un seul, jamais de chevauchement)', async () => {
+    useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
+    const { container } = render(<LaunchFilm />);
+    const dialog = (await screen.findByRole('dialog')) as HTMLElement;
+    // colonne flex plein écran (centrage vertical réel entre barre et sous-titres)
+    expect(dialog.className).toContain('flex');
+    expect(dialog.className).toContain('flex-col');
+    const zones = Array.from(dialog.children) as HTMLElement[];
+    // le fond reste en arrière-plan absolu, puis viennent barre / centre / sous-titres dans le flux
+    const barre = zones.find((z) => z.querySelector('[aria-label="Passer le film de lancement"]'));
+    const centre = zones.find((z) => z.className.includes('overflow-y-auto'));
+    const sousTitres = zones[zones.length - 1];
+    expect(barre).toBeTruthy();
+    expect(centre).toBeTruthy();
+    // zone centrale : défilable si écran très bas (jamais de contenu écrasé, 320 px compris)
+    expect(centre!.className).toContain('flex-1');
+    expect(centre!.className).toContain('min-h-0');
+    expect(centre!.className).toContain('overflow-y-auto');
+    // centrage horizontal + vertical réel via m-auto sur l'enfant (robuste même en débordement)
+    const enfant = centre!.querySelector('[data-film-keep]') as HTMLElement;
+    expect(enfant.className).toContain('m-auto');
+    expect(enfant.className).toContain('max-w-2xl');
+    // sous-titres : élément de flux (plus d'absolute), exactement un seul dans tout le film
+    expect(sousTitres.className).not.toContain('absolute');
+    expect(sousTitres.querySelectorAll('.film-caption')).toHaveLength(1);
+    expect(container.querySelectorAll('.film-caption')).toHaveLength(1);
+    expect(sousTitres.querySelector('.film-caption')!.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('M-20 — transitions en fondu croisé : au changement de scène l’ancienne reste ~720 ms sous la nouvelle, puis est retirée ; sous-titre toujours unique et à jour', async () => {
+    vi.useFakeTimers();
+    try {
+      useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
+      const { container } = render(<LaunchFilm />);
+      const dialog = screen.getByRole('dialog') as HTMLElement;
+      const film = buildFilmData(EVENTS, TASKS, 'Camille', TODAY);
+      // scène 0 affichée, sous-titre de la scène 0
+      expect(dialog.querySelector('.film-scene-on')).toBeTruthy();
+      expect(dialog.querySelectorAll('.film-caption')).toHaveLength(1);
+      expect(screen.getByText(film.captions[0], { exact: false })).toBeInTheDocument();
+      // avance jusqu’au 1er changement de scène (900 + 7200 = 8100 ms)
+      act(() => {
+        vi.advanceTimersByTime(8100);
+      });
+      const on = dialog.querySelector('.film-scene-on') as HTMLElement;
+      expect(on.textContent).toContain('Ta journée'); // nouvelle scène en fondu entrant
+      expect(dialog.querySelectorAll('.film-scene-off')).toHaveLength(1); // ancienne encore montée, masquée
+      expect(dialog.querySelector('.film-scene-off')!.getAttribute('aria-hidden')).toBe('true');
+      // sous-titre = scène en cours, toujours un seul (pas de chevauchement)
+      expect(screen.getByText(film.captions[1], { exact: false })).toBeInTheDocument();
+      expect(dialog.querySelectorAll('.film-caption')).toHaveLength(1);
+      // fin du fondu croisé : l’ancienne scène est retirée, il n’en reste qu’une
+      act(() => {
+        vi.advanceTimersByTime(720);
+      });
+      expect(dialog.querySelectorAll('.film-scene-off')).toHaveLength(0);
+      expect(dialog.querySelectorAll('.film-scene-on')).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

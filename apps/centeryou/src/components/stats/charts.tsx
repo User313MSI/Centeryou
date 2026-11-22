@@ -42,7 +42,7 @@ export function WeekBars({ weeks }: { weeks: WeekStats[] }) {
   const summary = weeks.map((w) => `${w.label} : ${formatHoursFr(w.totalMinutes)}`).join(', ');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`Heures planifiées par semaine — ${summary}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`Temps prévu par semaine — ${summary}`}>
       <line x1={8} x2={W - 8} y1={baseline} y2={baseline} stroke="currentColor" className="text-muted" strokeWidth={1} aria-hidden />
       {weeks.map((w, i) => {
         const x = 8 + i * slot + (slot - barW) / 2;
@@ -124,7 +124,7 @@ export function WeekdayBars({ perWeekday, busiestIndex }: { perWeekday: number[]
       viewBox={`0 0 ${W} ${H}`}
       className="h-auto w-full"
       role="img"
-      aria-label={`Temps planifié par jour de semaine sur les 4 dernières semaines — ${perWeekday
+      aria-label={`Temps prévu par jour de la semaine sur les 4 dernières semaines — ${perWeekday
         .map((m, i) => `${weekdayShortLabel(i)} : ${formatHoursFr(m)}`)
         .join(', ')}`}
     >
@@ -186,7 +186,7 @@ export function CategoryDonut({
       viewBox={`0 0 ${size} ${size}`}
       className={cx('h-auto', className)}
       role="img"
-      aria-label={`Répartition par catégorie sur les 4 dernières semaines — ${distribution
+      aria-label={`Répartition du temps prévu par catégorie sur les 4 dernières semaines — ${distribution
         .map((d) => `${d.category} : ${formatHoursFr(d.minutes)}`)
         .join(', ')}`}
     >

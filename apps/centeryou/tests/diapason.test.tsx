@@ -204,11 +204,12 @@ describe('Diapason — film de lancement (launch-film.tsx)', () => {
     await waitFor(() => expect(startNappe).toHaveBeenCalledTimes(1));
   });
 
-  it('nappe activée + amorce « Lancer le film » (premier geste) -> startNappe au clic, arrêt à « Passer »', async () => {
+  it('nappe activée + premier geste (bouton « Activer le son », M-20) -> startNappe au clic, arrêt à « Passer »', async () => {
     storeFilm({ filmPad: true });
-    // pas de geste dans l'onglet -> bouton « Lancer le film »
+    // pas de geste dans l'onglet -> le film démarre visuellement, seul un petit bouton
+    // « Activer le son » attend le geste (M-20) ; la nappe ne démarre pas sans geste
     render(<LaunchFilm />);
-    const bouton = await screen.findByRole('button', { name: /lancer le film/i });
+    const bouton = await screen.findByRole('button', { name: /activer le son/i });
     expect(startNappe).not.toHaveBeenCalled();
     fireEvent.click(bouton);
     await waitFor(() => expect(startNappe).toHaveBeenCalledTimes(1));
@@ -231,7 +232,7 @@ describe('Diapason — carte « Sons » (reglages/page.tsx)', () => {
     const volume = document.getElementById('reglage-volume-sons') as HTMLInputElement;
     expect(volume).toBeTruthy();
     expect(volume.type).toBe('range');
-    expect(volume.value).toBe('35'); // volume par défaut : bas
+    expect(volume.value).toBe('60'); // volume par défaut 0,6 (M-20 : audible, avant 0,35 = murmure)
     expect(screen.getByRole('switch', { name: 'Nappe du film' })).toHaveAttribute('aria-checked', 'false');
   });
 

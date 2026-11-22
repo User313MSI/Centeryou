@@ -7,6 +7,7 @@ import { sanitizeSettings } from '../src/lib/sanitize';
 import {
   ACCORDS_NAPPE,
   CLE_GESTE_SONS,
+  CRETE_NOTE,
   MAX_SONS_SIMULTANES,
   PLANS,
   VOLUME_DEFAUT_SONS,
@@ -130,11 +131,13 @@ afterEach(() => {
  * ---------------------------------------------------------------- */
 
 describe('Diapason — réglages persistés (sanitizeSettings)', () => {
-  it('défauts : sons actifs, volume BAS (0,35), nappe du film OFF', () => {
+  it('défauts : sons actifs, volume par défaut 0,6 (audible mais doux — M-20), nappe du film OFF', () => {
     const s = sanitizeSettings(undefined);
     expect(s.sounds).toBe(true);
     expect(s.soundVolume).toBe(VOLUME_DEFAUT_SONS);
-    expect(VOLUME_DEFAUT_SONS).toBeLessThanOrEqual(0.5); // « volume par défaut : bas »
+    expect(VOLUME_DEFAUT_SONS).toBe(0.6); // M-20 : assez fort pour être entendu (avant 0,35 × crête 0,22 = murmure)
+    expect(VOLUME_DEFAUT_SONS).toBeLessThanOrEqual(0.7); // jamais criard
+    expect(CRETE_NOTE).toBe(0.35); // crête par note (avant 0,22)
     expect(s.filmPad).toBe(false); // la nappe ne s'impose jamais
   });
 
@@ -276,11 +279,37 @@ describe('Diapason — jouerSon (gardes)', () => {
     expect(oscs).toHaveLength(0);
   });
 
-  it('contexte suspendu -> false + resume() tenté (le son attend le prochain geste)', () => {
+  it('contexte « suspended » (resume() asynchrone pas encore appliqué) -> resume() tenté ET notes programmées : le son partira dès que le contexte tournera (M-20)', () => {
     const { deps, oscs, resume } = depsPour({ settings: reglage(), state: 'suspended' });
-    expect(jouerSon('ding', deps)).toBe(false);
+    expect(jouerSon('ding', deps)).toBe(true);
     expect(resume).toHaveBeenCalled();
-    expect(oscs).toHaveLength(0);
+    expect(oscs).toHaveLength(2); // les 2 notes du « ding » sont programmées malgré « suspended »
+    expect(oscs[0].start).toHaveBeenCalled();
+  });
+
+  it('PREMIER GESTE de la session : rien avant le geste, puis le 1er appel (contexte encore « suspended ») produit bien un son — pas seulement le 2e (M-20)', () => {
+    const f = fauxContexte('suspended');
+    let debloque = false;
+    const deps = {
+      getSettings: () => reglage(),
+      getCtx: () => f.ctx,
+      estDebloque: () => debloque,
+    };
+    // session fraîche, aucun geste dans l'onglet : aucun son, aucun oscillateur
+    expect(jouerSon('ding', deps)).toBe(false);
+    expect(f.oscs).toHaveLength(0);
+    // le tout premier geste arrive (pointerdown -> marquerGesteAudio) : le contexte existe mais
+    // resume() n'a pas encore fait passer l'état à « running » — le piège de l'ancien code
+    debloque = true;
+    expect(jouerSon('ding', deps)).toBe(true); // le 1er son de la session est bien programmé
+    expect(f.resume).toHaveBeenCalled();
+    expect(f.oscs).toHaveLength(2);
+    expect(f.oscs[0].start).toHaveBeenCalled(); // il sonnera dès que le contexte tournera
+    f.ctx.state = 'running'; // le navigateur a appliqué le resume()
+    expect(f.oscs[1].stop).toHaveBeenCalled(); // les oscillateurs étaient bien lancés
+    // et le 2e son part immédiatement (contexte running)
+    expect(jouerSon('pop', deps)).toBe(true);
+    expect(f.oscs).toHaveLength(4);
   });
 
   it('Web Audio indisponible (pas de AudioContext) -> false, sans crash', () => {
@@ -336,6 +365,18 @@ describe('Diapason — jouerPlan (orchestration pure)', () => {
     // attaques à t0 + n.t
     expect(oscs[0].start).toHaveBeenCalledWith(1.0);
     expect(oscs[2].start).toHaveBeenCalledWith(1.0 + PLANS.carillon[2].t);
+  });
+
+  it('crête par note = CRETE_NOTE (0,35) sous le gain maître = volume : amplitude effective ~0,21 avec le défaut 0,6 — audible, jamais criarde (M-20)', () => {
+    const { ctx, gains } = fauxContexte();
+    jouerPlan(ctx, PLANS.ding, 0.6, 0);
+    expect(gains[0].gain.value).toBe(0.6); // gain maître = volume
+    // 1re note (g = 1) : rampe vers la crête CRETE_NOTE
+    expect(gains[1].gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(CRETE_NOTE, expect.any(Number));
+    // 2e note (g = 0,8) : crête 0,28
+    expect(gains[2].gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(CRETE_NOTE * 0.8, expect.any(Number));
+    // amplitude effective max = volume × crête = 0,6 × 0,35 = 0,21 (avant M-20 : 0,35 × 0,22 = 0,077, inaudible)
+    expect(0.6 * CRETE_NOTE).toBeLessThanOrEqual(0.25);
   });
 });
 
