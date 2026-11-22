@@ -62,9 +62,9 @@ Vague d'audits stricts (demande utilisateur du 22/11 au soir) : cinq auditeurs i
 
 ### M-27 — Chrono · Audit fiabilité, rapidité et fonctionnalités, la règle à la main (lecture seule)
 
-- **État : À LANCER dès le 22/11 au soir (prompt remis)**. Source : demande utilisateur « audit de la fonctionnalité, de la fiabilité, de la rapidité de ce produit, hyper strict ».
+- **État : EN COURS depuis le 2026-11-22 04:46 UTC — Chrono lancé, branche `vibe/chrono-fiabilite` créée depuis `main` `b37ac8e`**. Source : demande utilisateur « audit de la fonctionnalité, de la fiabilité, de la rapidité de ce produit, hyper strict ».
 - Objectif : mettre l'app en échec EN LOCAL et mesurer sans pitié : parcours complets réels (création, glisser-déposer, ICS 1 Mo, rappels, stats, film, PWA mobile, déconnexions), cas limites (fuseaux horaires, heures de nuit, années bissextiles,programme vide, 500 événements), 3 exécutions complètes des tests de suite (stabilité, jamais de hasard), rapidité mesurée page par page (charge JavaScript initiale par page comparée aux cibles documentées : landing et pages < 800 Ko, aucune régression silencieuse, temps de réponse des routes /api en local). Rapport : tableau de bord par critère, note impitoyable, reproduction exacte de chaque défaut trouvé, gravité et priorité.
-- Zone : AUCUN fichier de code modifié. Livrable : `docs/journal/chrono.md` + inscription MISSIONS.md. Branche `vibe/chrono-fiabilite`. PR : — · Dernière nouvelle : inscrite par Vibe Work le 22/11 au soir.
+- Zone : AUCUN fichier de code modifié. Livrable : `docs/journal/chrono.md` + inscription MISSIONS.md. Branche `vibe/chrono-fiabilite`. PR : — · Dernière nouvelle : 2026-11-22 04:46 UTC, inscription publiée sur `main` par Chrono, audit démarré (worktree isolé, base `b37ac8e`, tests + mesures en cours).
 
 ### M-28 — Cactus · Le client râleur, test d'utilisabilité impitoyable (lecture seule)
 
