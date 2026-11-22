@@ -114,6 +114,157 @@ function fillerSkipMask(norm: string[]): boolean[] {
   return skip;
 }
 
+/**
+ * M-22 — USINE À TITRES UNIQUE (Plume).
+ *
+ * Une seule fonction, `cleanTitle`, fabrique le titre final à partir du texte
+ * restant une fois dates / heures / catégories consommées. Elle est appelée
+ * par `parseInputDetailed`, donc par `parseInput` (saisie rapide clavier) ET
+ * par la commande vocale — les mêmes règles partout, aucun doublon de logique.
+ */
+
+/** Longueur max d’un titre : au-delà, troncature propre au dernier mot complet (~40 caractères). */
+export const TITRE_MAX = 40;
+
+/** Titre de repli si tout a été nettoyé : jamais un mur vide. */
+export const TITRE_REPLI = 'Nouvelle tâche';
+
+/**
+ * M-22 — lexique FR de bavardage et d’auto-correction (formes normalisées :
+ * minuscules, sans accents, apostrophes retirées, traits d’union conservés).
+ * Motifs les plus longs d’abord : « je veux dire », « c’est-à-dire », « du coup »…
+ * + hésitations (euh, bah, hum, hein…) et corrections (non, justement, plutôt…).
+ */
+export const LEXIQUE_BAVARDAGE: string[][] = [
+  ['je', 'voulais', 'dire'],
+  ['je', 'veux', 'dire'],
+  ['cest', 'a', 'dire'],
+  ['plutot', 'que'],
+  ['disons', 'que'],
+  ['en', 'realite'],
+  ['en', 'fait'],
+  ['du', 'coup'],
+  ['en', 'vrai'],
+  ['cest-a-dire'],
+  ['euh-euh'],
+  ['finalement'],
+  ['justement'],
+  ['euhh'],
+  ['euuh'],
+  ['euhm'],
+  ['disons'],
+  ['plutot'],
+  ['attends'],
+  ['voila'],
+  ['hein'],
+  ['cest'],
+  ['euh'],
+  ['bah'],
+  ['ben'],
+  ['heu'],
+  ['hum'],
+  ['mmh'],
+  ['mmm'],
+  ['ah'],
+  ['oh'],
+  ['hm'],
+  ['non'],
+  ['enfin'],
+  ['bref'],
+];
+
+/**
+ * M-22 — mots de liaison qui ne doivent jamais rester seuls (orphelins) en
+ * début, fin ou milieu de titre : le, la, les, de, à (a), que, pour.
+ * Ils ne partent qu’en bordure ou collés à un mot du lexique retiré :
+ * au milieu d’une activité ils restent (« laver la voiture », « salle de sport »).
+ */
+const MOTS_LIAISON_ORPHELINS = new Set(['le', 'la', 'les', 'de', 'a', 'que', 'pour']);
+
+/**
+ * Normalise un token pour la comparaison : comme `normalizeText`, plus la
+ * ponctuation retirée (sauf « ! » initial des priorités et « : » des heures),
+ * pour que « aujourd’hui, » ou « 14h, » soient reconnus malgré la virgule.
+ */
+function normToken(t: string): string {
+  const n = normalizeText(t);
+  const bang = n.startsWith('!') ? '!' : '';
+  // ES5 : pas de flag /u — l'entrée est déjà normalisée (a-z0-9 + ':' des heures + '-')
+  return bang + n.replace(/[^a-z0-9:-]+/g, '');
+}
+
+/**
+ * M-22 — L’USINE À TITRES, unique et partagée clavier + voix.
+ * Reçoit le texte restant (déjà débarrassé des dates/heures reconnues) et rend
+ * un titre propre et court :
+ *  - bavardage / auto-correction retirés (LEXIQUE_BAVARDAGE, plus « quoi » final),
+ *  - jamais de mot de liaison orphelin en début / fin / milieu,
+ *  - jamais de date ni d’heure dans le titre (consommées avant, dans parseInputDetailed),
+ *  - troncature propre à TITRE_MAX caractères au dernier mot complet, sans « … »,
+ *  - majuscule initiale, et repli TITRE_REPLI si le nettoyage a tout vidé.
+ */
+export function cleanTitle(raw: string): string {
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return TITRE_REPLI;
+  const norm = words.map(normToken);
+  const skip = new Array<boolean>(words.length).fill(false);
+
+  // 1) lexique de bavardage / auto-correction, n’importe où (motifs longs d’abord)
+  const motifs = [...LEXIQUE_BAVARDAGE].sort((a, b) => b.length - a.length);
+  for (let i = 0; i < norm.length; i += 1) {
+    if (skip[i]) continue;
+    for (const pat of motifs) {
+      if (pat.length <= norm.length - i && pat.every((p, k) => norm[i + k] === p)) {
+        for (let k = 0; k < pat.length; k += 1) skip[i + k] = true;
+        break;
+      }
+    }
+  }
+  // « quoi » de fin de phrase
+  if (!skip[norm.length - 1] && norm[norm.length - 1] === 'quoi') skip[norm.length - 1] = true;
+
+  // 2) un mot de liaison collé à un mot retiré part avec (orphelin de milieu)
+  for (let i = 0; i < norm.length; i += 1) {
+    if (!skip[i]) continue;
+    if (i > 0 && MOTS_LIAISON_ORPHELINS.has(norm[i - 1])) skip[i - 1] = true;
+    if (i < norm.length - 1 && MOTS_LIAISON_ORPHELINS.has(norm[i + 1])) skip[i + 1] = true;
+  }
+
+  // 3) jamais de mot de liaison orphelin en début ni en fin de titre
+  let first = 0;
+  let last = words.length - 1;
+  while (first <= last && skip[first]) first += 1;
+  while (last >= first && skip[last]) last -= 1;
+  while (first <= last && MOTS_LIAISON_ORPHELINS.has(norm[first])) { skip[first] = true; first += 1; }
+  while (last >= first && MOTS_LIAISON_ORPHELINS.has(norm[last])) { skip[last] = true; last -= 1; }
+
+  const kept = words.filter((_, i) => !skip[i]);
+  let title = kept.join(' ').replace(/\s+/g, ' ').trim();
+  // ponctuation de bordure (guillemets, virgule finale…) ; « ! » initial conservé
+  // ES5 : pas de flag /u — classes explicites (lettres accentuées FR incluses)
+  title = title.replace(/^[^a-zA-Z0-9À-ÿŒœ!]+/, '').replace(/[^a-zA-Z0-9À-ÿŒœ]+$/, '').trim();
+
+  // 4) troncature propre à ~TITRE_MAX caractères, au dernier mot complet, sans « … »
+  if (title.length > TITRE_MAX) {
+    let t = '';
+    for (const w of kept) {
+      const next = t ? `${t} ${w}` : w;
+      if (next.length > TITRE_MAX) break;
+      t = next;
+    }
+    if (!t && kept.length > 0) t = kept[0].slice(0, TITRE_MAX); // un seul mot trop long : coupe sèche
+    // re-nettoie les bords après troncature (un mot de liaison ne doit pas finir le titre)
+    const parts = t.split(' ').filter(Boolean);
+    while (parts.length > 0 && MOTS_LIAISON_ORPHELINS.has(normToken(parts[parts.length - 1]))) parts.pop();
+    while (parts.length > 0 && MOTS_LIAISON_ORPHELINS.has(normToken(parts[0]))) parts.shift();
+    title = parts.join(' ').trim();
+  }
+
+  if (!title) return TITRE_REPLI;
+  // 5) majuscule initiale
+  return title.charAt(0).toUpperCase() + title.slice(1);
+}
+
 function isTimeToken(t: string): boolean {
   return /^(\d{1,2})h(\d{2})$/.test(t) || /^(\d{1,2})h$/.test(t) || /^(\d{1,2}):(\d{2})$/.test(t);
 }
@@ -145,7 +296,8 @@ function parseTimeToken(t: string): string | null {
  */
 export function parseInputDetailed(raw: string, today: string = todayISO()): ParsedInputDetails {
   const tokens = raw.trim().split(/\s+/).filter(Boolean);
-  const norm = tokens.map((t) => normalizeText(t));
+  // M-22 : ponctuation tolérée dans les jetons (« aujourd’hui, », « 14h, »)
+const norm = tokens.map((t) => normToken(t));
 
   // M-19 : mots de remplissage retirés du titre (« écris-moi que », « j’ai », « un » en tête…)
   const skip = fillerSkipMask(norm);
@@ -256,9 +408,8 @@ export function parseInputDetailed(raw: string, today: string = todayISO()): Par
     titleWords.push(tokens[i]);
   }
 
-  let title = titleWords.join(' ').trim();
-  if (!title) title = 'Nouvelle tâche';
-  title = title.charAt(0).toUpperCase() + title.slice(1);
+  // M-22 : une seule usine à titres, partagée par la saisie rapide clavier et la voix
+  const title = cleanTitle(titleWords.join(' '));
 
   return {
     title,

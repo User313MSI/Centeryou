@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInput, parseInputDetailed, type ParsedInput } from '../src/lib/parser';
+import { LEXIQUE_BAVARDAGE, TITRE_MAX, cleanTitle, parseInput, parseInputDetailed, type ParsedInput } from '../src/lib/parser';
 import { addDaysISO, parseISO } from '../src/lib/dates';
 
 // lundi 6 janvier 2025 (référence fixe pour des tests déterministes)
@@ -171,5 +171,99 @@ describe('parseInputDetailed — drapeaux hasDate/hasTime (M-19)', () => {
 
   it('parseInput garde exactement sa forme historique à 5 champs', () => {
     expect(Object.keys(parseInput('sport demain 14h', TODAY)).sort()).toEqual(['category', 'date', 'priority', 'time', 'title']);
+  });
+});
+
+describe('M-22 — usine à titres propres (cleanTitle, partagée clavier + voix)', () => {
+  it.each<[string, Partial<ParsedInput>]>([
+    // la phrase réelle du 2e test utilisateur (auto-correction à l'oral)
+    ["euh bah non justement c'est plutôt aujourd'hui réunion à 14h", { title: 'Réunion', date: TODAY, time: '14:00' }],
+    ["ah non, justement, plutôt aujourd'hui, réunion à 14h", { title: 'Réunion', date: TODAY, time: '14:00' }],
+    // régression M-19 interdite : ce cas marchait déjà, il doit marcher encore
+    ["écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2", { title: 'Stream sur Red Dead 2', date: '2025-01-07', time: '18:00' }],
+    // trois phrases avec hésitations naturelles
+    ['euh, hum, dîner avec les parents demain à 20h', { title: 'Dîner avec les parents', date: '2025-01-07', time: '20:00' }],
+    ['bah en fait voilà appel du dentiste demain à 9h', { title: 'Appel du dentiste', date: '2025-01-07', time: '09:00' }],
+    ['euh bah je veux dire que stream Red Dead 2 demain 21h', { title: 'Stream Red Dead 2', date: '2025-01-07', time: '21:00' }],
+    // autres bavardages / ventilations / corrections
+    ['du coup sport demain 14h', { title: 'Sport', date: '2025-01-07', time: '14:00' }],
+    ['réunion avec Paul demain 15h quoi', { title: 'Réunion avec Paul', date: '2025-01-07', time: '15:00' }],
+    ["en vrai c'est-à-dire que j'ai un rdv dentiste vendredi 10h30", { title: 'Rdv dentiste', date: '2025-01-10', time: '10:30' }],
+    ['disons que je sors avec Léa jeudi 20h30', { title: 'Je sors avec Léa', date: '2025-01-09', time: '20:30' }],
+    ["c'est-à-dire appel paul à 15h aujourd'hui", { title: 'Appel paul', date: TODAY, time: '15:00' }],
+    ['hein ben euh ménage demain', { title: 'Ménage', date: '2025-01-07', time: null }],
+  ])('« %s »', (input, expected) => {
+    expect(p(input)).toEqual({ category: 'autre', priority: 'moyenne', time: null, ...expected });
+  });
+
+  it('jamais de date ni d’heure dans le titre', () => {
+    const titres = [
+      "euh bah non justement c'est plutôt aujourd'hui réunion à 14h",
+      'stream sur Red Dead 2 demain à 18h',
+      'rendez-vous mardi 10h30',
+      'sport dans 3 jours à 9h',
+      'dîner ce soir',
+    ].map((x) => p(x).title);
+    for (const t of titres) {
+      expect(t).not.toMatch(/\d{1,2}h\d{0,2}/);
+      expect(t).not.toMatch(/\d{1,2}:\d{2}/);
+      expect(t.toLowerCase()).not.toMatch(/aujourdhui|demain|apres-demain|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|ce soir|ce matin|dans \d/);
+    }
+  });
+
+  it('pas de mot de liaison orphelin en début, fin ou milieu de titre', () => {
+    expect(p('la réunion de').title).toBe('Réunion');
+    expect(p('à que pour le la de').title).toBe('Nouvelle tâche');
+    expect(p('je veux dire que appel 15h').title).toBe('Appel');
+    // au milieu d'une activité, ils restent (M-19 verrouillé : « laver la voiture », « acheter du pain »)
+    expect(p('mets laver la voiture samedi').title).toBe('Laver la voiture');
+    expect(p('acheter du pain perso').title).toBe('Acheter du pain');
+    expect(p("dis-moi que lundi 10h il y a le dentiste").title).toBe('Il y a le dentiste');
+  });
+
+  it('titre de repli clair si le nettoyage a tout vidé (jamais un mur vide)', () => {
+    expect(p('euh bah non en fait voilà du coup').title).toBe('Nouvelle tâche');
+    expect(p('quoi').title).toBe('Nouvelle tâche');
+    expect(p('   ').title).toBe('Nouvelle tâche');
+    const d = parseInputDetailed('euh bah non', TODAY);
+    expect(d.hasDate).toBe(false);
+    expect(d.hasTime).toBe(false);
+    expect(d.title).toBe('Nouvelle tâche');
+  });
+
+  it('troncature propre à ~40 caractères, au dernier mot complet, sans « … »', () => {
+    const t1 = p("réunion avec toute l'équipe projet Phoenix demain à 14h").title;
+    expect(t1).toBe("Réunion avec toute l'équipe projet");
+    expect(t1.length).toBeLessThanOrEqual(TITRE_MAX);
+    const t2 = p('stream sur Red Dead Redemption 2 avec les copains demain à 21h').title;
+    expect(t2.length).toBeLessThanOrEqual(TITRE_MAX);
+    expect(t2).not.toContain('…');
+    expect(t2.endsWith(' ')).toBe(false);
+    // un seul mot immense : coupe sèche à TITRE_MAX, pas de « … »
+    const t3 = p(`${'x'.repeat(60)} demain`).title;
+    expect(t3.length).toBe(TITRE_MAX);
+    expect(t3).not.toContain('…');
+  });
+
+  it('majuscule initiale systématique', () => {
+    expect(p('euh stream demain').title).toBe('Stream');
+    expect(cleanTitle('réunion équipe')).toBe('Réunion équipe');
+  });
+
+  it('cleanTitle : usine unique, idempotente, repli clair', () => {
+    expect(cleanTitle('')).toBe('Nouvelle tâche');
+    expect(cleanTitle('   ')).toBe('Nouvelle tâche');
+    expect(cleanTitle('euh bah non justement en fait plutôt voilà')).toBe('Nouvelle tâche');
+    expect(cleanTitle('réunion')).toBe('Réunion');
+    const t = cleanTitle("euh bah non justement c'est plutôt réunion");
+    expect(t).toBe('Réunion');
+    expect(cleanTitle(t)).toBe(t); // idempotente : la voix peut la réappliquer sans risque
+  });
+
+  it('chaque motif du lexique de bavardage disparaît du titre', () => {
+    for (const motif of LEXIQUE_BAVARDAGE) {
+      expect(cleanTitle(`${motif.join(' ')} réunion`)).toBe('Réunion');
+    }
+    expect(cleanTitle('réunion quoi')).toBe('Réunion'); // « quoi » de fin de phrase
   });
 });

@@ -241,3 +241,65 @@ describe('M-19 — saisie vocale vraiment naturelle (repli parseInput avant « J
     expect(useStore.getState().tasks).toHaveLength(0);
   });
 });
+
+describe('M-22 — titres propres à la voix (même usine à titres que la saisie clavier)', () => {
+  // règle 8 : aucune date littérale comparée au jour réel — tout est recalculé à l'exécution
+  const today = () => todayISO();
+  const tomorrow = () => addDaysISO(todayISO(), 1);
+
+  it('la phrase réelle avec auto-correction : « euh bah non justement c’est plutôt aujourd’hui réunion à 14h » -> événement aujourd’hui 14h00, titre « Réunion »', async () => {
+    const reply = await handleVoiceCommand("euh bah non justement c'est plutôt aujourd'hui réunion à 14h");
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0]).toMatchObject({ title: 'Réunion', date: today(), start: '14:00', end: '15:00' });
+    expect(s.tasks).toHaveLength(0);
+    expect(reply).toContain("Ajouté : Réunion, aujourd'hui à 14h00");
+  });
+
+  it('branche « ajoute » avec hésitations -> même titre propre, même confirmation', async () => {
+    const reply = await handleVoiceCommand("ajoute euh bah non justement c'est plutôt aujourd'hui réunion à 14h");
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Réunion', date: today(), start: '14:00', end: '15:00' });
+    expect(reply).toContain("Ajouté : Réunion, aujourd'hui à 14h00");
+  });
+
+  it('régression M-19 interdite : « écris-moi que demain à 18:00 j’ai un stream sur Red Dead 2 » -> « Stream sur Red Dead 2 » demain 18h00', async () => {
+    const reply = await handleVoiceCommand("écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2");
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Stream sur Red Dead 2', date: tomorrow(), start: '18:00', end: '19:00' });
+    expect(reply).toContain('Ajouté : Stream sur Red Dead 2, demain à 18h00');
+  });
+
+  it.each<[string, string, string]>([
+    ['euh, hum, dîner avec les parents demain à 20h', 'Dîner avec les parents', '20:00'],
+    ['bah en fait voilà appel du dentiste demain à 9h', 'Appel du dentiste', '09:00'],
+    ['euh bah je veux dire que stream Red Dead 2 demain 21h', 'Stream Red Dead 2', '21:00'],
+  ])('hésitations naturelles « %s » -> titre propre « %s » demain à %s', async (phrase, titre, heure) => {
+    const reply = await handleVoiceCommand(phrase);
+    expect(useStore.getState().events[0]).toMatchObject({ title: titre, date: tomorrow(), start: heure });
+    expect(reply).toContain(`Ajouté : ${titre}, demain à ${heure.replace(':', 'h')}`);
+  });
+
+  it('le « quoi » final et le bavardage ne polluent pas le titre (« quoi de prévu demain » reste une requête de programme)', async () => {
+    const reply = await handleVoiceCommand('réunion aujourd’hui à 14h quoi');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Réunion', date: today(), start: '14:00' });
+    expect(reply).toContain("Ajouté : Réunion, aujourd'hui à 14h00");
+  });
+
+  it('titre vide après nettoyage -> repli clair « Nouvelle tâche », jamais un mur vide', async () => {
+    const reply = await handleVoiceCommand("euh bah non en fait voilà aujourd'hui à 14h");
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0]).toMatchObject({ title: 'Nouvelle tâche', date: today(), start: '14:00', end: '15:00' });
+    expect(reply).toContain("Ajouté : Nouvelle tâche, aujourd'hui à 14h00");
+  });
+
+  it('les commandes existantes continuent de répondre à l’identique (ajoute, c’est fait, programme, agenda, quoi de prévu, « ! »)', async () => {
+    expect(await handleVoiceCommand('mon programme')).toContain('libre');
+    expect(await handleVoiceCommand('agenda')).toContain('libre');
+    expect(await handleVoiceCommand('quoi de prévu demain ?')).toContain('demain');
+    await handleVoiceCommand('ajoute sport demain 14h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Sport', date: tomorrow(), start: '14:00' });
+    await handleVoiceCommand("c'est fait sport");
+    await handleVoiceCommand('! demain je dois finir le rapport');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Je dois finir le rapport', date: tomorrow(), priority: 'haute' });
+  });
+});
