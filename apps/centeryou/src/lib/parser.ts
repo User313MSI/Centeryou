@@ -12,6 +12,18 @@ export interface ParsedInput {
   priority: Priority;
 }
 
+/**
+ * M-19 — détail exposé pour la voix : une date ou une heure a-t-elle été
+ * RECONNUES dans la phrase ? `parseInput` garde exactement la même forme
+ * (5 champs), seul `parseInputDetailed` porte ces deux drapeaux.
+ */
+export interface ParsedInputDetails extends ParsedInput {
+  /** une référence de date explicite a été reconnue (aujourd’hui, demain, jour de semaine, « dans N jours », « ce soir »…) */
+  hasDate: boolean;
+  /** une heure a été reconnue (14h, 14:30, midi, minuit, « ce soir » → 19:00) */
+  hasTime: boolean;
+}
+
 const CATEGORY_WORDS: Record<string, Category> = {
   sante: 'sante',
   travail: 'travail',
@@ -34,6 +46,72 @@ const MAX_RELATIVE_UNITS = 500;
 function isValidISODate(iso: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
   return !Number.isNaN(parseISO(iso).getTime());
+}
+
+/**
+ * M-19 — mots de remplissage en tête de phrase (formes normalisées, sans accents).
+ * Retirés du titre pour ne garder que le cœur de la phrase :
+ * « écris-moi que », « note que », « ajoute », « mets », « rappelle-moi »…
+ * Triés du plus long au plus court pour un appariement glouton.
+ */
+const LEAD_FILLERS: string[][] = [
+  ['ecris', 'moi', 'que'],
+  ['ecris-moi', 'que'],
+  ['dis', 'moi', 'que'],
+  ['dis-moi', 'que'],
+  ['rappelle', 'moi', 'que'],
+  ['rappelle-moi', 'que'],
+  ['note', 'que'],
+  ['ecris', 'moi'],
+  ['ecris-moi'],
+  ['rappelle', 'moi'],
+  ['rappelle-moi'],
+  ['ajoute'],
+  ['mets'],
+  ['met'],
+];
+
+/**
+ * M-19 — masque des tokens à ignorer pour le titre :
+ * « j’ai » (normalisé « jai ») disparaît partout dans la phrase, l’article
+ * « un »/« une » qui le suit disparaît avec, les remplissages de tête et
+ * l’article « un »/« une » en tête du cœur de phrase sont retirés.
+ */
+function fillerSkipMask(norm: string[]): boolean[] {
+  const n = norm.length;
+  const skip = new Array<boolean>(n).fill(false);
+  for (let i = 0; i < n; i += 1) {
+    if (norm[i] === 'jai') skip[i] = true;
+  }
+  // « j’ai un stream » -> « stream » : l’article collé à « j’ai » part avec
+  for (let i = 1; i < n; i += 1) {
+    if (skip[i - 1] && norm[i - 1] === 'jai' && (norm[i] === 'un' || norm[i] === 'une')) skip[i] = true;
+  }
+  const open = (): number[] => {
+    const idx: number[] = [];
+    for (let i = 0; i < n; i += 1) if (!skip[i]) idx.push(i);
+    return idx;
+  };
+  // remplissage en tête (tant qu’un motif colle au début des tokens restants)
+  let progress = true;
+  while (progress) {
+    progress = false;
+    const idx = open();
+    for (const pat of LEAD_FILLERS) {
+      if (pat.length <= idx.length && pat.every((p, k) => norm[idx[k]] === p)) {
+        for (let k = 0; k < pat.length; k += 1) skip[idx[k]] = true;
+        progress = true;
+        break;
+      }
+    }
+  }
+  // article « un » / « une » en tête du cœur de phrase (tant qu’il reste un mot après)
+  let idx = open();
+  while (idx.length > 1 && (norm[idx[0]] === 'un' || norm[idx[0]] === 'une')) {
+    skip[idx[0]] = true;
+    idx = open();
+  }
+  return skip;
 }
 
 function isTimeToken(t: string): boolean {
@@ -65,13 +143,20 @@ function parseTimeToken(t: string): string | null {
  *  - « !lundi réunion »          -> priorité Haute, lundi, réunion
  * Au moindre doute : tâche simple aujourd'hui.
  */
-export function parseInput(raw: string, today: string = todayISO()): ParsedInput {
+export function parseInputDetailed(raw: string, today: string = todayISO()): ParsedInputDetails {
   const tokens = raw.trim().split(/\s+/).filter(Boolean);
   const norm = tokens.map((t) => normalizeText(t));
+
+  // M-19 : mots de remplissage retirés du titre (« écris-moi que », « j’ai », « un » en tête…)
+  const skip = fillerSkipMask(norm);
+  // M-19 : une heure explicite existe-t-elle dans la phrase ? Si oui, « soir »/« matin »
+  // ne restent pas dans le titre (« demain soir 21h » -> 21:00, titre sans « soir »).
+  const hasExplicitTime = norm.some((t) => isTimeToken(t) || t === 'midi' || t === 'minuit');
 
   let priority: Priority = 'moyenne';
   let time: string | null = null;
   let date: string | null = null;
+  let hasDate = false;
   let category: Category | null = null;
   const titleWords: string[] = [];
 
@@ -83,6 +168,7 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
       t = t.slice(1);
       if (!t) continue;
     }
+    if (skip[i]) continue;
 
     const asTime = parseTimeToken(t);
     if (asTime) {
@@ -100,25 +186,37 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
 
     if (t === 'aujourdhui') {
       date = today;
+      hasDate = true;
       continue;
     }
     if (t === 'demain') {
       date = addDaysISO(today, 1);
+      hasDate = true;
       continue;
     }
     if (t === 'apres-demain' || (t === 'apres' && norm[i + 1] === 'demain')) {
       date = addDaysISO(today, 2);
+      hasDate = true;
       if (t === 'apres') i += 1;
       continue;
     }
     if (t === 'ce' && norm[i + 1] === 'soir') {
       date = today;
+      hasDate = true;
       if (!time) time = '19:00';
+      i += 1;
+      continue;
+    }
+    if (t === 'ce' && norm[i + 1] === 'matin') {
+      // « ce matin » = aujourd’hui, mais aucune heure inventée
+      date = today;
+      hasDate = true;
       i += 1;
       continue;
     }
     if (t in WEEKDAY_IDX) {
       date = nextWeekdayISO(WEEKDAY_IDX[t], today);
+      hasDate = true;
       continue;
     }
     if (t === 'dans' && /^\d+$/.test(norm[i + 1] ?? '')) {
@@ -132,6 +230,7 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
         const candidate = addDaysISO(today, isDays ? n : n * 7);
         if (isValidISODate(candidate)) {
           date = candidate;
+          hasDate = true;
           i += 2;
           continue;
         }
@@ -143,8 +242,14 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
       continue;
     }
 
-    // « à 14h » : on ignore le « à » collé à une heure
-    if (t === 'a' && norm[i + 1] && isTimeToken(norm[i + 1])) {
+    // « soir »/« matin » seuls : retirés du titre quand une heure explicite est donnée
+    // (« demain soir 21h »), sinon ils restent dans le titre (« dîner demain soir »)
+    if (hasExplicitTime && (t === 'soir' || t === 'matin')) {
+      continue;
+    }
+
+    // « à 14h », « à 14:30 », « à midi » : on ignore le « à » collé à une heure
+    if (t === 'a' && norm[i + 1] && (isTimeToken(norm[i + 1]) || norm[i + 1] === 'midi' || norm[i + 1] === 'minuit')) {
       continue;
     }
 
@@ -161,5 +266,22 @@ export function parseInput(raw: string, today: string = todayISO()): ParsedInput
     time,
     category: category ?? 'autre',
     priority,
+    hasDate,
+    hasTime: time !== null,
+  };
+}
+
+/**
+ * Parseur de saisie rapide — même analyse que `parseInputDetailed`,
+ * forme historique à 5 champs inchangée.
+ */
+export function parseInput(raw: string, today: string = todayISO()): ParsedInput {
+  const d = parseInputDetailed(raw, today);
+  return {
+    title: d.title,
+    date: d.date,
+    time: d.time,
+    category: d.category,
+    priority: d.priority,
   };
 }
