@@ -82,4 +82,4 @@ Hésitations + corrections + ventilation ci-dessus (~35 motifs). Choix délibér
 ## Liens
 
 - Branche : `vibe/plume-titres-propres` · PR : **#41** https://github.com/User313MSI/Centeryou/pull/41 (brouillon, base `main`) · MISSIONS.md : section M-22.
-- Pushs : inscription branche (`af6d39d`), inscription PR (`abeb9cf`), livraison code+tests+journal (dernier commit de la branche, 2026-11-22 ~06:00 UTC).
+- Pushs : inscription branche (`af6d39d`), inscription PR (`abeb9cf`), livraison code+tests+journal (`f62210d`), merge de `origin/main` (`b488ed5`, conflit MISSIONS.md M-22 résolu : objectif reformulé de main + PR #41 conservés ; main n'apportait que MISSIONS.md) — 2026-11-22 ~06:00 UTC. Après merge : 571/571 tests verts, tsc ✅, test:parser ✅, build ✅ (First Load 87,5 kO).
