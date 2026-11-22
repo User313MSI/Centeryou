@@ -298,7 +298,8 @@ export default function ReglagesPage() {
               <p className="mt-0.5 text-xs text-muted">
                 La narration du film lit ton brief du matin (texte déjà calculé, aucun coût supplémentaire). Voix de ton
                 navigateur par défaut ; voix premium si ton offre y donne droit et si le quota le permet, sinon bascule
-                silencieuse. Sans interaction préalable, un bouton « Lancer le film » débloque le son.
+                silencieuse. Le film démarre tout seul ; un petit bouton « Activer le son » débloque la narration au
+                premier passage.
               </p>
             </div>
             <Toggle
