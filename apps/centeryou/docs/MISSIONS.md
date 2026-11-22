@@ -70,7 +70,7 @@ Vague d'audits stricts (demande utilisateur du 22/11 au soir) : cinq auditeurs i
 
 - **État : À LANCER dès le 22/11 au soir (prompt remis)**. Source : demande utilisateur « un prompt d'un utilisateur hyper strict qui se plaint, un client vraiment relou, pour voir ce qu'on peut modifier ». Alimente directement M-23 Nuage (habillage) et les futurs correctifs UX.
 - Objectif : incarner un client exigeant, pointilleux et râleur et utiliser VRAIMENT l'app en local, de bout en bout (première ouverture, onboarding, saisie rapide, dictée vocale, planning, déplacements, rappels, stats, réglages, film, PWA mobile) : se plaindre de TOUT ce qui agace, cheveux tirés : libellés confus, clics inutiles, temps d'attente, états vides incompréhensibles, incohérences, détails visuels, manques. Chaque plainte notée : 🔴 insupportable (je quitte l'app) / 🟠 agaçant (je râle mais je reste) / 🟡 détail (je le mentionne). Terminer par : « les 3 trucs qui me feraient désinstaller », « les 3 trucs qui me feraient payer 4,99 € », « ce que je raconterais à un ami ». Les plaintes doivent être reproductibles (écran, clics, phrase exacte).
-- Zone : AUCUN fichier de code modifié. Livrable : `docs/journal/cactus.md` + inscription MISSIONS.md. Branche `vibe/cactus-raleur`. PR : — · Dernière nouvelle : inscrite par Vibe Work le 22/11 au soir.
+- Zone : AUCUN fichier de code modifié. Livrable : `docs/journal/cactus.md` + inscription MISSIONS.md. Branche `vibe/cactus-raleur`. PR : — · Dernière nouvelle : **EN COURS** — branche `vibe/cactus-raleur` créée depuis main `ff7fe48`, app lancée en local et testée de bout en bout comme un vrai client (inscrit par Cactus le 22/11 à 04:46 UTC).
 
 ### M-29 — Fugueur · Audit désengagement, pourquoi les gens partiraient (PROGRAMMÉE, après M-23)
 
