@@ -5,10 +5,13 @@ import {
   listCustomerSubscriptions,
   readCachedSubscription,
   retrieveCheckoutSession,
+  retrieveCustomer,
   retrieveSubscription,
   snapshotFromSubscription,
   type SubscriptionSnapshot,
 } from '../../../../lib/server/stripe';
+
+import { supabaseServerConfig, verifySessionUser } from '../../../../lib/server/auth';
 
 import {
   isValidCheckoutSessionId,
@@ -60,6 +63,13 @@ async function snapshotFromCustomer(customerId: string): Promise<SubscriptionSna
  *
  * Sécurité (M-13) : rate-limit par IP (429 + Retry-After, FR) ; corps plafonné ;
  * champs inattendus rejetés ; customerId / sessionId validés (formats Stripe).
+ *
+ * Sécurité (M-32, attaque O3 de Bastion) : dès que Stripe est configuré (des
+ * statuts réels peuvent exister), une session Supabase valide est EXIGÉE — la
+ * route n'est plus un oracle sans auth — et si un `customerId` est demandé, son
+ * e-mail Stripe doit correspondre à celui de la session (comme /api/sync et
+ * /api/portal). Sans Supabase pour vérifier l'identité → refus propre (503).
+ * Sans Stripe configuré (usage local pur) : réponse `configured: false` inchangée.
  */
 export async function POST(req: Request) {
   const limited = rateLimitOrNull(req, 'subscription-status', RATE_LIMIT_PER_HOUR);
@@ -86,6 +96,27 @@ export async function POST(req: Request) {
     }
     if (!isStripeConfigured()) {
       return NextResponse.json({ snapshot: null, configured: false });
+    }
+    // M-32 (O3) : plus d'oracle sans auth — session Supabase exigée dès que des
+    // statuts d'abonnement réels peuvent exister côté serveur.
+    if (!supabaseServerConfig()) {
+      return json({ error: 'Vérification d’identité indisponible sur ce déploiement : statut refusé.' }, 503);
+    }
+    const user = await verifySessionUser(req);
+    if (!user) {
+      return json({ error: 'Session invalide ou absente : statut d’abonnement refusé.' }, 401);
+    }
+    if (customerIdOrNull) {
+      // comme /api/sync et /api/portal : le compte doit appartenir à la session
+      try {
+        const customer = await retrieveCustomer(customerIdOrNull);
+        const customerEmail = (customer.email ?? '').trim().toLowerCase();
+        if (!customerEmail || customerEmail !== user.email.trim().toLowerCase()) {
+          return json({ error: 'Ce compte ne correspond pas à ta session : accès refusé.' }, 403);
+        }
+      } catch {
+        return json({ error: 'Impossible de vérifier le propriétaire du compte pour le moment.' }, 502);
+      }
     }
     try {
       const snapshot =
