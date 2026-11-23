@@ -4,7 +4,7 @@ import { getSnapshot, putSnapshot, type SyncSnapshot } from '../../../lib/server
 
 import { checkRateLimit } from '../../../lib/server/rate-limit';
 
-import { supabaseServerConfig, verifySessionUser } from '../../../lib/server/auth';
+import { supabaseServerConfig, verifySessionUser, type SessionUser } from '../../../lib/server/auth';
 
 import { isStripeConfigured, retrieveCustomer } from '../../../lib/server/stripe';
 
@@ -29,6 +29,9 @@ export const dynamic = 'force-dynamic';
  *   propriété ne peut pas être prouvée → refus propre (503). Le point d'entrée
  *   n'est jamais laissé ouvert là où des données de compte peuvent exister.
  *   Sans aucun backend configuré (dev local), le repli mémoire est inchangé.
+ * - M-32 (attaque R2 de Bastion) : quand Supabase est configuré SANS Stripe, le
+ *   snapshot est indexé par l'identité de la session (`user:<id>`), jamais par un
+ *   `customerId` libre fourni par le client → la fenêtre IDOR est fermée.
  * - validation d'entrées (M-13) : corps ≤ 1 Mo (413), JSON invalide → 400,
  *   champs inattendus rejetés (400), customerId au format Stripe `cus_…`,
  *   updatedAt nombre fini borné, state objet JSON obligatoire.
@@ -75,28 +78,44 @@ function validCustomerId(raw: string | undefined): string | null {
   return id;
 }
 
+type AuthzResult =
+  | { ok: true; user: SessionUser | null; /** clé de stockage réelle du snapshot */ storageKey: string }
+  | { ok: false; response: NextResponse };
+
 /**
- * Renvoie une réponse d'erreur si l'appelant ne peut pas être authentifié comme
- * le propriétaire du compte `customerId`, sinon null (accès autorisé).
+ * Authentifie l'appelant et DERIVE la clé de stockage du snapshot (M-32, attaque
+ * R2 de Bastion) :
+ * - Stripe configuré : la propriété du `customerId` est prouvée par l'e-mail de la
+ *   session (comme avant) et la clé reste le `customerId` ;
+ * - Supabase configuré SANS Stripe : aucun `cus_…` fourni par le client ne peut être
+ *   prouvé, donc la sauvegarde est liée à l'IDENTITÉ DE LA SESSION (`user:<id>`),
+ *   jamais à un identifiant de client libre — la fenêtre IDOR est fermée ;
+ * - aucun backend configuré (dev local) : repli mémoire inchangé, clé = customerId.
  */
-async function authorize(req: Request, customerId: string): Promise<NextResponse | null> {
+async function authorize(req: Request, customerId: string): Promise<AuthzResult> {
   if (!supabaseServerConfig()) {
     // Aucun compte n'est possible sur ce déploiement : une synchro ne peut contenir
     // de vraies données que si Stripe est configuré (les customerId viennent de Stripe).
     if (isStripeConfigured()) {
-      return NextResponse.json(
-        { error: 'Vérification d’identité indisponible sur ce déploiement : synchronisation refusée.' },
-        { status: 503, headers: NO_STORE },
-      );
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: 'Vérification d’identité indisponible sur ce déploiement : synchronisation refusée.' },
+          { status: 503, headers: NO_STORE },
+        ),
+      };
     }
-    return null; // dev local sans aucun backend : repli mémoire, inchangé
+    return { ok: true, user: null, storageKey: customerId }; // dev local sans aucun backend : repli mémoire, inchangé
   }
   const user = await verifySessionUser(req);
   if (!user) {
-    return NextResponse.json(
-      { error: 'Session invalide ou absente : synchronisation refusée.' },
-      { status: 401, headers: NO_STORE },
-    );
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'Session invalide ou absente : synchronisation refusée.' },
+        { status: 401, headers: NO_STORE },
+      ),
+    };
   }
   if (isStripeConfigured()) {
     // Le compte (customerId Stripe) doit correspondre à la session : même e-mail.
@@ -104,20 +123,29 @@ async function authorize(req: Request, customerId: string): Promise<NextResponse
       const customer = await retrieveCustomer(customerId);
       const customerEmail = (customer.email ?? '').trim().toLowerCase();
       if (!customerEmail || customerEmail !== user.email.trim().toLowerCase()) {
-        return NextResponse.json(
-          { error: 'Ce compte ne correspond pas à ta session : accès refusé.' },
-          { status: 403, headers: NO_STORE },
-        );
+        return {
+          ok: false,
+          response: NextResponse.json(
+            { error: 'Ce compte ne correspond pas à ta session : accès refusé.' },
+            { status: 403, headers: NO_STORE },
+          ),
+        };
       }
+      return { ok: true, user, storageKey: customerId };
     } catch (err) {
       cleanError(err);
-      return NextResponse.json(
-        { error: 'Impossible de vérifier le propriétaire du compte pour le moment.' },
-        { status: 502, headers: NO_STORE },
-      );
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: 'Impossible de vérifier le propriétaire du compte pour le moment.' },
+          { status: 502, headers: NO_STORE },
+        ),
+      };
     }
   }
-  return null;
+  // M-32 (R2) : sans Stripe, le snapshot est indexé par l'identité de session,
+  // JAMAIS par le `customerId` libre fourni dans la requête.
+  return { ok: true, user, storageKey: `user:${user.id}` };
 }
 
 export async function GET(req: Request) {
@@ -127,10 +155,10 @@ export async function GET(req: Request) {
   if (!customerId) {
     return badRequest('customerId requis');
   }
-  const denied = await authorize(req, customerId);
-  if (denied) return denied;
+  const auth = await authorize(req, customerId);
+  if (!auth.ok) return auth.response;
   try {
-    const snap = await getSnapshot(customerId);
+    const snap = await getSnapshot(auth.storageKey);
     return NextResponse.json({ snapshot: snap }, { headers: NO_STORE });
   } catch (err) {
     cleanError(err);
@@ -164,9 +192,9 @@ export async function POST(req: Request) {
     ) {
       return badRequest('customerId, updatedAt et state requis');
     }
-    const denied = await authorize(req, customerId);
-    if (denied) return denied;
-    const snap: SyncSnapshot = { customerId, updatedAt, state };
+    const auth = await authorize(req, customerId);
+    if (!auth.ok) return auth.response;
+    const snap: SyncSnapshot = { customerId: auth.storageKey, updatedAt, state };
     await putSnapshot(snap);
     return NextResponse.json({ ok: true }, { headers: NO_STORE });
   } catch (err) {

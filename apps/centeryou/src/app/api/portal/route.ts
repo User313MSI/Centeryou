@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { createPortalSession, isStripeConfigured } from '../../../lib/server/stripe';
+import { createPortalSession, isStripeConfigured, retrieveCustomer } from '../../../lib/server/stripe';
+
+import { supabaseServerConfig, verifySessionUser } from '../../../lib/server/auth';
 
 import {
   isValidCustomerId,
@@ -28,6 +30,12 @@ const MAX_BODY_BYTES = 8 * 1024;
  * Sécurité (M-13) : rate-limit par IP ; corps plafonné ; champs inattendus
  * rejetés ; customerId validé (format Stripe `cus_…`) ; URL de retour dérivée
  * d'une origine de confiance uniquement (jamais d'un Host forgé).
+ *
+ * Sécurité (M-32, attaque R3 de Bastion) : dès que Stripe est configuré, une
+ * session Supabase valide est EXIGÉE et l'e-mail de la session doit être celui
+ * du client Stripe `customerId` (même garantie que /api/sync) — connaître un
+ * `cus_…` ne suffit plus à ouvrir le portail de facturation de quelqu'un d'autre.
+ * Sans Supabase pour vérifier l'identité → refus propre (503, fail-closed).
  */
 export async function POST(req: Request) {
   const limited = rateLimitOrNull(req, 'portal', RATE_LIMIT_PER_HOUR);
@@ -52,6 +60,26 @@ export async function POST(req: Request) {
 
   const base = trustedBaseUrl(req);
   if (!base.ok) return base.response;
+
+  // M-32 (R3) : preuve de propriété, comme la synchronisation — la session est
+  // exigée et son e-mail doit correspondre à celui du client Stripe.
+  if (!supabaseServerConfig()) {
+    return json({ error: 'Vérification d’identité indisponible sur ce déploiement : portail refusé.' }, 503);
+  }
+  const user = await verifySessionUser(req);
+  if (!user) {
+    return json({ error: 'Session invalide ou absente : portail refusé.' }, 401);
+  }
+  try {
+    const customer = await retrieveCustomer(customerId);
+    const customerEmail = (customer.email ?? '').trim().toLowerCase();
+    if (!customerEmail || customerEmail !== user.email.trim().toLowerCase()) {
+      return json({ error: 'Ce compte ne correspond pas à ta session : accès refusé.' }, 403);
+    }
+  } catch (err) {
+    console.error('[api/portal]', err);
+    return json({ error: 'Impossible de vérifier le propriétaire du compte pour le moment.' }, 502);
+  }
 
   try {
     const session = await createPortalSession({

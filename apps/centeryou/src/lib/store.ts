@@ -8,7 +8,7 @@ import { endMinutesOf, minutesOf, timeOf, todayISO } from './dates';
 import { defaultSettings } from './defaults';
 import { currentMonth, defaultSubscription, defaultVoiceQuota, type SubscriptionState, type VoiceQuota } from './subscription';
 import { sanitizeEvents, sanitizeSettings, sanitizeTasks } from './sanitize';
-import { createSafeStorage } from './safe-storage';
+import { createSafeStorage, sanitizePersistedSubscription, sanitizePersistedVoiceQuota } from './safe-storage';
 import { uid } from './utils';
 
 export { defaultSettings };
@@ -196,8 +196,12 @@ export const useStore = create<CenteryouState>()(
           tasks: sanitizeTasks(p.tasks),
           settings: sanitizeSettings(p.settings),
           deviceId: typeof p.deviceId === 'string' ? p.deviceId : '',
-          subscription: { ...defaultSubscription, ...p.subscription },
-          voiceQuota: { ...defaultVoiceQuota, ...p.voiceQuota },
+          // M-32 Verrou 2 (attaque R1 de Bastion) : le stockage local est éditable par
+          // n'importe qui — subscription et voiceQuota ne sont jamais repris tels quels,
+          // chaque champ doit passer la sanitation stricte (whitelist, bornes) ; ce qui
+          // n'est pas propre est ignoré silencieusement, un stockage légitime intact.
+          subscription: sanitizePersistedSubscription(p.subscription),
+          voiceQuota: sanitizePersistedVoiceQuota(p.voiceQuota),
           syncUpdatedAt: typeof p.syncUpdatedAt === 'number' ? p.syncUpdatedAt : 0,
         };
       },
