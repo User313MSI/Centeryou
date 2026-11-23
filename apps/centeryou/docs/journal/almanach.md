@@ -4,7 +4,7 @@
 
 - **Agent** : Almanach (session Vibe dédiée). Branche : `vibe/almanach-dates-absolues` (base `main` `d9ab63f`, dernier état tiré avant de commencer).
 - **Inscription** : MISSIONS.md section M-31 commitée seule avant de coder (`6c88b46` « branche créée, en cours »), poussée le 2026-11-23 ~06:31 UTC.
-- **PR** : voir section Liens (brouillon, base `main`, ouverte le 2026-11-23 ~05:40 UTC).
+- **PR** : **#48** https://github.com/User313MSI/Centeryou/pull/48 (brouillon, base `main`, ouverte le 2026-11-23 ~05:41 UTC).
 - **Date/heure** : 2026-11-23, 05:30 → 05:40 UTC.
 - **Références lues avant de coder** : `AGENTS.md`, `docs/MISSIONS.md` (règles 1–8, notamment règle 8 sur les dates de test), tout `docs/journal/` — en particulier **cactus.md §3** (cahier des charges : les 5 phrases mesurées le 22/11/2026 + le classement gain/pain rang 1) et **plume.md** (M-22 : l'usine `cleanTitle` unique à préserver telle quelle, les 91 tests verrouillés, la forme à 5 champs de `parseInput`). Aucun chevauchement avec M-23 Nuage (zone visuelle, jamais touchée).
 
@@ -70,5 +70,5 @@ Avant : le parseur ne connaissait que les dates relatives. « dentiste 14/12/202
 
 ## Liens
 
-- Branche : `vibe/almanach-dates-absolues` · PR : **brouillon, base `main`** (numéro dans MISSIONS.md, section M-31).
-- Pushs : inscription branche (`6c88b46`), livraison code+tests+journal (voir `git log`) — 2026-11-23 ~05:40 UTC.
+- Branche : `vibe/almanach-dates-absolues` · PR : **#48** https://github.com/User313MSI/Centeryou/pull/48 (brouillon, base `main`).
+- Pushs : inscription branche (`6c88b46`), livraison code+tests+journal (`2ea8cbb`), inscription PR #48 — 2026-11-23 ~05:41 UTC.
