@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Settings } from 'lucide-react';
-import { LogoWithName } from '../brand/logo';
+import { Logo, LogoWithName } from '../brand/logo';
 import { SyncIndicator } from '../account/sync-indicator';
 import { NAV_ITEMS, isActive } from './nav-items';
 import { capitalize, formatDayLong, todayISO } from '../../lib/dates';
@@ -34,7 +34,9 @@ export function TopNav() {
       {/* Ligne principale */}
       <div className="mx-auto flex h-14 w-full max-w-[1100px] items-center justify-between gap-3 px-4 md:h-16 md:px-6">
         <Link href="/aujourdhui" aria-label="Centeryou — aujourd’hui" className="flex shrink-0 items-center rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <LogoWithName size={30} />
+          {/* Nuage (M-23) : monogramme seul sous sm (même règle que PublicNav) */}
+          <Logo size={30} className="sm:hidden" />
+          <LogoWithName size={30} className="hidden sm:flex" />
         </Link>
 
         {/* Rubriques centrales (desktop) */}
@@ -68,7 +70,7 @@ export function TopNav() {
         <div className="flex shrink-0 items-center gap-2">
           <SyncIndicator />
           {today && (
-            <p className="hidden text-sm font-semibold capitalize text-muted lg:block" aria-live="polite">
+            <p className="hidden text-sm font-semibold text-muted lg:block" aria-live="polite">
               {capitalize(today)}
             </p>
           )}

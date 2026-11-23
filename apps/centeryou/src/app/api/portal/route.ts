@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   }
 
   if (!isStripeConfigured()) {
-    return NextResponse.json({ error: 'STRIPE_SECRET_KEY manquante côté serveur' }, { status: 503 });
+    return NextResponse.json({ error: 'La gestion de l’abonnement n’est pas encore disponible — réessaie plus tard.' }, { status: 503 });
   }
 
   const base = trustedBaseUrl(req);

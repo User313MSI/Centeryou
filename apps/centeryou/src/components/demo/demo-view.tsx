@@ -56,7 +56,7 @@ export function DemoView() {
         </p>
         <Link
           href="/inscription"
-          className="inline-flex min-h-11 shrink-0 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-pill bg-primarydark bg-cta px-4 text-sm font-semibold text-surface shadow-card sm:px-5 transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
         >
           Créer mon compte
         </Link>
@@ -66,7 +66,7 @@ export function DemoView() {
         <h1 className="text-2xl font-extrabold text-ink md:text-4xl">
           La semaine de {DEMO_PROFILE.prenom}, {DEMO_PROFILE.role}
         </h1>
-        <p className="mt-1 text-sm font-semibold capitalize text-muted">{weekLabel}</p>
+        <p className="mt-1 text-sm font-semibold text-muted">{weekLabel}</p>
       </header>
 
       <Card>

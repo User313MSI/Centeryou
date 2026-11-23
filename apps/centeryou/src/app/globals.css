@@ -121,10 +121,39 @@ html.dark {
     overflow-x: clip;
   }
   body {
-    @apply bg-bg font-sans text-ink antialiased;
+    @apply font-sans text-ink antialiased;
+    /* le fond uni est posé sur <html> ; <body> reste transparent pour laisser
+       voir les voiles pastel de body::before (bloc Nuage M-23 ci-dessous) */
     /* zones s\u00fbres lat\u00e9rales (paysage / \u00e9cran courbe) : 0 px sur ordinateur */
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
+  }
+  /*
+   * Nuage (M-23) — voiles pastel très doux en fond de page, dérivés des tokens
+   * existants (violet --c-primary, turquoise --c-voice). Pseudo-élément fixe de
+   * <body>, z-index -1 : derrière tout le contenu, jamais interactif, statique
+   * (rien à tuer sous prefers-reduced-motion). Opacités faibles pour que les
+   * contrastes AA (Sourire) restent vrais partout, y compris le texte secondaire
+   * posé directement sur le fond (textSecondary assombri à #5F6284 dans
+   * design/tokens.ts : 5,64:1 sur #FAFAFC, encore >= 4,9:1 sous un voile à 10 %).
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(56rem 38rem at 8% -12%, rgb(var(--c-primary) / 0.09), transparent 62%),
+      radial-gradient(48rem 34rem at 96% -6%, rgb(var(--c-voice) / 0.07), transparent 60%),
+      radial-gradient(42rem 30rem at 50% 112%, rgb(var(--c-primary) / 0.05), transparent 64%),
+      linear-gradient(180deg, rgb(var(--c-primary) / 0.04), transparent 34%);
+  }
+  html.dark body::before {
+    background:
+      radial-gradient(56rem 38rem at 8% -12%, rgb(var(--c-primary) / 0.18), transparent 62%),
+      radial-gradient(48rem 34rem at 96% -6%, rgb(var(--c-voice) / 0.12), transparent 60%),
+      radial-gradient(42rem 30rem at 50% 112%, rgb(var(--c-primarydark) / 0.14), transparent 64%);
   }
   ::selection {
     @apply bg-primary/25 text-ink;
@@ -135,6 +164,19 @@ html.dark {
   input[type='date']::-webkit-calendar-picker-indicator,
   input[type='time']::-webkit-calendar-picker-indicator {
     @apply cursor-pointer opacity-60;
+  }
+}
+
+/*
+ * Nuage (M-23) — dégradé discret sur les éléments clés : voile blanc très léger
+ * en haut à gauche des boutons primaires (posé par-dessus bg-primarydark).
+ * Contrastes conservés : blanc sur #5B3FE8 + voile 12 % ≈ 4,9:1 (texte clair) ;
+ * en sombre, encre sombre sur #A794FF + voile ≈ 7:1. Le hover brightness-95 agit
+ * sur l'ensemble, jamais sous le seuil AA.
+ */
+@layer components {
+  .bg-cta {
+    background-image: linear-gradient(135deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0) 55%);
   }
 }
 

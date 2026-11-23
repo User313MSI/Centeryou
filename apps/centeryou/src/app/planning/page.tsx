@@ -10,7 +10,7 @@ import { DayView } from '../../components/events/day-view';
 import { MonthView } from '../../components/events/month-view';
 import { WeekView } from '../../components/events/week-view';
 import { useEventActions } from '../../components/events/use-event-actions';
-import { addDaysISO, addMonthsISO, formatDayLong, formatMonthYear, isSameMonth, monthMatrix, nextSlot, startOfWeekISO, todayISO } from '../../lib/dates';
+import { addDaysISO, addMonthsISO, capitalize, formatDayLong, formatMonthYear, isSameMonth, monthMatrix, nextSlot, startOfWeekISO, todayISO } from '../../lib/dates';
 import { calendarMonthOnDate, calendarOnDate } from '../../lib/events';
 import { useUiStore, type PlanningView } from '../../lib/ui-store';
 import { useHorizontalSwipe } from '../../lib/use-swipe';
@@ -36,12 +36,15 @@ export default function PlanningPage() {
   // geste mobile : glisser horizontalement = jour / semaine / mois précédent(e) ou suivant(e)
   const swipeRef = useHorizontalSwipe<HTMLDivElement>({ onSwipeLeft: goNext, onSwipeRight: goPrev });
 
-  const title =
+  // Nuage (M-23) — casse française : seule la 1re lettre en majuscule (capitalize JS),
+  // jamais la classe CSS `capitalize` qui donnait « Semaine Du Lundi 16 Novembre »
+  const title = capitalize(
     view === 'jour'
       ? formatDayLong(cursor)
       : view === 'semaine'
         ? `Semaine du ${formatDayLong(startOfWeekISO(cursor))}`
-        : formatMonthYear(cursor);
+        : formatMonthYear(cursor),
+  );
 
   const onDayClick = (iso: string) => {
     setCursor(iso);
@@ -63,7 +66,7 @@ export default function PlanningPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 key={title} className="animate-fade-in text-2xl font-extrabold capitalize text-ink md:text-4xl">
+        <h1 key={title} className="animate-fade-in text-2xl font-extrabold text-ink md:text-4xl">
           {title}
         </h1>
         <Button onClick={() => openEventDialog({ date: cursor, start: nextSlot() })}>

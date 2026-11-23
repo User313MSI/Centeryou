@@ -41,7 +41,8 @@ export const PLANS: Record<PlanId, PlanOffer> = {
     priceMonthlyEur: 4.99,
     tagline: 'Tout Centeryou, sans limite.',
     features: [
-      'Voix premium illimitée (quota serveur)',
+      // Nuage (M-23) : « quota serveur » = jargon ingénieur, retiré (libellé seul, aucun comportement)
+      'Voix premium illimitée',
       'Sauvegarde en ligne avec un compte',
       'Synchronisation multi-appareils',
       'Toutes les fonctionnalités Découverte',

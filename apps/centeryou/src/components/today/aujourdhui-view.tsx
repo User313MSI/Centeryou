@@ -15,7 +15,7 @@ import { BriefCard } from './brief-card';
 import { ProgressBar } from './progress-bar';
 // film de lancement chargé avec la page Aujourd'hui, en lazy (chunk séparé, zéro régression de First Load JS)
 const WelcomeSequence = dynamic(() => import('./welcome-sequence').then((m) => m.WelcomeSequence), { ssr: false });
-import { formatDayLong, greetingFor, todayISO } from '../../lib/dates';
+import { capitalize, formatDayLong, greetingFor, todayISO } from '../../lib/dates';
 import { calendarOnDate } from '../../lib/events';
 import { formatHoursFr, statsWeeks } from '../../lib/stats';
 import { useStore } from '../../lib/store';
@@ -50,7 +50,7 @@ export function AujourdhuiView() {
           {greetingFor()}
           {prenom ? ` ${prenom}` : ''}
         </h1>
-        <p className="mt-1 text-sm font-semibold capitalize text-muted">{formatDayLong(today)}</p>
+        <p className="mt-1 text-sm font-semibold text-muted">{capitalize(formatDayLong(today))}</p>
       </header>
 
       <section aria-label="Commande rapide" className="mx-auto w-full max-w-2xl">

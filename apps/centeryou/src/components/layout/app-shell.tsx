@@ -140,13 +140,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
+  // Nuage (M-23) : fond transparent ici — les voiles pastel de body::before (globals.css) restent visibles
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen">
       {publicRoute ? <PublicNav /> : <TopNav />}
       {/* key = route courante : transition douce entre les vues (fondu + translate sobre) */}
       <main
         key={pathname}
-        className="animate-view-in mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12"
+        className="animate-view-in mx-auto w-full max-w-[1100px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-8 md:px-6 md:pb-16"
       >
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>

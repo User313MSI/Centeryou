@@ -155,9 +155,9 @@ export function SubscriptionCard() {
         </div>
 
         <p className="text-xs text-muted">
-          Paiement sécurisé par Stripe (Checkout + portail client, en français). Aucune donnée de carte n’est
-          jamais stockée par Centeryou. Annulation en un clic dans le portail : l’accès Premium est conservé
-          jusqu’à la fin de la période payée.
+          Paiement sécurisé, en français. Aucune donnée de carte n’est jamais stockée par Centeryou. Annulation
+          en un clic depuis « Gérer l’abonnement » : l’accès Premium est conservé jusqu’à la fin de la période
+          payée.
         </p>
       </CardBody>
     </Card>

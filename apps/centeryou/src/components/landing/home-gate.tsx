@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mic, ShieldCheck, Smartphone } from 'lucide-react';
 import { Card, CardBody } from '../ui/card';
-import { LogoWithName } from '../brand/logo';
+import { Logo } from '../brand/logo';
 import { ProductMock } from './product-mock';
 import { useHydrated } from '../../lib/useHydrated';
 import { useStore } from '../../lib/store';
@@ -14,7 +14,7 @@ import { SLOGAN } from '../../lib/site';
 
 const CTA_BASE =
   'inline-flex min-h-12 items-center justify-center gap-2 rounded-pill px-6 text-base font-semibold transition-all duration-normal ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]';
-const CTA_PRIMARY = `${CTA_BASE} bg-primarydark text-surface shadow-card hover:brightness-95 hover:shadow-hover`;
+const CTA_PRIMARY = `${CTA_BASE} bg-primarydark bg-cta text-surface shadow-card hover:brightness-95 hover:shadow-hover`;
 const CTA_SECONDARY = `${CTA_BASE} border border-line bg-surface text-ink hover:border-primary hover:text-primarydark`;
 
 const ARGUMENTS = [
@@ -31,16 +31,19 @@ const ARGUMENTS = [
   {
     icon: ShieldCheck,
     title: 'Tes données restent les tiennes',
-    text: 'Aucun compte serveur : tout reste dans ce navigateur (localStorage). Rien n’est envoyé, rien n’est vendu, effaçable en un clic.',
+    text: 'Aucun compte serveur : tout reste sur cet appareil. Rien n’est envoyé, rien n’est vendu, effaçable en un clic.',
   },
 ];
 
 function LandingPage() {
   return (
-    <div className="flex flex-col gap-10 md:gap-14">
-      <section className="flex flex-col items-center gap-6 pt-6 text-center md:pt-10">
-        <LogoWithName size={44} />
-        <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-ink md:text-4xl">
+    <div className="flex flex-col gap-12 md:gap-16">
+      <section className="flex flex-col items-center gap-8 pt-8 text-center md:pt-12">
+        {/* Nuage (M-23) : le nom « Centeryou » vit dans la barre du haut — le hero ne montre
+            que le monogramme, plus grand : plus de logo doublé */}
+        <Logo size={56} />
+        {/* Nuage (M-23) : slogan en dégradé violet discret (texte large 48 px, ≥ 3:1 requis, primary fait 4,17:1) */}
+        <h1 className="max-w-3xl bg-gradient-to-r from-primary to-primarydark bg-clip-text text-4xl font-extrabold leading-tight tracking-tight text-transparent md:text-4xl">
           {SLOGAN}
         </h1>
         <p className="max-w-xl text-base font-semibold text-muted md:text-lg">

@@ -170,7 +170,7 @@ export default function ReglagesPage() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                <Moon size={16} aria-hidden className="text-primary" /> Mode sombre
+                <Moon size={16} aria-hidden className="text-primarydark" /> Mode sombre
               </p>
               <p className="mt-0.5 text-xs text-muted">
                 Un thème sombre reposant pour les yeux, mémorisé sur cet appareil.
@@ -194,7 +194,7 @@ export default function ReglagesPage() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                <Sparkles size={16} aria-hidden className="text-primary" /> Animations &amp; célébrations
+                <Sparkles size={16} aria-hidden className="text-primarydark" /> Animations &amp; célébrations
               </p>
               <p className="mt-0.5 text-xs text-muted">
                 Apparitions douces, micro-confettis et petits feux d’artifice lors des moments forts. Si tu désactives
@@ -265,7 +265,7 @@ export default function ReglagesPage() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <Sparkles size={16} aria-hidden className="text-primary" /> Film de lancement
+            <Sparkles size={16} aria-hidden className="text-primarydark" /> Film de lancement
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -315,7 +315,7 @@ export default function ReglagesPage() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <Volume2 size={18} aria-hidden className="text-primary" /> Sons
+            <Volume2 size={18} aria-hidden className="text-primarydark" /> Sons
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -374,7 +374,7 @@ export default function ReglagesPage() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <Bell size={18} aria-hidden className="text-primary" /> Rappels
+            <Bell size={18} aria-hidden className="text-primarydark" /> Rappels
           </h2>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -386,7 +386,7 @@ export default function ReglagesPage() {
             <p className="text-xs text-muted">Ce navigateur ne permet pas les notifications : aucun rappel ne sera envoyé.</p>
           )}
           {permRappels === 'granted' && (
-            <p className="text-xs font-semibold text-voicetext">Notifications autorisées : tes rappels arriveront au bon moment.</p>
+            <p className="text-xs font-semibold text-primarydark">Notifications autorisées : tes rappels arriveront au bon moment.</p>
           )}
           {permRappels === 'denied' && (
             <div className="rounded-card border border-warning/40 bg-warning/10 px-4 py-3">
@@ -461,9 +461,9 @@ export default function ReglagesPage() {
         </CardHeader>
         <CardBody className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Par défaut, toutes tes données restent dans ce navigateur (localStorage). Si tu crées un compte (carte
-            ci-dessus), une copie est enregistrée en ligne ; la synchronisation multi-appareils de l’offre Premium
-            (voir Abonnement ci-dessus) envoie aussi un snapshot vers le serveur.
+            Par défaut, toutes tes données restent sur cet appareil. Si tu crées un compte (carte ci-dessus),
+            une copie est enregistrée en ligne ; la synchronisation multi-appareils de l’offre Premium (voir
+            Abonnement ci-dessus) envoie aussi une copie sur le serveur.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" size="sm" onClick={onExport}>
@@ -477,7 +477,7 @@ export default function ReglagesPage() {
               type="file"
               accept="application/json,.json"
               className="hidden"
-              aria-label="Choisir un fichier de sauvegarde JSON"
+              aria-label="Choisir un fichier de sauvegarde"
               onChange={onFilePicked}
             />
           </div>

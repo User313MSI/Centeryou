@@ -16,7 +16,9 @@ export const colors = {
   bg: '#FAFAFC',
   surface: '#FFFFFF',
   ink: '#1A1B2E',
-  textSecondary: '#6E7191',
+  /** Nuage (M-23) : assombri de #6E7191 (4,54:1) à #5F6284 (5,64:1) — le texte secondaire
+   *  reste ≥ 4,5:1 même posé sur les voiles pastel du fond (voir globals.css, bloc M-23) */
+  textSecondary: '#5F6284',
   border: '#E7E7F0',
   /** voile des fenêtres modales (identique à l'encre en clair, quasi noir en sombre) */
   veil: '#1A1B2E',
@@ -98,15 +100,25 @@ export const typography = {
 export const radius = { card: 16, pill: 999, tile: 20 } as const;
 
 export const shadows = {
-  rest: '0 4px 16px rgba(26,27,46,.08)',
+  rest: '0 6px 24px rgba(26,27,46,.06)',
   hover: '0 8px 30px rgba(124,92,255,.25)',
 } as const;
 
 /** ombres du thème sombre (le violet .25 reste pour le hover, le reste passe au noir) */
 export const darkShadows = {
-  rest: '0 4px 16px rgba(0,0,0,.45)',
+  rest: '0 6px 24px rgba(0,0,0,.38)',
   hover: '0 8px 30px rgba(0,0,0,.55)',
 } as const;
+
+/**
+ * Nuage (M-23) — ligne directrice « douce et aérienne », dérivée des tokens existants :
+ * voiles pastel très doux en fond de page (globals.css, `body::before`, opacités
+ * faibles sur --c-primary / --c-voice / --c-primarydark), dégradés discrets sur les
+ * éléments clés (boutons primaires `.bg-cta`, slogan en dégradé, logo en dégradé
+ * violet), cartes plus légères (ombre adoucie ci-dessus + plus d'air en padding),
+ * motif d'ondes toujours réservé à la voix. Aucun token de la palette figée
+ * (#7C5CFF #5B3FE8 #2DD4BF #FFB020 #FF6B6B #FAFAFC #1A1B2E) n'est changé.
+ */
 
 /** animations sobres 200–300 ms ease-out */
 export const motion = { fast: 200, normal: 300, easing: 'ease-out' } as const;

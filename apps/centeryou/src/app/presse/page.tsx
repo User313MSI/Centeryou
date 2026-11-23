@@ -33,7 +33,7 @@ export default function PressePage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Fiche de presse</h1>
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Fiche de presse</h1>
         <blockquote className="mt-2 border-l-4 border-primary pl-4 text-lg font-bold text-ink md:text-xl">
           « {SLOGAN} »
         </blockquote>
@@ -114,7 +114,7 @@ export default function PressePage() {
             >
               <span>
                 <span className="flex items-center gap-2 text-sm font-semibold text-ink">
-                  <Download size={16} aria-hidden className="text-primary" /> {a.label}
+                  <Download size={16} aria-hidden className="text-primarydark" /> {a.label}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted">{a.note}</span>
               </span>
@@ -147,7 +147,7 @@ export default function PressePage() {
           <div className="flex flex-wrap gap-3 pt-1">
             <Link
               href="/demo"
-              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark bg-cta px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
             >
               Ouvrir la démo
             </Link>
