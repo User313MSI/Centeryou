@@ -54,7 +54,7 @@ export function VoicePanel() {
         className={cx(
           'flex h-24 w-24 items-center justify-center rounded-pill shadow-hover transition-all duration-normal ease-out',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-95',
-          listening ? 'bg-voice text-onbright' : 'bg-primarydark text-surface hover:brightness-95',
+          listening ? 'bg-voice text-onbright' : 'bg-primarydark bg-cta text-surface hover:brightness-95',
         )}
       >
         {listening ? <Waves className="h-10 w-10" /> : <Mic size={34} aria-hidden />}

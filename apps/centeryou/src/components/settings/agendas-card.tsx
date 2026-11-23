@@ -116,7 +116,7 @@ export function AgendasCard() {
     <Card>
       <CardHeader>
         <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-          <CalendarDays size={18} aria-hidden className="text-primary" /> Agendas
+          <CalendarDays size={18} aria-hidden className="text-primarydark" /> Agendas
         </h2>
       </CardHeader>
       <CardBody className="flex flex-col gap-3">
@@ -181,7 +181,7 @@ export function AgendasCard() {
             <p className="text-sm font-semibold text-ink">Import de « {rapport.nom} » terminé</p>
             <ul className="flex flex-col gap-1 text-sm text-ink">
               <li>
-                <span className="font-semibold text-voicetext">{rapport.importes}</span> {plur(rapport.importes, 'événement')} importé
+                <span className="font-semibold text-primarydark">{rapport.importes}</span> {plur(rapport.importes, 'événement')} importé
                 {rapport.importes > 1 ? 's' : ''}
               </li>
               <li>

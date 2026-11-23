@@ -153,7 +153,7 @@ function SceneOpen({ film }: { film: FilmData }) {
         {film.greeting}
         {film.prenom ? `, ${film.prenom}` : ''}
       </h1>
-      <p className="film-sub text-lg font-semibold capitalize md:text-xl">{film.dateFr}</p>
+      <p className="film-sub text-lg font-semibold md:text-xl">{film.dateFr}</p>
     </>
   );
 }
@@ -363,7 +363,7 @@ function StaticPanel({ film }: { film: FilmData }) {
         {film.greeting}
         {film.prenom ? `, ${film.prenom}` : ''}
       </h1>
-      <p className="film-sub mt-1 font-semibold capitalize">{film.dateFr}</p>
+      <p className="film-sub mt-1 font-semibold">{film.dateFr}</p>
       <ul className="film-sub mt-4 flex flex-col gap-1.5 text-sm md:text-base">
         <li>
           Aujourd’hui : {film.eventCount} événement{film.eventCount > 1 ? 's' : ''}, {film.taskOpen} tâche{film.taskOpen > 1 ? 's' : ''} à faire,{' '}

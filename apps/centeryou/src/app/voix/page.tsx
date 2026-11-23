@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader } from '../../components/ui/card';
 import { VoicePanel } from '../../components/voice/voice-panel';
 
 const COMMANDS: { cmd: string; desc: string }[] = [
-  { cmd: '« ajoute sport demain 14h »', desc: 'crée un événement (même parseur que l’ajout rapide)' },
+  { cmd: '« ajoute sport demain 14h »', desc: 'crée un événement (compris aussi dans la barre d’ajout rapide)' },
   { cmd: '« mon programme » / « que dois-je faire aujourd’hui ? »', desc: 'lit ton programme du jour' },
   { cmd: '« quoi de prévu demain ? »', desc: 'lit ton programme de demain' },
   { cmd: '« c’est fait sport »', desc: 'coche la tâche correspondante et te félicite' },

@@ -11,7 +11,9 @@ const variants: Record<Variant, string> = {
   // #7C5CFF ne fait que 4,35:1 (3,87:1 en sombre) ; assombrir légèrement au survol
   // garde le texte ≥ 6:1. Bouton danger : texte blanc (text-surface) sur corail
   // assombri #C03A3A = 5,37:1 (text-onbright n'y ferait que 3,15:1).
-  primary: 'bg-primarydark text-surface hover:brightness-95 shadow-card hover:shadow-hover',
+  // Nuage (M-23) : bg-cta = voile blanc 12 % en haut à gauche (dégradé discret),
+  // contraste conservé (blanc sur #5B3FE8 + voile ≈ 4,9:1 ; ≥ 6:1 sans le voile)
+  primary: 'bg-primarydark bg-cta text-surface hover:brightness-95 shadow-card hover:shadow-hover',
   secondary: 'bg-surface text-ink border border-line hover:border-primary hover:text-primarydark',
   ghost: 'text-muted hover:text-ink hover:bg-surface',
   danger: 'bg-danger text-surface hover:brightness-95',

@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
   if (!isStripeConfigured()) {
     return NextResponse.json(
-      { error: 'Paiement non configuré (STRIPE_SECRET_KEY manquante côté serveur)' },
+      { error: 'Le paiement en ligne n’est pas encore activé — réessaie plus tard.' },
       { status: 503 },
     );
   }

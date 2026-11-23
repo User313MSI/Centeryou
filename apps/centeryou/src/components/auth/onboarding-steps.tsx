@@ -64,7 +64,7 @@ export function OnboardingSteps() {
       <Card>
         <CardBody className="flex flex-col items-center gap-3 pt-5 text-center">
           <p className="max-w-md text-sm text-muted">
-            Tes données restent dans ce navigateur (localStorage) — effaçables à tout moment dans{' '}
+            Tes données restent sur cet appareil — effaçables à tout moment dans{' '}
             <Link href="/reglages" className="font-semibold text-primarydark underline-offset-2 hover:underline">
               Réglages
             </Link>

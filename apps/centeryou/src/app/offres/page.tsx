@@ -28,7 +28,7 @@ export default function OffresPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Offres</h1>
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Offres</h1>
         <p className="mt-1 text-sm font-semibold text-muted">
           L’essentiel est gratuit, et tout reste chez toi par défaut. Une offre Premium optionnelle existe pour aller plus loin.
         </p>
@@ -43,7 +43,7 @@ export default function OffresPage() {
           <ul className="flex flex-col gap-2">
             {INCLUDED.map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm text-muted">
-                <Check size={16} aria-hidden className="mt-0.5 shrink-0 text-voicetext" />
+                <Check size={16} aria-hidden className="mt-0.5 shrink-0 text-primarydark" />
                 {item}
               </li>
             ))}
@@ -51,7 +51,7 @@ export default function OffresPage() {
           <div>
             <Link
               href="/inscription"
-              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark px-6 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark bg-cta px-6 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
             >
               Créer mon compte
             </Link>
@@ -62,7 +62,7 @@ export default function OffresPage() {
       <Card>
         <CardHeader>
           <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-            <ShieldCheck size={18} aria-hidden className="text-primary" /> Nos principes
+            <ShieldCheck size={18} aria-hidden className="text-primarydark" /> Nos principes
           </h2>
         </CardHeader>
         <CardBody>

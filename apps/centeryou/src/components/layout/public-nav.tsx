@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogoWithName } from '../brand/logo';
+import { Logo, LogoWithName } from '../brand/logo';
 import { useHydrated } from '../../lib/useHydrated';
 import { useStore } from '../../lib/store';
 import { cx } from '../../lib/utils';
@@ -34,7 +34,10 @@ export function PublicNav() {
           aria-label="Centeryou — accueil"
           className="flex shrink-0 items-center rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <LogoWithName size={30} />
+          {/* Nuage (M-23) : à 320 px, seul le monogramme dans l'en-tête — le nom complet
+              n'apparaît qu'à partir de sm, le bouton « Créer mon compte » n'est plus tassé */}
+          <Logo size={30} className="sm:hidden" />
+          <LogoWithName size={30} className="hidden sm:flex" />
         </Link>
 
         <nav aria-label="Navigation publique" className="hidden flex-1 items-center justify-center gap-1 md:flex">
@@ -58,14 +61,14 @@ export function PublicNav() {
           {connected ? (
             <Link
               href="/aujourdhui"
-              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark bg-cta px-4 text-sm font-semibold text-surface shadow-card sm:px-5 transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
             >
               Mon planning
             </Link>
           ) : (
             <Link
               href="/inscription"
-              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark px-5 text-sm font-semibold text-surface shadow-card transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
+              className="inline-flex min-h-11 items-center rounded-pill bg-primarydark bg-cta px-4 text-sm font-semibold text-surface shadow-card sm:px-5 transition-all duration-normal ease-out hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.98]"
             >
               Créer mon compte
             </Link>

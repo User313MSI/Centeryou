@@ -92,8 +92,7 @@ export function AccountSection() {
         <CardBody className="flex flex-col gap-4">
           {!configured && (
             <p className="text-sm text-muted">
-              La sauvegarde en ligne n’est pas activée sur ce déploiement (variables Supabase non renseignées). Centeryou
-              reste 100 % local.
+              La sauvegarde en ligne n’est pas encore activée. Centeryou reste 100 % local.
             </p>
           )}
           {configured && status === 'loading' && (

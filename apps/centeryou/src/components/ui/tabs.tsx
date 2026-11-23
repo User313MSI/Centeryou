@@ -63,7 +63,7 @@ export function Tabs({
             className={cx(
               'min-h-11 rounded-pill px-4 text-sm font-semibold transition-all duration-fast ease-out',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              active ? 'bg-primarydark text-surface shadow-card' : 'text-muted hover:text-ink',
+              active ? 'bg-primarydark bg-cta text-surface shadow-card' : 'text-muted hover:text-ink',
             )}
           >
             {opt.label}

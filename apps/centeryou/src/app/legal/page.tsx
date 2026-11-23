@@ -19,7 +19,7 @@ export default function LegalPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-extrabold text-ink md:text-3xl">Mentions légales & confidentialité</h1>
+        <h1 className="text-2xl font-extrabold text-ink md:text-4xl">Mentions légales & confidentialité</h1>
         <p className="mt-1 text-sm font-semibold text-muted">
           Dernière mise à jour : {LEGAL.cguUpdated} — version {LEGAL.privacyVersion} de la politique de confidentialité.
         </p>

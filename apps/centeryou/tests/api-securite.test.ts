@@ -153,7 +153,10 @@ describe('hygiène des erreurs — aucun détail interne dans les réponses', ()
     );
     expect(res.status).toBe(503);
     const data = await res.json();
-    expect(data.error).toContain('STRIPE_SECRET_KEY');
+    // Nuage (M-23) : message réécrit en français courant pour le client (Cactus M-28) ;
+    // le test garde son esprit « aucun détail interne » et l'étend au nom de variable.
+    expect(data.error).toBe('Le paiement en ligne n’est pas encore activé — réessaie plus tard.');
+    expect(data.error).not.toContain('STRIPE_SECRET_KEY');
   });
 
   it('POST /api/portal sans STRIPE_SECRET_KEY → 503 propre (refus sans clé)', async () => {

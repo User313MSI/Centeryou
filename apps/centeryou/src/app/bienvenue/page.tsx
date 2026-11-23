@@ -85,7 +85,7 @@ export default function BienvenuePage() {
     <div className="flex flex-col items-center gap-6 py-4 md:py-8">
       <div className="flex flex-col items-center gap-3 text-center">
         <Logo size={56} />
-        <p className="text-sm font-bold uppercase tracking-wide text-primary">Étape {step + 1} sur 3</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-primarydark">Étape {step + 1} sur 3</p>
         <div className="flex items-center gap-1.5" aria-hidden>
           {STEPS.map((_, i) => (
             <span
@@ -103,10 +103,10 @@ export default function BienvenuePage() {
         <CardBody className="pt-6">
           <div key={step} className="animate-slide-up flex flex-col gap-5">
             <div className="flex flex-col items-center gap-3 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-tile bg-primary/10 text-primary">
+              <span className="flex h-14 w-14 items-center justify-center rounded-tile bg-primary/10 text-primarydark">
                 <StepIcon size={26} aria-hidden />
               </span>
-              <h1 className="text-2xl font-extrabold text-ink md:text-3xl">{STEPS[step].title}</h1>
+              <h1 className="text-2xl font-extrabold text-ink md:text-4xl">{STEPS[step].title}</h1>
               <p className="text-base font-semibold text-muted">{STEPS[step].question}</p>
             </div>
 
