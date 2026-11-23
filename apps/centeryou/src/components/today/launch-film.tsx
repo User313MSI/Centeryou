@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import { SkipForward, Sparkles, Volume2 } from 'lucide-react';
 
 import { Button } from '../ui/button';
@@ -305,7 +307,7 @@ function SceneMagic({ film, actif }: { film: FilmData; actif: boolean }) {
     <>
       <h2 className="film-title text-2xl font-extrabold md:text-4xl">La magie</h2>
       {card ? (
-        <div key="card" className="film-scene flex flex-col items-center gap-5">
+        <div key="card" className="film-scene film-scene-on flex flex-col items-center gap-5">
           <div data-film-keep className="film-card film-halo-pulse flex w-full max-w-md items-center gap-3 rounded-tile p-4 text-left">
             <span aria-hidden className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(category) }} />
             <span className="min-w-0">
@@ -599,11 +601,16 @@ export function LaunchFilm() {
     };
   }, [open, close]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
   const caption = motion ? film.captions[Math.min(scene, film.captions.length - 1)] : film.briefText;
 
-  return (
+  // Cinéaste (M-21) : le film est un dialogue modal plein écran -> rendu dans un portail
+  // vers document.body. Sinon, le <main> de l'app-shell (classe animate-view-in, transform
+  // retenu par le fill-mode both) devient le containing block du fixed inset-0 : le film
+  // s'affichait alors dans une boîte de 1100 px au lieu du plein écran (contenu découpé,
+  // dépassant de l'écran quand la page est longue).
+  return createPortal(
     <div
       ref={dialogRef}
       role="dialog"
@@ -643,10 +650,13 @@ export function LaunchFilm() {
       </div>
 
       {/* zone centrale : centrée dans l'espace restant entre la barre et les sous-titres
-          (m-auto sur l'enfant = centrage horizontal ET vertical, même en cas de débordement),
-          défilable si l'écran est très bas — jamais de contenu écrasé ni coupé (320 px compris) */}
+          (m-auto sur l'enfant = centrage horizontal ET vertical conservé, même en cas de
+          débordement), défilable si l'écran est très bas — jamais de contenu écrasé ni
+          coupé (320 px compris). Cinéaste (M-21) : le conteneur de scènes a overflow-hidden
+          (+ p-6 pour le halo pulsant de 24 px) : la scène fondante en absolute (film-scene-off)
+          est rognée au conteneur, elle ne déborde jamais nulle part. */}
       <div className="relative z-10 flex min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-        <div className="relative m-auto flex w-full max-w-2xl justify-center" data-film-keep>
+        <div className="relative m-auto flex w-full max-w-2xl justify-center overflow-hidden p-6" data-film-keep>
           {prevScene !== null && prevScene !== scene && (
             <div key={`prev-${prevScene}`} className="film-scene film-scene-off" aria-hidden>
               <SceneView scene={prevScene} film={film} actif={false} />
@@ -666,6 +676,7 @@ export function LaunchFilm() {
           {speaking && <span className="ml-2 inline-block h-2 w-2 animate-pulse rounded-full bg-voice align-middle" aria-label="lecture vocale en cours" />}
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -245,7 +245,8 @@ describe('LaunchFilm (composant)', () => {
 
   it('M-20 — layout centré en colonne : barre du haut, zone centrale défilable, sous-titres DANS LE FLUX (un seul, jamais de chevauchement)', async () => {
     useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
-    const { container } = render(<LaunchFilm />);
+    // M-21 : le film est portalé dans document.body (plein écran réel) -> on interroge document
+    render(<LaunchFilm />);
     const dialog = (await screen.findByRole('dialog')) as HTMLElement;
     // colonne flex plein écran (centrage vertical réel entre barre et sous-titres)
     expect(dialog.className).toContain('flex');
@@ -268,7 +269,7 @@ describe('LaunchFilm (composant)', () => {
     // sous-titres : élément de flux (plus d'absolute), exactement un seul dans tout le film
     expect(sousTitres.className).not.toContain('absolute');
     expect(sousTitres.querySelectorAll('.film-caption')).toHaveLength(1);
-    expect(container.querySelectorAll('.film-caption')).toHaveLength(1);
+    expect(document.querySelectorAll('.film-caption')).toHaveLength(1);
     expect(sousTitres.querySelector('.film-caption')!.getAttribute('aria-live')).toBe('polite');
   });
 
@@ -276,7 +277,7 @@ describe('LaunchFilm (composant)', () => {
     vi.useFakeTimers();
     try {
       useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
-      const { container } = render(<LaunchFilm />);
+      render(<LaunchFilm />);
       const dialog = screen.getByRole('dialog') as HTMLElement;
       const film = buildFilmData(EVENTS, TASKS, 'Camille', TODAY);
       // scène 0 affichée, sous-titre de la scène 0
@@ -300,6 +301,38 @@ describe('LaunchFilm (composant)', () => {
       });
       expect(dialog.querySelectorAll('.film-scene-off')).toHaveLength(0);
       expect(dialog.querySelectorAll('.film-scene-on')).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('M-21 — scène « La magie » : la carte « Carte créée » reçoit bien la variante visible film-scene-on (jamais .film-scene seul = invisible)', async () => {
+    vi.useFakeTimers();
+    try {
+      useStore.setState({ settings: { ...defaultSettings, prenom: 'Camille', launchFilmVoice: false } });
+      render(<LaunchFilm />);
+      const dialog = screen.getByRole('dialog') as HTMLElement;
+      const film = buildFilmData(EVENTS, TASKS, 'Camille', TODAY);
+      // avance jusqu'à la scène 4 « La magie » (900 + 7200 + 8600 + 8600 = 25300 ms)
+      act(() => {
+        vi.advanceTimersByTime(25310);
+      });
+      // la machine à écrire défile la phrase (600 ms + 60 ms/caractère), puis la carte apparaît (+700 ms)
+      act(() => {
+        vi.advanceTimersByTime(600 + film.magicPhrase.length * 60 + 1500);
+      });
+      const label = Array.from(dialog.querySelectorAll('span')).find((el) => el.textContent === 'Carte créée');
+      expect(label).toBeTruthy();
+      const wrapper = (label as HTMLElement).closest('.film-scene') as HTMLElement;
+      expect(wrapper).toBeTruthy();
+      // la branche « carte » porte la variante visible (avant M-21 : .film-scene seul -> opacity 0, carte invisible)
+      expect(wrapper.className).toContain('film-scene-on');
+      // garde-fou : aucune scène du film n'est rendue avec .film-scene seul (qui serait invisible)
+      const scenes = Array.from(dialog.querySelectorAll('.film-scene')) as HTMLElement[];
+      expect(scenes.length).toBeGreaterThan(0);
+      for (const el of scenes) {
+        expect(el.className).toMatch(/film-scene-(on|off)/);
+      }
     } finally {
       vi.useRealTimers();
     }
