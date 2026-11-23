@@ -1,5 +1,5 @@
 import type { Category, Priority } from '../types';
-import { WEEKDAY_NAMES, addDaysISO, nextWeekdayISO, parseISO, timeOf, todayISO } from './dates';
+import { WEEKDAY_NAMES, addDaysISO, nextWeekdayISO, pad2, parseISO, timeOf, todayISO } from './dates';
 import { normalizeText } from './utils';
 
 export interface ParsedInput {
@@ -18,10 +18,30 @@ export interface ParsedInput {
  * (5 champs), seul `parseInputDetailed` porte ces deux drapeaux.
  */
 export interface ParsedInputDetails extends ParsedInput {
-  /** une référence de date explicite a été reconnue (aujourd’hui, demain, jour de semaine, « dans N jours », « ce soir »…) */
+  /** une référence de date explicite a été reconnue (aujourd’hui, demain, jour de semaine, « dans N jours », « ce soir », date absolue M-31…) */
   hasDate: boolean;
   /** une heure a été reconnue (14h, 14:30, midi, minuit, « ce soir » → 19:00) */
   hasTime: boolean;
+  /**
+   * M-31 — garde-fou : portion de phrase qui RESSEMBLE à une date mais n’a pas été
+   * reconnue (ex. « 32/13/2026 », « le 30 février »). Jamais de mauvais jour silencieux :
+   * le fragment reste dans le titre et ce champ porte le texte brut pour avertir.
+   * `null` quand tout va bien.
+   */
+  dateWarning: string | null;
+}
+
+/**
+ * M-31 — message d’avertissement clair à présenter à l’utilisateur quand un fragment
+ * ressemble à une date sans être reconnu. Si aucune date n’a été reconnue du tout,
+ * la date par défaut (aujourd’hui) est utilisée et on le dit explicitement.
+ */
+export function dateWarningMessage(warning: string | null, hasDate: boolean): string | null {
+  if (!warning) return null;
+  if (hasDate) {
+    return `« ${warning} » ressemble à une date mais n’a pas été comprise — corrige-la si besoin.`;
+  }
+  return `Date non comprise (« ${warning} »), mise à aujourd’hui — corrige-la si besoin.`;
 }
 
 const CATEGORY_WORDS: Record<string, Category> = {
@@ -46,6 +66,134 @@ const MAX_RELATIVE_UNITS = 500;
 function isValidISODate(iso: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
   return !Number.isNaN(parseISO(iso).getTime());
+}
+
+/**
+ * M-31 — DATES ABSOLUES EN FRANÇAIS.
+ *
+ * Formats reconnus : « 14 décembre », « le 3 janvier », « 1er mai », « 25/12 »,
+ * « 14/12/2026 », abréviations courantes (janv., févr., avr., mai, juin, juil.,
+ * août, sept., oct., nov., déc.), avec ou sans article « le », avec ou sans année.
+ *
+ * Règles :
+ *  - année absente → prochaine occurrence à venir (aujourd’hui inclus, comme
+ *    `nextWeekdayISO`) : en novembre 2026, « 14 janvier » = 14 janvier 2027 ;
+ *  - année explicite → telle quelle, même passée (règle simple et cohérente :
+ *    une année écrite est une année voulue, jamais modifiée silencieusement) ;
+ *  - années bissextiles respectées (« 29/02/2028 » valide, « 29/02/2026 » non) ;
+ *  - la date reconnue est consommée : elle ne reste JAMAIS dans le titre
+ *    (l’usine `cleanTitle` de Plume, M-22, continue de fonctionner telle quelle) ;
+ *  - un fragment qui ressemble à une date sans être valide (« 32/13/2026 »,
+ *    « le 30 février ») n’est PAS consommé : il reste visible dans le titre et
+ *    `dateWarning` le signale — JAMAIS de création silencieuse au mauvais jour.
+ */
+
+/** mois FR, formes normalisées (minuscules, sans accents, point d’abréviation retiré par normToken) */
+const MONTHS_FR: Record<string, number> = {
+  janvier: 1, janv: 1,
+  fevrier: 2, fevr: 2,
+  mars: 3,
+  avril: 4, avr: 4,
+  mai: 5,
+  juin: 6,
+  juillet: 7, juil: 7,
+  aout: 8,
+  septembre: 9, sept: 9,
+  octobre: 10, oct: 10,
+  novembre: 11, nov: 11,
+  decembre: 12, dec: 12,
+};
+
+/** « 25/12 », « 14/12/2026 », « 14/12/26 » — séparateur « / » uniquement, sur le token BRUT (2 chiffres jour/mois) */
+const NUM_DATE_RE = /^(\d{2})\/(\d{2})(?:\/(\d{2}|\d{4}))?$/;
+
+/** « 14 », « 1er » — jour d’une date textuelle, sur le token normalisé */
+const DAY_RE = /^(\d{1,2})(er)?$/;
+
+/** année 4 chiffres facultative après une date textuelle */
+const YEAR_RE = /^\d{4}$/;
+
+/**
+ * Construit une date ISO stricte : null si le jour n’existe pas (31 avril,
+ * 29 février d’une année non bissextile…). Aucune date ne « déborde » jamais.
+ */
+function makeISODate(y: number, m: number, d: number): string | null {
+  if (!Number.isInteger(y) || y < 1000 || y > 9999) return null;
+  if (!Number.isInteger(m) || m < 1 || m > 12) return null;
+  if (!Number.isInteger(d) || d < 1 || d > 31) return null;
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+
+/**
+ * Prochaine occurrence à venir (aujourd’hui inclus) d’un jour/mois sans année.
+ * Balaye jusqu’à 8 ans : couvre toujours le 29 février (année bissextile).
+ * null si aucune occurrence valide (ex. « 31 avril », « 30 février »).
+ */
+function nextOccurrenceISO(day: number, month: number, today: string): string | null {
+  const ty = Number(today.slice(0, 4));
+  for (let y = ty; y <= ty + 8; y += 1) {
+    const iso = makeISODate(y, month, day);
+    if (iso !== null && iso >= today) return iso;
+  }
+  return null;
+}
+
+interface AbsoluteDateMatch {
+  /** date ISO reconnue, ou null si le fragment ressemble à une date sans être valide */
+  date: string | null;
+  /** fragment brut ressemblant à une date mais non reconnu (garde-fou M-31) */
+  warning: string | null;
+  /** nombre de tokens à consommer quand la date est reconnue */
+  consumed: number;
+}
+
+/**
+ * Tente de reconnaître une date absolue à la position i : « 25/12 », « 14/12/2026 »,
+ * « 14 décembre [2026] », « le 3 janvier », « 1er mai 2027 »…
+ * Retourne null si rien ne ressemble à une date ici.
+ */
+function matchAbsoluteDate(tokens: string[], norm: string[], i: number, today: string): AbsoluteDateMatch | null {
+  const t = norm[i];
+  // article « le » facultatif devant la date : « le 3 janvier », « le 25/12 »
+  const le = t === 'le' ? 1 : 0;
+  const start = i + le;
+  // token brut nettoyé des ponctuations de bordure (« 14/12/2026, » → « 14/12/2026 »)
+  const rawTok = (tokens[start] ?? '').replace(/^!+/, '').replace(/[.,;:!?]+$/, '');
+  const fragment = (n: number) => tokens.slice(i, i + n).join(' ');
+
+  // 1) date numérique « 25/12 », « 14/12/2026 » (séparateur « / » exigé : un simple
+  //    nombre « 2026 » ou « 2512 » n’est JAMAIS pris pour une date)
+  const num = rawTok.match(NUM_DATE_RE);
+  if (num) {
+    const day = Number(num[1]);
+    const month = Number(num[2]);
+    const year = num[3] ? (num[3].length === 4 ? Number(num[3]) : 2000 + Number(num[3])) : null;
+    const consumed = le + 1;
+    const iso = year !== null ? makeISODate(year, month, day) : nextOccurrenceISO(day, month, today);
+    return iso !== null
+      ? { date: iso, warning: null, consumed }
+      : { date: null, warning: fragment(consumed), consumed };
+  }
+
+  // 2) date textuelle « 14 décembre », « le 3 janvier », « 1er mai » (+ année 4 chiffres facultative)
+  const dayTok = norm[start] ?? '';
+  const monthTok = norm[start + 1] ?? '';
+  const dm = dayTok.match(DAY_RE);
+  const month = MONTHS_FR[monthTok];
+  if (dm && month) {
+    const day = Number(dm[1]);
+    const yearTok = norm[start + 2] ?? '';
+    const hasYear = YEAR_RE.test(yearTok);
+    const consumed = le + 2 + (hasYear ? 1 : 0);
+    const iso = hasYear ? makeISODate(Number(yearTok), month, day) : nextOccurrenceISO(day, month, today);
+    return iso !== null
+      ? { date: iso, warning: null, consumed }
+      : { date: null, warning: fragment(consumed), consumed };
+  }
+
+  return null;
 }
 
 /**
@@ -292,7 +440,10 @@ function parseTimeToken(t: string): string | null {
  *  - « dentist mardi 10h30 santé » -> dentist, mardi, 10:30, catégorie Santé
  *  - « rapport vendredi »        -> rapport, vendredi, sans heure
  *  - « !lundi réunion »          -> priorité Haute, lundi, réunion
- * Au moindre doute : tâche simple aujourd'hui.
+ *  - « dentiste 14/12/2026 10h » -> dentiste, 14/12/2026, 10:00 (M-31, date absolue)
+ *  - « noël 25 décembre »        -> noël, 25 décembre (prochaine occurrence), sans heure
+ * Au moindre doute : tâche simple aujourd'hui — et si un fragment ressemble à une
+ * date sans être reconnu, `dateWarning` le signale (jamais de mauvais jour silencieux).
  */
 export function parseInputDetailed(raw: string, today: string = todayISO()): ParsedInputDetails {
   const tokens = raw.trim().split(/\s+/).filter(Boolean);
@@ -309,6 +460,7 @@ const norm = tokens.map((t) => normToken(t));
   let time: string | null = null;
   let date: string | null = null;
   let hasDate = false;
+  let dateWarning: string | null = null;
   let category: Category | null = null;
   const titleWords: string[] = [];
 
@@ -389,6 +541,23 @@ const norm = tokens.map((t) => normToken(t));
       }
     }
 
+    // M-31 — dates absolues en français (« 14 décembre », « le 3 janvier », « 1er mai »,
+    // « 25/12 », « 14/12/2026 »…). Reconnues ici : la date consommée ne va JAMAIS dans
+    // le titre (cleanTitle de Plume inchangé). Si le fragment ressemble à une date sans
+    // être valide, il RESTE dans le titre et part dans `dateWarning` : jamais de
+    // création silencieuse au mauvais jour.
+    const abs = matchAbsoluteDate(tokens, norm, i, today);
+    if (abs) {
+      if (abs.date) {
+        date = abs.date;
+        hasDate = true;
+        i += abs.consumed - 1;
+        continue;
+      }
+      if (abs.warning && !dateWarning) dateWarning = abs.warning;
+      // sinon on laisse le token suivre son cours normal (reste dans le titre)
+    }
+
     if (t in CATEGORY_WORDS) {
       category = CATEGORY_WORDS[t];
       continue;
@@ -419,6 +588,7 @@ const norm = tokens.map((t) => normToken(t));
     priority,
     hasDate,
     hasTime: time !== null,
+    dateWarning,
   };
 }
 

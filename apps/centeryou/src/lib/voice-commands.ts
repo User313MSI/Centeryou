@@ -4,7 +4,7 @@ import { addDaysISO, formatDayLong, formatTimeFr, minutesOf, timeOf, todayISO } 
 
 import { eventsOnDate, findConflict } from './events';
 
-import { cleanTitle, parseInput, parseInputDetailed, type ParsedInput } from './parser';
+import { cleanTitle, dateWarningMessage, parseInputDetailed, type ParsedInputDetails } from './parser';
 
 import { useStore } from './store';
 
@@ -55,20 +55,24 @@ function whenLabel(date: string, today: string, tomorrow: string): string {
  * Règle unique, partout pareil : une heure = événement d’1 h (avec refus poli
  * si le créneau est déjà pris exactement), sinon = tâche.
  */
-function createFromParsed(parsed: ParsedInput, today: string, tomorrow: string): string {
+function createFromParsed(parsed: ParsedInputDetails, today: string, tomorrow: string): string {
   const s = useStore.getState();
   // M-22 : la commande vocale passe par la MÊME usine à titres que la saisie rapide
   // clavier (cleanTitle, unique, dans parser.ts) — le message affiche le titre propre.
   const title = cleanTitle(parsed.title);
+  // M-31 : garde-fou — si un fragment ressemblait à une date sans être reconnu,
+  // l’avertissement remonte dans la réponse (écrite ET parlée), jamais de mauvais jour silencieux.
+  const warn = dateWarningMessage(parsed.dateWarning, parsed.hasDate);
+  const suffix = warn ? ` ⚠️ ${warn}` : '';
   if (parsed.time) {
     const start = parsed.time;
     const end = timeOf(Math.min(minutesOf(start) + 60, 24 * 60 - 1));
     const conflict = findConflict(s.events, { date: parsed.date, start, end });
     if (conflict?.exact) {
-      return `Je n’ai pas pu ajouter « ${title} » : ce créneau est déjà pris par « ${conflict.other.title} ».`;
+      return `Je n’ai pas pu ajouter « ${title} » : ce créneau est déjà pris par « ${conflict.other.title} ».${suffix}`;
     }
     s.addEvent({ title, date: parsed.date, start, end, category: parsed.category, repeat: 'jamais' });
-    return `Ajouté : ${title}, ${whenLabel(parsed.date, today, tomorrow)} à ${formatTimeFr(start)}.`;
+    return `Ajouté : ${title}, ${whenLabel(parsed.date, today, tomorrow)} à ${formatTimeFr(start)}.${suffix}`;
   }
   s.addTask({
     title,
@@ -77,7 +81,7 @@ function createFromParsed(parsed: ParsedInput, today: string, tomorrow: string):
     category: parsed.category,
     priority: parsed.priority,
   });
-  return `Ajouté à tes tâches : ${title}, pour ${whenLabel(parsed.date, today, tomorrow)}.`;
+  return `Ajouté à tes tâches : ${title}, pour ${whenLabel(parsed.date, today, tomorrow)}.${suffix}`;
 }
 
 /** M-19 — aide en cas d’échec réel : invite à parler naturellement + liste figée de formules. */
@@ -102,7 +106,8 @@ export async function handleVoiceCommand(raw: string): Promise<string> {
 
   if (norm.startsWith('ajoute')) {
     const rest = raw.replace(/^\s*ajoute\s+/i, '');
-    reply = createFromParsed(parseInput(rest, today), today, tomorrow);
+    // M-31 : parseInputDetailed pour porter aussi l’avertissement « date non comprise »
+    reply = createFromParsed(parseInputDetailed(rest, today), today, tomorrow);
   } else if (norm.includes('cest fait') || norm.startsWith('fait ')) {
     const rest = raw.replace(/^\s*(c'est|c est|fait)\s+/i, '');
     const target = normalizeText(rest);

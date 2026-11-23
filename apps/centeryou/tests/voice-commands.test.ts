@@ -303,3 +303,73 @@ describe('M-22 — titres propres à la voix (même usine à titres que la saisi
     expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Je dois finir le rapport', date: tomorrow(), priority: 'haute' });
   });
 });
+
+describe('M-31 — Almanach : dates absolues à la voix + garde-fou « date non comprise »', () => {
+  // règle 8 : aucune date littérale comparée au jour réel — tout est recalculé à l'exécution
+  const today = () => todayISO();
+  // prochaine occurrence du 14 décembre, recalculée à l'exécution
+  const nextDec14 = () => {
+    const y = Number(todayISO().slice(0, 4));
+    const cand = `${y}-12-14`;
+    return cand >= todayISO() ? cand : `${y + 1}-12-14`;
+  };
+
+  it('« ajoute dentiste 14/12/2099 10h » -> événement le 14/12/2099 à 10h00, titre « Dentiste »', async () => {
+    const reply = await handleVoiceCommand('ajoute dentiste 14/12/2099 10h');
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0]).toMatchObject({ title: 'Dentiste', date: '2099-12-14', start: '10:00', end: '11:00' });
+    expect(reply).toContain('Ajouté : Dentiste');
+    expect(reply).not.toContain('Date non comprise');
+  });
+
+  it('phrase naturelle « dentiste 14/12/2099 à 10h » -> événement le 14/12/2099 à 10h00 (repli hasDate)', async () => {
+    await handleVoiceCommand('dentiste 14/12/2099 à 10h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Dentiste', date: '2099-12-14', start: '10:00', end: '11:00' });
+  });
+
+  it('« anniversaires maman 14 décembre » -> tâche le 14 décembre prochain, titre « Anniversaires maman »', async () => {
+    const reply = await handleVoiceCommand('anniversaires maman 14 décembre');
+    const s = useStore.getState();
+    expect(s.events).toHaveLength(0);
+    expect(s.tasks[0]).toMatchObject({ title: 'Anniversaires maman', date: nextDec14(), time: null });
+    expect(reply).toContain('tâches');
+    expect(reply).toContain('Anniversaires maman');
+    expect(reply).not.toContain('Date non comprise');
+  });
+
+  it('« noël 25 décembre 2099 » -> tâche le 25/12/2099, titre « Noël »', async () => {
+    await handleVoiceCommand('noël 25 décembre 2099');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Noël', date: '2099-12-25' });
+  });
+
+  it('garde-fou à la voix : « ajoute dentiste 32/13/2099 10h » -> avertissement clair, date = aujourd’hui', async () => {
+    const reply = await handleVoiceCommand('ajoute dentiste 32/13/2099 10h');
+    const s = useStore.getState();
+    expect(s.events[0]).toMatchObject({ date: today(), start: '10:00' }); // jamais un mauvais jour silencieux
+    expect(s.events[0].title).toContain('32/13/2099'); // le fragment reste visible dans le titre
+    expect(reply).toContain('Ajouté : Dentiste');
+    expect(reply).toContain('Date non comprise');
+    expect(reply).toContain('32/13/2099');
+    expect(reply).toContain('mise à aujourd’hui');
+    expect(reply).toContain('corrige-la si besoin');
+  });
+
+  it('garde-fou aussi en tâche : « ajoute noël 31 avril 2099 » -> avertissement dans la réponse', async () => {
+    const reply = await handleVoiceCommand('ajoute noël 31 avril 2099');
+    const s = useStore.getState();
+    expect(s.tasks[0]).toMatchObject({ date: today(), title: 'Noël 31 avril 2099' });
+    expect(reply).toContain('Date non comprise');
+    expect(reply).toContain('31 avril 2099');
+  });
+
+  it('régression : les commandes et phrases d’avant continuent (ajoute, programme, stream Red Dead 2, « ! »)', async () => {
+    expect(await handleVoiceCommand('mon programme')).toContain('libre');
+    await handleVoiceCommand('ajoute sport demain 14h');
+    expect(useStore.getState().events[0]).toMatchObject({ title: 'Sport', start: '14:00' });
+    await handleVoiceCommand("écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2");
+    expect(useStore.getState().events[1]).toMatchObject({ title: 'Stream sur Red Dead 2', start: '18:00' });
+    await handleVoiceCommand('! demain je dois finir le rapport');
+    expect(useStore.getState().tasks[0]).toMatchObject({ title: 'Je dois finir le rapport', priority: 'haute' });
+  });
+});
