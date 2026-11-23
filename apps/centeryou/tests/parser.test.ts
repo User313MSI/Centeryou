@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEXIQUE_BAVARDAGE, TITRE_MAX, cleanTitle, parseInput, parseInputDetailed, type ParsedInput } from '../src/lib/parser';
+import { LEXIQUE_BAVARDAGE, TITRE_MAX, cleanTitle, dateWarningMessage, parseInput, parseInputDetailed, type ParsedInput } from '../src/lib/parser';
 import { addDaysISO, parseISO } from '../src/lib/dates';
 
 // lundi 6 janvier 2025 (référence fixe pour des tests déterministes)
@@ -265,5 +265,134 @@ describe('M-22 — usine à titres propres (cleanTitle, partagée clavier + voix
       expect(cleanTitle(`${motif.join(' ')} réunion`)).toBe('Réunion');
     }
     expect(cleanTitle('réunion quoi')).toBe('Réunion'); // « quoi » de fin de phrase
+  });
+});
+
+describe('M-31 — Almanach : dates absolues en français reconnues par le parseur', () => {
+  // dimanche 22 novembre 2026 : la « journée réelle » de la session Cactus (M-28)
+  const CACTUS = '2026-11-22';
+  const q = (input: string, today: string = TODAY) => parseInputDetailed(input, today);
+
+  it.each<[string, string, Partial<ParsedInput>]>([
+    // les phrases réelles mesurées par Cactus (§3), avec aujourd’hui = 22/11/2026
+    ['dentiste 14/12/2026 10h', CACTUS, { title: 'Dentiste', date: '2026-12-14', time: '10:00' }],
+    ['réunion le 3 janvier 9h', CACTUS, { title: 'Réunion', date: '2027-01-03', time: '09:00' }],
+    ['anniversaires maman 14 décembre', CACTUS, { title: 'Anniversaires maman', date: '2026-12-14', time: null }],
+    ['noël 25 décembre', CACTUS, { title: 'Noël', date: '2026-12-25', time: null }],
+    ['14 décembre 10h', CACTUS, { title: 'Nouvelle tâche', date: '2026-12-14', time: '10:00' }],
+    // formats demandés
+    ['1er mai', TODAY, { title: 'Nouvelle tâche', date: '2025-05-01', time: null }],
+    ['1 mai 2026', TODAY, { date: '2026-05-01' }],
+    ['25/12', TODAY, { date: '2025-12-25' }],
+    ['14/12', TODAY, { date: '2025-12-14' }],
+    ['14/12/2026', TODAY, { date: '2026-12-14' }],
+    ['25/12/2026 8h', TODAY, { date: '2026-12-25', time: '08:00' }],
+    ['le 25/12/2026', TODAY, { date: '2026-12-25' }],
+    ['dentiste 14/12/2026 à 10h', CACTUS, { title: 'Dentiste', date: '2026-12-14', time: '10:00' }],
+    ['! dentiste 14/12/2026 10h', CACTUS, { title: 'Dentiste', date: '2026-12-14', time: '10:00', priority: 'haute' }],
+    // abréviations courantes
+    ['10 janv.', TODAY, { date: '2025-01-10' }],
+    ['3 janv.', TODAY, { date: '2026-01-03' }], // passée cette année -> année prochaine
+    ['14 févr. 9h', TODAY, { date: '2025-02-14', time: '09:00' }],
+    ['5 sept. 2026', TODAY, { date: '2026-09-05' }],
+    ['1er oct. 2027', TODAY, { date: '2027-10-01' }],
+    ['noël 25 déc.', TODAY, { title: 'Noël', date: '2025-12-25' }],
+    ['14 décembre 2026', TODAY, { date: '2026-12-14' }],
+    ['14 dec 2026 10h30', TODAY, { date: '2026-12-14', time: '10:30' }],
+    ['le 3 janvier', CACTUS, { date: '2027-01-03' }],
+    ['14 janvier', CACTUS, { date: '2027-01-14' }], // en novembre, « 14 janvier » = janvier 2027
+    ['14 décembre', '2027-01-05', { date: '2027-12-14' }], // en janvier, « 14 décembre » = décembre 2027
+    ['14 décembre', '2026-01-05', { date: '2026-12-14' }], // même année si encore à venir
+    ['14 décembre', '2026-12-14', { date: '2026-12-14' }], // aujourd’hui inclus
+    // années bissextiles respectées
+    ['29/02/2028', TODAY, { date: '2028-02-29' }],
+    ['29 février 2028', TODAY, { date: '2028-02-29' }],
+    ['29 février', CACTUS, { date: '2028-02-29' }], // prochaine occurrence valide du 29 février
+    // année explicite passée : règle simple et cohérente = telle quelle, jamais modifiée
+    ['dentiste 14/12/2025 10h', CACTUS, { title: 'Dentiste', date: '2025-12-14', time: '10:00' }],
+  ])('« %s » (aujourd’hui = %s)', (input, today, expected) => {
+    expect(parseInput(input, today)).toMatchObject({ category: 'autre', priority: 'moyenne', time: null, ...expected });
+  });
+
+  it('la date consommée ne reste JAMAIS dans le titre (usine cleanTitle de Plume intacte)', () => {
+    expect(q('dentiste 14/12/2026 10h', CACTUS).title).toBe('Dentiste');
+    expect(q('anniversaires maman 14 décembre', CACTUS).title).toBe('Anniversaires maman');
+    expect(q('réunion le 3 janvier 9h', CACTUS).title).toBe('Réunion');
+    const titres = [
+      'dentiste 14/12/2026 10h',
+      'réunion le 3 janvier 9h',
+      'noël 25 décembre',
+      'anniversaires maman 14 décembre',
+      '1er mai 2027 à 14h',
+      '25/12/2026 18h',
+    ].map((x) => q(x, CACTUS).title);
+    for (const t of titres) {
+      expect(t).not.toMatch(/\d/);
+      expect(t.toLowerCase()).not.toMatch(/janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre|janv|fevr|avr|juil|sept|oct|nov|dec/);
+    }
+  });
+
+  it('hasDate/hasTime sont levés pour les dates absolues (la voix crée bien l’élément)', () => {
+    expect(q('dentiste 14/12/2026 10h', CACTUS)).toMatchObject({ hasDate: true, hasTime: true, date: '2026-12-14', time: '10:00', dateWarning: null });
+    expect(q('noël 25 décembre', CACTUS)).toMatchObject({ hasDate: true, hasTime: false, date: '2026-12-25', dateWarning: null });
+    expect(q('14/12/2026', CACTUS)).toMatchObject({ hasDate: true, hasTime: false, dateWarning: null });
+  });
+
+  it('parseInput garde exactement sa forme historique à 5 champs, même avec une date absolue', () => {
+    const r = parseInput('dentiste 14/12/2026 10h', CACTUS);
+    expect(Object.keys(r).sort()).toEqual(['category', 'date', 'priority', 'time', 'title']);
+    expect(r).toEqual({ title: 'Dentiste', date: '2026-12-14', time: '10:00', category: 'autre', priority: 'moyenne' });
+  });
+
+  it.each<[string, string, string]>([
+    // fragment ressemblant à une date mais NON reconnu -> garde-fou, jamais de mauvais jour silencieux
+    ['dentiste 32/13/2026 10h', CACTUS, '32/13/2026'],
+    ['dentiste 29/02/2026 10h', CACTUS, '29/02/2026'], // 2026 n’est pas bissextile
+    ['réunion le 30 février 9h', CACTUS, 'le 30 février'],
+    ['sport le 31 avril 2026', CACTUS, 'le 31 avril 2026'],
+    ['rdv 00/12/2026', CACTUS, '00/12/2026'],
+  ])('garde-fou « %s » : dateWarning = %s, date = aujourd’hui, le fragment reste visible dans le titre', (input, today, warning) => {
+    const r = q(input, today);
+    expect(r.dateWarning).toBe(warning);
+    expect(r.date).toBe(today); // aucune date valide reconnue -> aujourd’hui, jamais un autre jour silencieux
+    expect(r.title.toLowerCase()).toContain(warning.replace(/^le /, '').toLowerCase());
+    expect(r.title).not.toBe('Nouvelle tâche');
+  });
+
+  it('pas de fausse alerte : heure invalide, année seule ou nombre sans « / » ne sont pas des dates', () => {
+    expect(q('sport 25h', TODAY).dateWarning).toBeNull();
+    expect(q('sport 10h70', TODAY).dateWarning).toBeNull();
+    expect(q('en 2026', TODAY).dateWarning).toBeNull();
+    expect(q('en 2026', TODAY).title).toBe('En 2026');
+    expect(q('code 2512', TODAY).dateWarning).toBeNull();
+    expect(q('code 2512', TODAY).title).toBe('Code 2512');
+    expect(q('dans 2 mois', TODAY).dateWarning).toBeNull();
+    expect(q('dans 500 jours', TODAY).dateWarning).toBeNull();
+  });
+
+  it('dateWarningMessage : avertissement clair, « mise à aujourd’hui » seulement si aucune date reconnue', () => {
+    expect(dateWarningMessage(null, false)).toBeNull();
+    const m1 = dateWarningMessage('32/13/2026', false);
+    expect(m1).toContain('Date non comprise');
+    expect(m1).toContain('32/13/2026');
+    expect(m1).toContain('mise à aujourd’hui');
+    expect(m1).toContain('corrige-la si besoin');
+    const m2 = dateWarningMessage('32/13', true);
+    expect(m2).toContain('ressemble à une date');
+    expect(m2).toContain('corrige-la si besoin');
+    expect(m2).not.toContain('mise à aujourd’hui');
+  });
+
+  it('régressions : tout ce qui marchait continue (dates relatives, « ! », catégories, bavardage)', () => {
+    expect(p('sport demain 14h')).toEqual({ title: 'Sport', date: '2025-01-07', time: '14:00', category: 'autre', priority: 'moyenne' });
+    expect(p('jeudi 18h').date).toBe('2025-01-09');
+    expect(p('récap dans 2 semaines').date).toBe('2025-01-20');
+    expect(p('!lundi réunion').priority).toBe('haute');
+    expect(p("écris-moi que demain à 18:00 j'ai un stream sur Red Dead 2")).toEqual({ title: 'Stream sur Red Dead 2', date: '2025-01-07', time: '18:00', category: 'autre', priority: 'moyenne' });
+    expect(p("euh bah non justement c'est plutôt aujourd'hui réunion à 14h").title).toBe('Réunion');
+    // une date absolue ne mange pas le reste de la phrase (« vendredi » est consommé comme date relative, comme avant)
+    expect(p('rapport vendredi 14 décembre 9h').date).toBe('2025-12-14');
+    expect(p('rapport vendredi 14 décembre 9h').title).toBe('Rapport');
+    expect(p('acheter du pain 3 mai').title).toBe('Acheter du pain');
   });
 });
