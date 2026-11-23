@@ -48,7 +48,7 @@ Vague d'audits stricts (demande utilisateur du 22/11) — **TERMINÉE ET FUSIONN
 
 ### M-30 — Projecteur · Contenus réseaux sociaux (PROGRAMMÉE, après M-23 et M-29)
 
-- **État : À LANCER MAINTENANT (23/11 — en parallèle de M-29 et M-32 ; sa zone docs/marketing/reseaux/ ne croise ni l'audit lecture seule ni le code serveur)**. Source : demande utilisateur « générer des vidéos, des posts Instagram, des vidéos pour les réseaux ».
+- **État : BRANCHE CRÉÉE, EN COURS (23/11 — branche `vibe/projecteur-reseaux` créée depuis `main` `c8e3491`, en parallèle de M-29 et M-32 ; zone `docs/marketing/reseaux/` étanche : ni audit lecture seule ni code serveur)**. Source : demande utilisateur « générer des vidéos, des posts Instagram, des vidéos pour les réseaux ».
 - Objectif : lancement social : scripts storyboards de vidéos courtes (formats Reels/TikTok/Shorts : plan par plan, texte voix-off 100 % FR, indications de tournage écran), posts Instagram, threads réseaux professionnels, calendrier de teasing jusqu'au 1/01/2027 — tout en TEXTE réutilisable sous `docs/marketing/reseaux/`, aucune image binaire committée (des sources HTML/CSS réutilisables sont autorisées). Livrable futur : sa zone est exclusively `docs/marketing/reseaux/` + journal + inscription. PR : —.
 
 ### M-09 — Déménageur · Migration hébergement Vercel → Cloudflare (décision utilisateur du 20/11)
