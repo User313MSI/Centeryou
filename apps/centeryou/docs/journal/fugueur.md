@@ -132,7 +132,7 @@ Rester dans l'esprit sobre, doux et aérien (pas de points, pas de niveaux, pas 
 
 - Branche : `vibe/fugueur-desengagement` (poussée). Base : `main` `c8e3491`.
 - Inscription M-29 publiée en commit `2f78c5a` (23/11 07:17 UTC) : « branche créée, audit en cours ».
-- PR : **brouillon, base `main`**, contient UNIQUEMENT `apps/centeryou/docs/journal/fugueur.md` + l'inscription `MISSIONS.md` → lien en mise à jour ci-dessous.
+- PR : **#51 — https://github.com/User313MSI/Centeryou/pull/51** (brouillon, base `main`, ouverte le 23/11 ~07:38 UTC), contient UNIQUEMENT `apps/centeryou/docs/journal/fugueur.md` + l'inscription `MISSIONS.md` (vérifié via l'API : `get_files` = ces 2 fichiers).
 - Captures et scripts de parcours : hors dépôt, `C:\Users\stark\Documents\fugueur-audit\`.
 
-*Mise à jour finale : PR #XX ouverte (voir ci-dessus).*
+*Mise à jour finale (23/11 ~07:40 UTC) : **PR #51 ouverte en brouillon** — « M-29 Fugueur — pourquoi ils partiraient et comment les garder », base `main`, 2 fichiers docs uniquement. Branche `vibe/fugueur-desengagement` poussée (commits `2f78c5a` inscription + `9c62aba` rapport + mise à jour PR).*
