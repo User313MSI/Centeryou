@@ -1,6 +1,6 @@
 # Nuage — Journal de mission M-23 · Ligne graphique douce et aérienne
 
-- **Agent** : Nuage (session Vibe dédiée). Branche : `vibe/nuage-ligne-graphique` (base `main` `876f700`, inscription M-23 publiée sur `main` à 05:28 UTC en commit MISSIONS.md seul). PR : brouillon, base `main` (lien en bas, « PR #XX ouverte »).
+- **Agent** : Nuage (session Vibe dédiée). Branche : `vibe/nuage-ligne-graphique` (base `main` `876f700`, inscription M-23 publiée sur `main` à 05:28 UTC en commit MISSIONS.md seul). PR : **#49** — https://github.com/User313MSI/Centeryou/pull/49 (brouillon, base `main`, ouverte le 23/11 à 06:20 UTC).
 - **Zone tenue** : `src/app/globals.css`, `design/tokens.ts`, `tailwind.config.ts` (non modifié — rien à y changer), `src/components/**`, pages `src/app/**` (hors `api` sauf 2 chaînes d'erreur, voir §6), `docs/journal/nuage.md`, MISSIONS.md (inscription). **INTERDIT tenu** : `src/lib/parser.ts` et les tests du parseur (mission M-31 Almanach en parallèle) — `git diff` le prouve. Zéro dépendance ajoutée (`package.json`/lock inchangés), aucun binaire, aucune image committée (captures hors dépôt).
 - **Sources lues avant de coder** : `AGENTS.md`, `docs/MISSIONS.md` (M-23), tout `docs/journal/` — notamment **pinceau.md** (échelles en place), **sourire.md** (contrastes à préserver), **accord.md** (le film), **nord.md** (choix tranchés, non rouverts), **cactus.md** (défauts client), plus plume/cineaste pour ne rien refaire.
 - **Heures UTC** : inscription 05:28 · audit + captures avant 05:35–05:55 · codage 05:55–06:10 · tests/build/captures après 06:10–06:18.
@@ -105,5 +105,5 @@ Pourquoi `textSecondary` a bougé : `#6E7191` (4,54:1) n'avait aucune marge — 
 ## 9. Liens
 
 - Branche `vibe/nuage-ligne-graphique` (poussée). Inscription M-23 sur `main` : commit `876f700` (05:28 UTC).
-- PR brouillon base `main` : **« M-23 Nuage — la ligne directrice douce et aérienne »** — voir MISSIONS.md (section M-23, « PR #XX ouverte »).
+- PR **#49** brouillon base `main` : « M-23 Nuage — la ligne directrice douce et aérienne » — https://github.com/User313MSI/Centeryou/pull/49 (MISSIONS.md section M-23 : « PR #49 ouverte »).
 - Captures avant/après (hors dépôt) : `C:\Users\stark\Documents\nuage-shots\before\` et `...\after\` (38 + 40 PNG, 1440×900 et 320×700, clair + sombre).
