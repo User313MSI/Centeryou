@@ -43,8 +43,8 @@ Vague d'audits stricts (demande utilisateur du 22/11) — **TERMINÉE ET FUSIONN
 
 ### M-29 — Fugueur · Audit désengagement, pourquoi les gens partiraient (PROGRAMMÉE, après M-23)
 
-- **État : EN COURS — branche `vibe/fugueur-desengagement` créée depuis `main` `c8e3491` le 23/11, audit de désengagement en cours (lecture seule, aucun fichier de code modifié ; en parallèle de M-30 et M-32, zones étanches)**. Source : demande utilisateur « quelqu'un qui se sentirait ennuyé de l'app, qui dirait qu'il n'y a pas grand-chose, pas assez bien, qui pourrait repousser les gens ».
-- Objectif : audit de désengagement/rétention : profils d'utilisateurs qui abandonnent (jadis 1re minute, 1re journée, 1re semaine), contenu et fonctionnalités qui manquent pour donner envie de rester, comparaison honnête avec les concurrents du marché (recherche publique autorisée), premier handicap à lever. Livrable futur : `docs/journal/fugueur.md` + inscription. PR : — (sera ouverte en brouillon, base `main`, avec UNIQUEMENT le journal + cette inscription).
+- **État : AUDIT TERMINÉ le 23/11 ~07:35 UTC — branche `vibe/fugueur-desengagement` (base `main` `c8e3491`), lecture seule (aucun fichier de code modifié : diff = journal + cette inscription). Rapport dans `docs/journal/fugueur.md` : 3 parcours joués en production (build ✅, tests 621/621 ✅, Chrome headless CDP), manques classés gain/pain, handicap n°1 = rappels muets app fermée. PR brouillon en cours d'ouverture (base `main`, 2 fichiers docs)**. Source : demande utilisateur « quelqu'un qui se sentirait ennuyé de l'app, qui dirait qu'il n'y a pas grand-chose, pas assez bien, qui pourrait repousser les gens ».
+- Objectif : audit de désengagement/rétention : profils d'utilisateurs qui abandonnent (jadis 1re minute, 1re journée, 1re semaine), contenu et fonctionnalités qui manquent pour donner envie de rester, comparaison honnête avec les concurrents du marché (recherche publique autorisée), premier handicap à lever. Livrable : `docs/journal/fugueur.md` + inscription. PR : — (brouillon, base `main`, UNIQUEMENT journal + inscription).
 
 ### M-30 — Projecteur · Contenus réseaux sociaux (PROGRAMMÉE, après M-23 et M-29)
 
