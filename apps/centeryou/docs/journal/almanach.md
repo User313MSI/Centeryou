@@ -70,5 +70,5 @@ Avant : le parseur ne connaissait que les dates relatives. « dentiste 14/12/202
 
 ## Liens
 
-- Branche : `vibe/almanach-dates-absolues` · PR : **#48** https://github.com/User313MSI/Centeryou/pull/48 (brouillon, base `main`).
-- Pushs : inscription branche (`6c88b46`), livraison code+tests+journal (`2ea8cbb`), inscription PR #48 — 2026-11-23 ~05:41 UTC.
+- Branche : `vibe/almanach-dates-absolues` · PR : **#48** https://github.com/User313MSI/Centeryou/pull/48 (brouillon, base `main`, 6 fichiers = la zone étanche exactement).
+- Pushs : inscription branche (`6c88b46`), livraison code+tests+journal (`2ea8cbb`), inscription PR #48 (`436c9d8`), merge de `origin/main` `876f700` (commit M-23 Nuage, aucun conflit — MISSIONS.md sections disjointes) `6a1bcbf` — 2026-11-23 ~05:45 UTC. Après merge : 621/621 tests verts, branche à jour de `main`.
