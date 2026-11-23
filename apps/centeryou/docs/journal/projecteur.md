@@ -45,8 +45,9 @@ Chaque script vidéo contient : **accroche dans les 3 premières secondes**, pla
 ## 4. Validation
 
 - `grep` de contrôle sur `docs/marketing/reseaux/` (termes interdits, prix) : résultats notés ci-dessous §5.
-- `npm run build` : voir résultat final (relance une fois si faux échec d'infra).
-- `git diff --name-only origin/main...HEAD` : zone respectée (reseaux/ + journal/projecteur.md + MISSIONS.md).
+- `npm run build` en local : ✅ (23 routes, 0 erreur).
+- CI PR #50 : premier run **failure** sur `next/font` (« TypeError: Cannot read properties of null (reading '1') » — faux positif d'infra connu, documenté journal Verrou M-13 : 3 faux échecs CI déjà identifiés ; mon diff est 100 % docs) → **relance une fois** → run 137548618007 **success ✅** (tests Vitest + build Next.js bloquants au vert, 07:32 UTC).
+- `git diff --name-only origin/main...HEAD` : zone respectée — uniquement `docs/marketing/reseaux/**` (12 fichiers .md) + `docs/journal/projecteur.md` + `docs/MISSIONS.md`.
 
 ## 5. Résultats des greps de contrôle (23/11, ~07:5x UTC)
 
@@ -63,5 +64,5 @@ Chaque script vidéo contient : **accroche dans les 3 premières secondes**, pla
 
 ## 7. Liens
 
-- Branche : `vibe/projecteur-reseaux` (poussée).
-- PR : voir inscription MISSIONS.md section M-30 (« PR #XX ouverte »).
+- Branche : `vibe/projecteur-reseaux` (poussée, 3 commits : inscription MISSIONS.md seule → kit + journal → « PR #50 ouverte »).
+- PR : **#50** — https://github.com/User313MSI/Centeryou/pull/50 (brouillon, base `main`, ouverte le 23/11 à 07:27 UTC ; CI bloquante verte après 1 relance de faux échec `next/font`). Inscription MISSIONS.md section M-30 : « PR #50 ouverte ».
